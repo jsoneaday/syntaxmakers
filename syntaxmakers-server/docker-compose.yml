@@ -1,0 +1,32 @@
+version: "3.8"
+
+services:
+  server:
+    image: syntaxmakersserver
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    depends_on:
+      - db
+    environment:
+      RUST_LOG: debug,
+      ENV: development
+      PORT: 4002
+      HOST: "0.0.0.0"
+      POSTGRES_HOST: "db"
+      POSTGRES_PORT: 5432
+      POSTGRES_PASSWORD: syntaxmakers
+      POSTGRES_USER: syntaxmakers
+      POSTGRES_DB: syntaxmakers
+    ports:
+      - "4002:4002"
+  db:
+    image: postgres:14-alpine
+    ports:
+      - 5433:5432
+    environment:
+      POSTGRES_PASSWORD: syntaxmakers
+      POSTGRES_USER: syntaxmakers
+      POSTGRES_DB: syntaxmakers
+    volumes:
+      - ./dbdata:/var/lib/postgresql/data

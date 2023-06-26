@@ -1,0 +1,64 @@
+select {
+  outline: none;
+  appearance: none;
+  background-color: transparent;
+  border: none;
+  padding: 0 1em 0 0;
+  margin: 0;
+  width: 100%;
+  font-family: inherit;
+  font-size: inherit;
+  cursor: inherit;
+  line-height: inherit;
+  text-align-last: right;
+}
+
+option {
+  direction: rtl;
+}
+
+.select {
+  padding: 0.25em 0.5em;
+  cursor: pointer;
+  line-height: 1.1;
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  align-items: center;
+  position: relative;
+  min-width: 10em;
+  font-weight: var(--bold-font);
+}
+
+.select-container {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  padding-left: 1.5em;
+  padding-right: 1em;
+}
+
+.select-label {
+  width: 10em;
+}
+
+.select-chevron {
+  width: 1.2em;
+}
+
+.select-icon {
+  width: 1.55em;
+  height: 1.55em;
+  overflow: hidden;
+  border: 1px solid var(--secondary-cl);
+  border-radius: 50%;
+}
+
+.select-icon-label {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: center;
+  width: 100%;
+}

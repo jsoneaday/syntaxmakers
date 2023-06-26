@@ -1,0 +1,37 @@
+[package]
+name = "syntaxmakers-server"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+path = "src/lib.rs"
+
+[[bin]]
+path = "src/main.rs"
+name = "syntaxmakers-server"
+
+[dependencies]
+actix-http = "3.3.1"
+actix-web = "4.3.1"
+actix-multipart = "0.6.0"
+async-trait = "0.1.67"
+chrono = { version = "0.4.24", features = ["serde"] }
+derive_more = "0.99.17"
+dotenv = "0.15.0"
+env_logger = "0.10.0"
+fake = { version = "2.6.1", features=['derive']}
+futures = "0.3.28"
+futures-util = "0.3.28"
+lazy_static = "1.4.0"
+log = "0.4.16"
+mockall = "0.11.4"
+multipart = "0.18.0"
+rand = "0.8.5"
+reqwest = { version = "0.11.14", features = ["json", "multipart"] }
+serde = { version = "1.0.157", features = ["derive"] }
+serde_json = "1.0.94"
+serde_repr = "0.1.12"
+sqlx = { version = "0.6.3", features = ["postgres", "runtime-tokio-rustls", "chrono"]}
+tokio = { version = "1.26.0", features = ["full"] }
+tokio-stream = "0.1.14"
+uuid = { version = "1.3.0", features = ["v4", "serde"] }
