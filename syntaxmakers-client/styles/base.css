@@ -24,7 +24,7 @@
   --panel-bg-cl: var(--bg-cl);
   --panel-border-cl: var(--secondary-cl);
 
-  --border-cl: var(--tertiary-cl);
+  --border-cl: rgb(214, 216, 218);
 
   --band-bg-cl: var(--tertiary-cl);
   --band-cl: var(--tertiary-font-cl);

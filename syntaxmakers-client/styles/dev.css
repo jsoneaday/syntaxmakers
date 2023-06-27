@@ -11,15 +11,37 @@
 }
 
 .dev-top {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
   width: 100%;
-  padding-right: 1em;
-  padding-left: 1em;
+  padding-right: 2em;
+  padding-left: 2em;
   margin-bottom: 1.5em;
 }
 
 .dev-header {
-  margin-top: 0.5em;
-  margin-bottom: 1.5em;
+  margin-bottom: 1em;
+}
+
+.dev-sub-header {
+  margin-bottom: 1em;
+}
+
+.search-header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.search-input {
+  border: 2px solid var(--border-cl);
+  width: 20em;
+  border-radius: 0.5rem;
+  padding: 0.95em;
+  margin-right: 1em;
 }
 
 .filter-submit-section {

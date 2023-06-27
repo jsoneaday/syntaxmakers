@@ -108,58 +108,22 @@ pub fn Dev(cx: Scope) -> impl IntoView {
         }
     ]);
 
+    let (search_input, set_search_input) = create_signal(cx, "");
+
     view! {
         cx,
         <div class="dev-container">
-            <div class="dev-top">
-                <div class="title-font header-container dev-header">
-                    "Select your preferences to find your next job"
+            <div class="dev-top header-container">
+                <div class="title-font dev-header">
+                    "Developer job search"
                 </div>
-                <div class="selector-items">
-                    <div class="section-container">
-                        <Select 
-                            id="primary_language_selections".to_string() 
-                            label="Primary Language".to_string() 
-                            options=PRIM_LANGUAGES.clone()
-                            select_icon={SelectIcon{ src: "web-programming.png".to_string(), style: "margin-right: 0.5em;".to_string() }}
-                        />
-                    </div>
-                    <div class="section-container">
-                        <Select 
-                            id="secondary_language_selections".to_string() 
-                            label="Secondary Language".to_string() 
-                            options=SEC_LANGUAGES.clone()
-                            select_icon={SelectIcon{ src: "web-programming.png".to_string(), style: "margin-right: 0.5em;".to_string() }}
-                        />
-                    </div>
-                    <div class="section-container">
-                        <Select 
-                            id="industry_selections".to_string() 
-                            label="Industry".to_string() 
-                            options=INDUSTRIES.clone()
-                            select_icon={SelectIcon{ src: "office-building.png".to_string(), style: "margin-right: 0.5em;".to_string() }}
-                        />
-                    </div>
-                    <div class="section-container">
-                        <Select 
-                            id="salary_selections".to_string() 
-                            label="Base Salary".to_string() 
-                            options=SALARIES.clone()
-                            select_icon={SelectIcon{ src: "save-money.png".to_string(), style: "margin-right: 0.5em;".to_string() }}
-                        />
-                    </div>
-                    <div class="section-container">
-                        <Select 
-                            id="location_selections".to_string() 
-                            label="Location".to_string() 
-                            options=LOCATIONS.clone()
-                            select_icon={SelectIcon{ src: "location.png".to_string(), style: "margin-right: 0.5em;".to_string() }}
-                        />
-                    </div>
-                    <div class="filter-submit-section">
-                        <button class="primary-btn">"Submit"</button>
-                    </div>
-                </div>            
+                <div class="sub-title-font dev-sub-header">
+                    "Enter your preferences to find your next job"
+                </div>
+                <div class="search-header">
+                    <input class="search-input" type="test" value=search_input />
+                    <button class="primary-btn">"search"</button>
+                </div>
             </div>
             <div class="info-band">
                 <img class="dev-info-band-icon" src="clipboard.png" />
