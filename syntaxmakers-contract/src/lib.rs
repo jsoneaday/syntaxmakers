@@ -1,5 +1,7 @@
 mod msg;
-mod state;
+mod state {
+    pub mod admins;
+}
 mod error;
 mod contract;
 

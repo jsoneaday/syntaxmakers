@@ -6,7 +6,7 @@ use crate::msg::ExecuteMsg;
 use crate::msg::GreetResp;
 use crate::msg::InstantiateMsg;
 use crate::msg::QueryMsg;
-use crate::state::ADMINS;
+use crate::state::admins::ADMINS;
 use crate::msg::AdminsListResp;
 
 pub fn instantiate(
@@ -21,7 +21,6 @@ pub fn instantiate(
         .map(|addr| deps.api.addr_validate(&addr))
         .collect();
     ADMINS.save(deps.storage, &admins?)?;
-
 
     Ok(Response::new())
 }
