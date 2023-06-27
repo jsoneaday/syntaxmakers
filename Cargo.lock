@@ -3714,6 +3714,7 @@ dependencies = [
 name = "syntaxmakers-contract"
 version = "0.1.0"
 dependencies = [
+ "chrono",
  "cosmwasm-schema",
  "cosmwasm-std",
  "cw-multi-test",
