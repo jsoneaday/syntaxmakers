@@ -1,6 +1,6 @@
 [workspace]
 members = [
-    "syntaxmakers-client",
-    "syntaxmakers-server"
+    "wclient",
+    "server"
 ]
 resolver = "2"
