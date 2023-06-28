@@ -1,6 +1,6 @@
 use leptos::*;
 use leptos_router::*;
-use crate::{common::state::user_type::UserType, routes::{home::Home, dev::Dev}};
+use crate::{common::state::user_type::UserType, routes::{home::Home, dev::dev::Dev}};
 
 #[component]
 pub fn App(cx: Scope) -> impl IntoView {

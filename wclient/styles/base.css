@@ -22,21 +22,21 @@
 
   --bg-cl: white;
   --panel-bg-cl: var(--bg-cl);
-  --panel-border-cl: var(--secondary-cl);
 
   --border-cl: rgb(214, 216, 218);
+  --border-rad: 0.25em;
 
   --band-bg-cl: var(--tertiary-cl);
   --band-cl: var(--tertiary-font-cl);
 }
 
 .title-font {
-  font-size: x-large;
+  font-size: 1.2em;
   font-weight: var(--bold-font);
 }
 
 .sub-title-font {
-  font-size: large;
+  font-size: 1em;
   font-weight: var(--bold-font);
   color: var(--secondary-font-cl);
 }
@@ -63,12 +63,12 @@
 }
 
 body {
-  background-color: var(--bg-cl);
+  background-color: rgb(241, 249, 254);
   font-family: "Roboto", sans-serif;
 }
 
 main {
-  max-width: 960px;
+  max-width: 1150px;
   margin-left: auto;
   margin-right: auto;
 }
@@ -80,8 +80,8 @@ main {
   align-items: center;
   justify-content: flex-start;
   padding: 2em;
-  border: 1px solid var(--panel-border-cl);
-  border-radius: 20px;
+  border: 1px solid var(--border-cl);
+  border-radius: var(--border-rad);
   box-shadow: 0em 5em 5em 0em rgba(0, 0, 0, 0.05);
 }
 
@@ -91,13 +91,13 @@ main {
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
-  border: 1px solid var(--panel-border-cl);
-  border-radius: 20px;
+  border: 1px solid var(--border-cl);
+  border-radius: var(--border-rad);
 }
 
 .info-band {
   width: 100%;
-  height: 4em;
+  height: 3.5em;
   background-color: var(--band-bg-cl);
   display: flex;
   flex-direction: row;
@@ -110,6 +110,10 @@ main {
 
 ul {
   list-style-type: none;
+  padding: 0;
+}
+li {
+  padding: 0;
 }
 
 a {
@@ -145,10 +149,10 @@ input[type="reset"] {
 .primary-btn {
   background-color: var(--primary-btn-cl);
   color: var(--bg-cl);
-  border-radius: 0.25em;
+  border-radius: var(--border-rad);
   border: 1px solid var(--primary-btn-cl);
-  padding: 0.5em 1em;
-  font-size: 1.25rem;
+  padding: 0.75em 1.1em;
+  font-size: 1rem;
   font-weight: var(--bold-font);
   cursor: pointer;
   line-height: 1.1;

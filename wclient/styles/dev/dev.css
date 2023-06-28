@@ -1,12 +1,20 @@
 .dev-container {
+  display: grid;
+  grid-template-columns: 250px 600px 300px;
+  column-gap: 1rem;
+}
+
+.dev-main {
+  background-color: var(--bg-cl);
+  grid-column: 2;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   justify-content: flex-start;
   width: 100%;
   height: 100vh;
-  border-right: 1px solid var(--border-cl);
-  border-left: 1px solid var(--border-cl);
+  border: 1px solid var(--border-cl);
+  border-radius: var(--border-rad);
   box-shadow: 0em 5em 5em 0em rgba(0, 0, 0, 0.05);
 }
 
@@ -16,6 +24,7 @@
   align-items: flex-start;
   justify-content: flex-start;
   width: 100%;
+  padding-top: 1.5em;
   padding-right: 2em;
   padding-left: 2em;
   margin-bottom: 1.5em;
@@ -39,7 +48,7 @@
 .search-input {
   border: 2px solid var(--border-cl);
   width: 20em;
-  border-radius: 0.5rem;
+  border-radius: var(--border-rad);
   padding: 0.95em;
   margin-right: 1em;
 }
@@ -64,6 +73,14 @@
   margin-right: 0.7em;
 }
 
-.dev-post-preview {
+.dev-post-preview-container {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
   padding: 2em;
+}
+
+.dev-preview-item {
+  margin-bottom: 2em;
 }

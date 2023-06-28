@@ -1,6 +1,10 @@
 mod routes {
     pub mod home;
-    pub mod dev;
+    pub mod dev {
+        pub mod dev;
+        pub mod left_menu;
+        pub mod promoted_jobs;
+    }
     pub mod post_detail;
 }
 mod common {

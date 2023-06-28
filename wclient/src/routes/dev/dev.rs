@@ -4,6 +4,8 @@ use fake::Fake;
 use lazy_static::lazy_static;
 use leptos::{Scope, IntoView, view, component, create_signal, For};
 use crate::common::components::{select::{Select, SelectOption, SelectIcon}, post_preview::{PostPreviewProp, PostPreview}};
+use crate::routes::dev::left_menu::LeftMenu;
+use crate::routes::dev::promoted_jobs::PromotedJobs;
 use uuid::Uuid;
 
 lazy_static!{
@@ -113,40 +115,44 @@ pub fn Dev(cx: Scope) -> impl IntoView {
     view! {
         cx,
         <div class="dev-container">
-            <div class="dev-top header-container">
-                <div class="title-font dev-header">
-                    "Developer job search"
+            <LeftMenu />
+            <div class="dev-main">
+                <div class="dev-top header-container">
+                    <div class="title-font dev-header">
+                        "Developer job search"
+                    </div>
+                    <div class="sub-title-font dev-sub-header">
+                        "Enter your preferences to find your next job"
+                    </div>
+                    <div class="search-header">
+                        <input class="search-input" type="test" value=search_input />
+                        <button class="primary-btn">"search"</button>
+                    </div>
                 </div>
-                <div class="sub-title-font dev-sub-header">
-                    "Enter your preferences to find your next job"
+                <div class="info-band">
+                    <img class="dev-info-band-icon" src="clipboard.png" />
+                    "Result count 231"  
+                    <img class="dev-info-band-icon" style="margin-left: 1.5em;" src="wall-clock.png" />
+                    "Date jun 16, 2023"
                 </div>
-                <div class="search-header">
-                    <input class="search-input" type="test" value=search_input />
-                    <button class="primary-btn">"search"</button>
-                </div>
-            </div>
-            <div class="info-band">
-                <img class="dev-info-band-icon" src="clipboard.png" />
-                "Result count 231"  
-                <img class="dev-info-band-icon" style="margin-left: 1.5em;" src="wall-clock.png" />
-                "Date jun 16, 2023"
-            </div>
-            <div class="dev-post-preview">
-                <ul>
-                    <For 
-                        each=post_previews 
-                        key=|_| { Uuid::new_v4() }
-                        view=move |cx, post_preview: PostPreviewProp| {
-                            view!{
-                                cx,
-                                <li>
-                                    <PostPreview post_preview=post_preview />
-                                </li>
+                <div class="dev-post-preview-container">
+                    <ul>
+                        <For 
+                            each=post_previews 
+                            key=|_| { Uuid::new_v4() }
+                            view=move |cx, post_preview: PostPreviewProp| {
+                                view!{
+                                    cx,
+                                    <li class="dev-preview-item">
+                                        <PostPreview post_preview=post_preview />
+                                    </li>
+                                }
                             }
-                        }
-                    />
-                </ul>
-            </div>
-        </div>        
+                        />
+                    </ul>
+                </div>
+            </div>        
+            <PromotedJobs />
+        </div>
     }
 }
