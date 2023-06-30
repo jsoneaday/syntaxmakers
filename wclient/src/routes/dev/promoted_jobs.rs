@@ -40,7 +40,7 @@ pub fn PromotedJobs(cx: Scope) -> impl IntoView {
     view! {
         cx,
         <div class="panel-col job-menu-container">
-            <div class="title-font promoted-header">"Promoted jobs"</div>
+            <div class="title-font">"Promoted jobs"</div>
             <ul>
                 <For 
                     each=post_previews 
