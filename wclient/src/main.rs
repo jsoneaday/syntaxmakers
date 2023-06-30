@@ -17,6 +17,9 @@ mod common {
         pub mod user_type;
     }
 }
+mod common_test {
+    pub mod fixtures;
+}
 mod app;
 
 use leptos::*;

@@ -1,4 +1,4 @@
-use leptos::{view, Scope, IntoView, component};
+use leptos::{view, Scope, IntoView, component, Show};
 
 #[derive(Clone)]
 pub struct PostPreviewProp {
@@ -12,17 +12,27 @@ pub struct PostPreviewProp {
 }
 
 #[component]
-pub fn PostPreview(cx: Scope, post_preview: PostPreviewProp) -> impl IntoView {
+pub fn PostPreview(cx: Scope, post_preview: PostPreviewProp, is_small: bool) -> impl IntoView {
     view! {
         cx,
         <div class="post-preview-container">
-            <img class="preview-icon" src=post_preview.icon_src />
+            <Show 
+                when=move || !is_small
+                fallback=move |cx| view! {cx, <span />}
+            >
+                <img class="preview-icon" src=post_preview.icon_src.to_string() />
+            </Show>
             <div class="preview-content">
                 <div class="title-font">{post_preview.title}</div>
                 <div class="sub-title-font">{post_preview.company}</div>
                 <div class="normal-font">{post_preview.location}</div>
                 <div class="normal-font preview-salary">"Base Salary: "<i>{post_preview.salary}</i></div>
-                <div class="small-font preview-timestamp">{post_preview.timestamp}</div>
+                <Show 
+                    when=move || !is_small
+                    fallback=move |cx| view! {cx, <span />}
+                >
+                    <div class="small-font preview-timestamp">{post_preview.timestamp.to_string()}</div>
+                </Show>
             </div>
         </div>
     }

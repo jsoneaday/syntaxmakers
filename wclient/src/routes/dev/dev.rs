@@ -4,43 +4,12 @@ use fake::Fake;
 use lazy_static::lazy_static;
 use leptos::{Scope, IntoView, view, component, create_signal, For};
 use crate::common::components::{select::{Select, SelectOption, SelectIcon}, post_preview::{PostPreviewProp, PostPreview}};
+use crate::common_test::fixtures::salaries;
 use crate::routes::dev::left_menu::LeftMenu;
 use crate::routes::dev::promoted_jobs::PromotedJobs;
 use uuid::Uuid;
 
-lazy_static!{
-    static ref PRIM_LANGUAGES: Vec<SelectOption> = vec![
-        SelectOption { id: 1, label: "Rust".to_string()},
-        SelectOption { id: 7, label: "Go".to_string()},
-        SelectOption { id: 10, label: "Ruby".to_string()},
-        SelectOption { id: 11, label: "Swift".to_string()},
-        SelectOption { id: 12, label: "Kotlin".to_string()},
-        SelectOption { id: 13, label: "Scala".to_string()},
-        SelectOption { id: 13, label: "Elixir".to_string()}
-    ];
-    static ref SEC_LANGUAGES: Vec<SelectOption> = {
-        let mut sec_languages = PRIM_LANGUAGES.clone();
-        sec_languages.insert(0, SelectOption { id: 0, label: "Optional".to_string() });
-        sec_languages
-    };
-    static ref INDUSTRIES: Vec<SelectOption> = vec![
-        SelectOption { id: 1, label: "Finance".to_string()},
-        SelectOption { id: 2, label: "Crypto".to_string()},
-        SelectOption { id: 3, label: "AI/ML".to_string()},
-        SelectOption { id: 5, label: "Video Games".to_string()},
-    ];
-    static ref SALARIES: Vec<SelectOption> = vec![
-        SelectOption { id: 1, label: "$200,000+".to_string()},
-        SelectOption { id: 2, label: "$300,000+".to_string()},
-        SelectOption { id: 3, label: "$400,000+".to_string()},
-    ];
-    static ref LOCATIONS: Vec<SelectOption> = vec![
-        SelectOption { id: 1, label: "Remote".to_string()},
-        SelectOption { id: 2, label: "New York, United States".to_string()},
-        SelectOption { id: 3, label: "San Francisco, United States".to_string()},
-        SelectOption { id: 3, label: "Other".to_string()},
-    ];
-}
+
 
 #[component]
 pub fn Dev(cx: Scope) -> impl IntoView {
@@ -50,7 +19,7 @@ pub fn Dev(cx: Scope) -> impl IntoView {
             title: Sentence(5..6).fake(),
             company: CompanyName().fake(),
             location: format!("{}, {}", fake::faker::address::en::StateName().fake::<String>(), fake::faker::address::en::CountryName().fake::<String>()),
-            salary: SALARIES.get(1).unwrap().label.clone(),
+            salary: salaries().get(1).unwrap().label.clone(),
             timestamp: Utc::now().timestamp().to_string(),
             icon_src: "office-building-cl.png".to_string(),
         },
@@ -59,7 +28,7 @@ pub fn Dev(cx: Scope) -> impl IntoView {
             title: Sentence(5..6).fake(),
             company: CompanyName().fake(),
             location: format!("{}, {}", fake::faker::address::en::StateName().fake::<String>(), fake::faker::address::en::CountryName().fake::<String>()),
-            salary: SALARIES.get(0).unwrap().label.clone(),
+            salary: salaries().get(0).unwrap().label.clone(),
             timestamp: Utc::now().timestamp().to_string(),
             icon_src: "office-cl-1.png".to_string(),
         },
@@ -68,7 +37,7 @@ pub fn Dev(cx: Scope) -> impl IntoView {
             title: Sentence(5..6).fake(),
             company: CompanyName().fake(),
             location: format!("{}, {}", fake::faker::address::en::StateName().fake::<String>(), fake::faker::address::en::CountryName().fake::<String>()),
-            salary: SALARIES.get(1).unwrap().label.clone(),
+            salary: salaries().get(1).unwrap().label.clone(),
             timestamp: Utc::now().timestamp().to_string(),
             icon_src: "office-cl-2.png".to_string(),
         },
@@ -77,7 +46,7 @@ pub fn Dev(cx: Scope) -> impl IntoView {
             title: Sentence(5..6).fake(),
             company: CompanyName().fake(),
             location: format!("{}, {}", fake::faker::address::en::StateName().fake::<String>(), fake::faker::address::en::CountryName().fake::<String>()),
-            salary: SALARIES.get(2).unwrap().label.clone(),
+            salary: salaries().get(2).unwrap().label.clone(),
             timestamp: Utc::now().timestamp().to_string(),
             icon_src: "office-cl-3.png".to_string(),
         },
@@ -86,7 +55,7 @@ pub fn Dev(cx: Scope) -> impl IntoView {
             title: Sentence(5..6).fake(),
             company: CompanyName().fake(),
             location: format!("{}, {}", fake::faker::address::en::StateName().fake::<String>(), fake::faker::address::en::CountryName().fake::<String>()),
-            salary: SALARIES.get(2).unwrap().label.clone(),
+            salary: salaries().get(2).unwrap().label.clone(),
             timestamp: Utc::now().timestamp().to_string(),
             icon_src: "office-cl-4.png".to_string(),
         },
@@ -95,7 +64,7 @@ pub fn Dev(cx: Scope) -> impl IntoView {
             title: Sentence(5..6).fake(),
             company: CompanyName().fake(),
             location: format!("{}, {}", fake::faker::address::en::StateName().fake::<String>(), fake::faker::address::en::CountryName().fake::<String>()),
-            salary: SALARIES.get(1).unwrap().label.clone(),
+            salary: salaries().get(1).unwrap().label.clone(),
             timestamp: Utc::now().timestamp().to_string(),
             icon_src: "office-cl-5.png".to_string(),
         },
@@ -104,13 +73,13 @@ pub fn Dev(cx: Scope) -> impl IntoView {
             title: Sentence(5..6).fake(),
             company: CompanyName().fake(),
             location: format!("{}, {}", fake::faker::address::en::StateName().fake::<String>(), fake::faker::address::en::CountryName().fake::<String>()),
-            salary: SALARIES.get(2).unwrap().label.clone(),
+            salary: salaries().get(2).unwrap().label.clone(),
             timestamp: Utc::now().timestamp().to_string(),
             icon_src: "office-cl-6.png".to_string(),
         }
     ]);
 
-    let (search_input, set_search_input) = create_signal(cx, "");
+    let (search_input, _set_search_input) = create_signal(cx, "");
 
     view! {
         cx,
@@ -144,7 +113,7 @@ pub fn Dev(cx: Scope) -> impl IntoView {
                                 view!{
                                     cx,
                                     <li class="dev-preview-item">
-                                        <PostPreview post_preview=post_preview />
+                                        <PostPreview post_preview=post_preview is_small=false />
                                     </li>
                                 }
                             }
