@@ -27,3 +27,15 @@
 .preview-timestamp {
   margin-top: 0.5em;
 }
+
+.preview-small-title-font {
+  font-size: 1em;
+}
+
+.preview-small-sub-title-font {
+  font-size: 0.85em;
+}
+
+.preview-small-normal-font {
+  font-size: 0.85em;
+}

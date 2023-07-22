@@ -47,14 +47,15 @@ use std::env;
 use dotenv::dotenv;
 
 pub async fn run() -> std::io::Result<()> {
+    env_logger::init_from_env(env_logger::Env::new().default_filter_or("debug"));
+    
     dotenv().ok();
     let host = env::var("HOST").unwrap();
     let port = env::var("PORT").unwrap().parse::<u16>().unwrap();
     let repo = DbRepo::init().await;
     let app_data = actix_web::web::Data::new(AppState{
         repo
-    });
-    env_logger::init_from_env(env_logger::Env::new().default_filter_or("debug"));
+    });    
 
     HttpServer::new(move || {
         App::new()

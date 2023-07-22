@@ -42,7 +42,7 @@
 }
 
 .normal-font {
-  font-size: 1rem;
+  font-size: 1em;
   font-weight: var(--regular-font);
   color: var(--secondary-font-cl);
 }
@@ -110,6 +110,7 @@ main {
 }
 
 ul {
+  list-style: none;
   list-style-type: none;
   padding: 0;
 }

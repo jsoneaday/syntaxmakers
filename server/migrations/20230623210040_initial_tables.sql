@@ -38,7 +38,7 @@ create table industry (
 );
 
 insert into industry (name) values ('Finance');
-insert into industry (name) values ('Crypto/Blockchain');
+insert into industry (name) values ('Blockchain');
 insert into industry (name) values ('AI/ML');
 insert into industry (name) values ('Games');
 
@@ -60,6 +60,7 @@ create table developer (
     "updated_at" timestamptz(3) not null default current_timestamp,
     "user_name" varchar(50) not null,
     "full_name" varchar(100) not null,
+    "email" varchar(120) not null unique,
     "primary_lang_id" bigserial not null,
 
     constraint fk_primary_lang foreign key(primary_lang_id) references prog_language(id)
