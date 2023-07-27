@@ -39,9 +39,17 @@ pub mod common_test {
     pub mod fixtures;
 }
 pub mod app_state;
+pub mod routes {
+    pub mod base_model;
+    pub mod user_error;
+    pub mod companies {
+        pub mod model;
+        pub mod routes;
+    }
+}
 
 use actix_web::{HttpServer, App, middleware::Logger};
-use common::repository::base::DbRepo;
+use common::repository::base::{DbRepo, Repository};
 use crate::app_state::AppState;
 use std::env;
 use dotenv::dotenv;

@@ -1,14 +1,14 @@
 use async_trait::async_trait;
 use mockall::automock;
-use sqlx::error::Error;
+use sqlx::Error;
 use sqlx::{Postgres, Pool, query_as};
-use crate::common::repository::base::DbRepo;
+use crate::common::repository::base::{DbRepo, ConnGetter};
 use crate::common::repository::{base::EntityId, companies::models::{NewCompany, Company}};
 
 mod internal {
     use super::*;    
 
-    pub async fn create_company(conn: &Pool<Postgres>, new_company: NewCompany) -> Result<EntityId, Error> {
+    pub async fn insert_company(conn: &Pool<Postgres>, new_company: NewCompany) -> Result<EntityId, Error> {
         query_as::<_, EntityId>("insert into company (name) values ($1) returning id")
             .bind(new_company.name)
             .fetch_one(conn).await
@@ -27,26 +27,26 @@ mod internal {
 
 #[automock]
 #[async_trait]
-pub trait CreateCompanyFn {
-    async fn create_company(&self, conn: &Pool<Postgres>, new_company: NewCompany) -> Result<EntityId, Error>;
+pub trait InsertCompanyFn {
+    async fn insert_company(&self, new_company: NewCompany) -> Result<EntityId, Error>;
 }
 
 #[async_trait]
-impl CreateCompanyFn for DbRepo {
-    async fn create_company(&self, conn: &Pool<Postgres>, new_company: NewCompany) -> Result<EntityId, Error> {
-        internal::create_company(conn, new_company).await
+impl InsertCompanyFn for DbRepo {
+    async fn insert_company(&self, new_company: NewCompany) -> Result<EntityId, Error> {
+        internal::insert_company(self.get_conn(), new_company).await
     }
 }
 
 #[automock]
 #[async_trait]
-pub trait GetAllCompaniesFn {
-    async fn get_all_companies(&self, conn: &Pool<Postgres>) -> Result<Vec<Company>, Error>;
+pub trait QueryAllCompaniesFn {
+    async fn query_all_companies(&self) -> Result<Vec<Company>, Error>;
 }
 
 #[async_trait]
-impl GetAllCompaniesFn for DbRepo {
-    async fn get_all_companies(&self, conn: &Pool<Postgres>) -> Result<Vec<Company>, Error> {
-        internal::get_all_companies(conn).await
+impl QueryAllCompaniesFn for DbRepo {
+    async fn query_all_companies(&self) -> Result<Vec<Company>, Error> {
+        internal::get_all_companies(self.get_conn()).await
     }
 }

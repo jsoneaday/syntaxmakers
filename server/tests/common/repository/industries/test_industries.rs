@@ -1,4 +1,4 @@
-use syntaxmakers_server::common::repository::base::{ConnGetter, DbRepo};
+use syntaxmakers_server::common::repository::base::{ConnGetter, Repository, DbRepo};
 use syntaxmakers_server::common::repository::industries::repo::GetAllIndustriesFn;
 use syntaxmakers_server::common_test::fixtures::{INDUSTRY_NAMES, init_fixtures};
 

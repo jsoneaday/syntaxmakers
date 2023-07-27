@@ -2,7 +2,7 @@ use fake::Fake;
 use fake::faker::company::en::CompanyName;
 use fake::faker::internet::en::{Username, SafeEmail};
 use fake::faker::lorem::en::Sentence;
-use syntaxmakers_server::common::repository::base::{ConnGetter, DbRepo};
+use syntaxmakers_server::common::repository::base::{ConnGetter, Repository, DbRepo};
 use syntaxmakers_server::common::repository::companies::models::NewCompany;
 use syntaxmakers_server::common::repository::employers::models::NewEmployer;
 use syntaxmakers_server::common::repository::employers::repo::CreateEmployerFn;
@@ -12,7 +12,7 @@ use syntaxmakers_server::common::repository::industries::repo::GetAllIndustriesF
 use syntaxmakers_server::common::repository::countries::repo::GetAllCountriesFn;
 use syntaxmakers_server::common::repository::languages::repo::GetAllLanguagesFn;
 use syntaxmakers_server::common::repository::salaries::repo::GetAllSalariesFn;
-use syntaxmakers_server::common::repository::companies::repo::CreateCompanyFn;
+use syntaxmakers_server::common::repository::companies::repo::InsertCompanyFn;
 use syntaxmakers_server::common_test::fixtures::{ init_fixtures, get_fake_fullname};
 
 #[tokio::test]
@@ -24,7 +24,7 @@ async fn test_create_job_and_get_back() {
     let full_name = get_fake_fullname();
     let email = SafeEmail().fake::<String>();
     
-    let company_create_result = repo.create_company(conn, NewCompany{ name: CompanyName().fake::<String>() }).await.unwrap();
+    let company_create_result = repo.insert_company(NewCompany{ name: CompanyName().fake::<String>() }).await.unwrap();
     let company_id = company_create_result.id;
     let create_employer_result = repo.create_employer(conn, NewEmployer {
         user_name: user_name.clone(),
@@ -64,7 +64,7 @@ async fn test_create_two_jobs_and_get_back_both() {
     let email = SafeEmail().fake::<String>();
     
     // setup needed data
-    let company_create_result = repo.create_company(conn, NewCompany{ name: CompanyName().fake::<String>() }).await.unwrap();
+    let company_create_result = repo.insert_company(NewCompany{ name: CompanyName().fake::<String>() }).await.unwrap();
     let company_id = company_create_result.id;
     let create_employer_result = repo.create_employer(conn, NewEmployer {
         user_name: user_name.clone(),

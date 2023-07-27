@@ -1,11 +1,11 @@
 use fake::Fake;
 use fake::faker::company::en::CompanyName;
 use fake::faker::internet::en::{Username, SafeEmail};
-use syntaxmakers_server::common::repository::base::{ConnGetter, DbRepo};
+use syntaxmakers_server::common::repository::base::{ConnGetter, Repository, DbRepo};
 use syntaxmakers_server::common::repository::companies::models::NewCompany;
 use syntaxmakers_server::common::repository::employers::models::NewEmployer;
 use syntaxmakers_server::common::repository::employers::repo::{GetEmployerFn, GetAllEmployersFn, CreateEmployerFn};
-use syntaxmakers_server::common::repository::companies::repo::CreateCompanyFn;
+use syntaxmakers_server::common::repository::companies::repo::InsertCompanyFn;
 use syntaxmakers_server::common_test::fixtures::{ init_fixtures, get_fake_fullname};
 
 #[tokio::test]
@@ -17,7 +17,7 @@ async fn test_create_employer_and_get_back() {
     let full_name = get_fake_fullname();
     let email = SafeEmail().fake::<String>();
     
-    let company_create_result = repo.create_company(conn, NewCompany{ name: CompanyName().fake::<String>() }).await.unwrap();
+    let company_create_result = repo.insert_company(NewCompany{ name: CompanyName().fake::<String>() }).await.unwrap();
     let company_id = company_create_result.id;
 
     let create_result = repo.create_employer(conn, NewEmployer {
@@ -41,7 +41,7 @@ async fn test_create_two_employers_and_get_back_both() {
     let repo = DbRepo::init().await;
     let conn = &repo.get_conn();
 
-    let company_create_result = repo.create_company(conn, NewCompany{ name: CompanyName().fake::<String>() }).await.unwrap();
+    let company_create_result = repo.insert_company(NewCompany{ name: CompanyName().fake::<String>() }).await.unwrap();
     let company_id = company_create_result.id;
 
     let create_result1 = repo.create_employer(conn, NewEmployer {

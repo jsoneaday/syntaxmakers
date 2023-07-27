@@ -1,4 +1,4 @@
-use syntaxmakers_server::common::repository::base::{ConnGetter, DbRepo};
+use syntaxmakers_server::common::repository::base::{ConnGetter, Repository, DbRepo};
 use syntaxmakers_server::common::repository::languages::repo::GetAllLanguagesFn;
 use syntaxmakers_server::common_test::fixtures::{LANGUAGE_NAMES, init_fixtures};
 

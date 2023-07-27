@@ -1,6 +1,6 @@
 use fake::Fake;
 use fake::faker::internet::en::{Username, SafeEmail};
-use syntaxmakers_server::common::repository::base::{ConnGetter, DbRepo};
+use syntaxmakers_server::common::repository::base::{ConnGetter, Repository, DbRepo};
 use syntaxmakers_server::common::repository::developers::models::NewDeveloper;
 use syntaxmakers_server::common::repository::developers::repo::{GetDeveloperFn, GetAllDevelopersFn, CreateDeveloperFn};
 use syntaxmakers_server::common_test::fixtures::{ init_fixtures, get_fake_fullname};

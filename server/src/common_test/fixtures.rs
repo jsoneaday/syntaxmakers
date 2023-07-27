@@ -2,7 +2,7 @@ use std::sync::OnceLock;
 use fake::Fake;
 use fake::faker::name::en::{FirstName, LastName};
 use crate::app_state::AppState;
-use crate::common::repository::base::DbRepo;
+use crate::common::repository::base::Repository;
 
 pub static COUNTRY_NAMES: OnceLock<Vec<&'static str>> = OnceLock::new();
 pub static INDUSTRY_NAMES: OnceLock<Vec<&'static str>> = OnceLock::new();
@@ -46,7 +46,7 @@ pub fn init_fixtures() {
     });
 }
 
-pub async fn get_app_data(repo: DbRepo) -> actix_web::web::Data<AppState<DbRepo>> {
+pub async fn get_app_data<T: Repository>(repo: T) -> actix_web::web::Data<AppState<T>> {
     actix_web::web::Data::new(AppState { repo })
 }
 

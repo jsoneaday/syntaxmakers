@@ -2,29 +2,32 @@ use log::info;
 use sqlx::{Pool, Postgres, migrate, FromRow};
 use std::env;
 use dotenv::dotenv;
+use async_trait::async_trait;
 
 #[derive(FromRow)]
 pub struct EntityId {
     pub id: i64
 }
 
-pub trait Repository{}
+#[async_trait]
+pub trait Repository{
+    async fn init() -> Self;
+}
 
 pub struct DbRepo {
     conn: Pool<Postgres>
 }
 
-impl DbRepo {
-    pub async fn init() -> Self {
+#[async_trait]
+impl Repository for DbRepo {
+    async fn init() -> Self {
         DbRepo {
             conn: get_conn().await
         }
     }
 }
 
-impl Repository for DbRepo{}
-
-pub trait ConnGetter {
+pub trait ConnGetter: Repository {
     type Output;
 
     fn get_conn(&self) -> &Self::Output;
