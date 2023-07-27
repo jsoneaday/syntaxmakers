@@ -1,4 +1,5 @@
 use async_trait::async_trait;
+use mockall::automock;
 use sqlx::error::Error;
 use sqlx::{Postgres, Pool, query_as};
 use crate::common::repository::base::DbRepo;
@@ -13,21 +14,18 @@ mod internal {
             .fetch_one(conn).await
     }
 
-    pub async fn get_all_companies(conn: &Pool<Postgres>, page_size: i32, last_offset: i64) -> Result<Vec<Company>, Error> {
+    pub async fn get_all_companies(conn: &Pool<Postgres>) -> Result<Vec<Company>, Error> {
         query_as::<_, Company>(
             r"
             select * from company 
             order by updated_at desc 
-            limit $1
-            offset $2
             "
         )
-        .bind(page_size)
-        .bind(last_offset)
         .fetch_all(conn).await
     }
 }
 
+#[automock]
 #[async_trait]
 pub trait CreateCompanyFn {
     async fn create_company(&self, conn: &Pool<Postgres>, new_company: NewCompany) -> Result<EntityId, Error>;
@@ -40,14 +38,15 @@ impl CreateCompanyFn for DbRepo {
     }
 }
 
+#[automock]
 #[async_trait]
 pub trait GetAllCompaniesFn {
-    async fn get_all_companies(&self, conn: &Pool<Postgres>, page_size: i32, last_offset: i64) -> Result<Vec<Company>, Error>;
+    async fn get_all_companies(&self, conn: &Pool<Postgres>) -> Result<Vec<Company>, Error>;
 }
 
 #[async_trait]
 impl GetAllCompaniesFn for DbRepo {
-    async fn get_all_companies(&self, conn: &Pool<Postgres>, page_size: i32, last_offset: i64) -> Result<Vec<Company>, Error> {
-        internal::get_all_companies(conn, page_size, last_offset).await
+    async fn get_all_companies(&self, conn: &Pool<Postgres>) -> Result<Vec<Company>, Error> {
+        internal::get_all_companies(conn).await
     }
 }

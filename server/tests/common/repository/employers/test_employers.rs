@@ -5,7 +5,7 @@ use syntaxmakers_server::common::repository::base::{ConnGetter, DbRepo};
 use syntaxmakers_server::common::repository::companies::models::NewCompany;
 use syntaxmakers_server::common::repository::employers::models::NewEmployer;
 use syntaxmakers_server::common::repository::employers::repo::{GetEmployerFn, GetAllEmployersFn, CreateEmployerFn};
-use syntaxmakers_server::common::repository::companies::repo::{CreateCompanyFn};
+use syntaxmakers_server::common::repository::companies::repo::CreateCompanyFn;
 use syntaxmakers_server::common_test::fixtures::{ init_fixtures, get_fake_fullname};
 
 #[tokio::test]

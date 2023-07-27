@@ -1,10 +1,8 @@
 use std::sync::OnceLock;
-
 use fake::Fake;
 use fake::faker::name::en::{FirstName, LastName};
-
 use crate::app_state::AppState;
-use crate::common::repository::base::{DbRepo};
+use crate::common::repository::base::DbRepo;
 
 pub static COUNTRY_NAMES: OnceLock<Vec<&'static str>> = OnceLock::new();
 pub static INDUSTRY_NAMES: OnceLock<Vec<&'static str>> = OnceLock::new();
@@ -21,7 +19,7 @@ pub fn init_fixtures() {
     INDUSTRY_NAMES.get_or_init(|| {
         vec![
             "Finance",
-            "Crypto/Blockchain" ,
+            "Blockchain" ,
             "AI/ML",
             "Games"
         ]

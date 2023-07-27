@@ -1,7 +1,7 @@
 use fake::Fake;
 use fake::faker::company::en::CompanyName;
 use fake::faker::internet::en::{Username, SafeEmail};
-use fake::faker::lorem::en::{Sentence};
+use fake::faker::lorem::en::Sentence;
 use syntaxmakers_server::common::repository::base::{ConnGetter, DbRepo};
 use syntaxmakers_server::common::repository::companies::models::NewCompany;
 use syntaxmakers_server::common::repository::employers::models::NewEmployer;
@@ -12,7 +12,7 @@ use syntaxmakers_server::common::repository::industries::repo::GetAllIndustriesF
 use syntaxmakers_server::common::repository::countries::repo::GetAllCountriesFn;
 use syntaxmakers_server::common::repository::languages::repo::GetAllLanguagesFn;
 use syntaxmakers_server::common::repository::salaries::repo::GetAllSalariesFn;
-use syntaxmakers_server::common::repository::companies::repo::{CreateCompanyFn};
+use syntaxmakers_server::common::repository::companies::repo::CreateCompanyFn;
 use syntaxmakers_server::common_test::fixtures::{ init_fixtures, get_fake_fullname};
 
 #[tokio::test]

@@ -8,11 +8,13 @@ pub struct Developer {
     pub updated_at: DateTime<Utc>,
     pub user_name: String,
     pub full_name: String,
+    pub email: String,
     pub primary_lang_id: i64
 }
 
 pub struct NewDeveloper {
     pub user_name: String,
     pub full_name: String,
+    pub email: String,
     pub primary_lang_id: i64
 }
