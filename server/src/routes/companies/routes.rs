@@ -1,6 +1,6 @@
 use actix_web::web::{Json, Data};
 use crate::{common::repository::{companies::{repo::{InsertCompanyFn, QueryAllCompaniesFn}, models::NewCompany}, base::Repository}, app_state::AppState, routes::{base_model::OutputId, user_error::UserError}};
-use super::model::{NewCompanyForRoute, CompanyResponder, CompanyResponders};
+use super::models::{NewCompanyForRoute, CompanyResponder, CompanyResponders};
 
 pub async fn create_company<T: InsertCompanyFn + Repository>(
     app_state: Data<AppState<T>>, 

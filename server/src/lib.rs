@@ -43,11 +43,15 @@ pub mod routes {
     pub mod base_model;
     pub mod user_error;
     pub mod companies {
-        pub mod model;
+        pub mod models;
         pub mod routes;
     }
     pub mod countries {
-        pub mod model;
+        pub mod models;
+        pub mod routes;
+    }
+    pub mod developers {
+        pub mod models;
         pub mod routes;
     }
 }

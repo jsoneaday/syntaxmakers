@@ -1,6 +1,6 @@
 use crate::{common::repository::{countries::repo::QueryAllCountriesFn, base::Repository}, app_state::AppState, routes::user_error::UserError};
 use actix_web::web::Data;
-use super::model::{CountryResponder, CountryResponders};
+use super::models::{CountryResponder, CountryResponders};
 
 pub async fn get_all_countries<T: QueryAllCountriesFn + Repository>(app_state: Data<AppState<T>>) -> Result<CountryResponders, UserError> {
     let result = app_state.repo.query_all_countries().await;
