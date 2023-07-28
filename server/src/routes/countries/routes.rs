@@ -21,19 +21,10 @@ pub async fn get_all_countries<T: QueryAllCountriesFn + Repository>(app_state: D
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{common::repository::{base::Repository, countries::models::Country}, common_test::fixtures::get_app_data};
+    use crate::{common::repository::{base::Repository, countries::models::Country}, common_test::fixtures::{get_app_data, MockDbRepo}};
     use async_trait::async_trait;
     use chrono::Utc;
     use fake::{faker::address::en::CountryName, Fake};
-
-    struct MockDbRepo;
-
-    #[async_trait]
-    impl Repository for MockDbRepo {
-        async fn init() -> Self {
-            MockDbRepo
-        }
-    }
 
     #[async_trait]
     impl QueryAllCountriesFn for MockDbRepo {

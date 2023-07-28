@@ -38,20 +38,14 @@ mod tests {
     use sqlx::Error as SqlxError;
     use chrono::Utc;
     use super::*;
-    use crate::{common::repository::{companies::{repo::{InsertCompanyFn, QueryAllCompaniesFn}, models::Company}, base::EntityId}, common_test::fixtures::get_app_data};
+    use crate::{
+        common::repository::{companies::{repo::{InsertCompanyFn, QueryAllCompaniesFn}, models::Company}, base::EntityId}, 
+        common_test::fixtures::{get_app_data, MockDbRepo}
+    };
     use async_trait::async_trait;
     use fake::{faker::company::en::CompanyName, Fake};
 
     const ID: i64 = 1;
-
-    struct MockDbRepo;
-
-    #[async_trait]
-    impl Repository for MockDbRepo{
-        async fn init() -> Self {
-            MockDbRepo
-        }
-    }
 
     #[async_trait]
     impl InsertCompanyFn for MockDbRepo {
