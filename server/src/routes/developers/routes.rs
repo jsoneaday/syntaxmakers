@@ -70,3 +70,54 @@ pub async fn get_all_developers<T: QueryAllDevelopersFn + Repository>(
         Err(e) => Err(e.into())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::{common_test::fixtures::{MockDbRepo, get_app_data, get_fake_fullname}, common::repository::{base::EntityId, developers::models::Developer}};
+    use async_trait::async_trait;
+    use chrono::Utc;
+    use fake::{faker::internet::en::{Username, FreeEmail}, Fake};
+    use super::*;
+
+    #[async_trait]
+    impl InsertDeveloperFn for MockDbRepo {
+        async fn insert_developer(&self, _: NewDeveloper) -> Result<EntityId, sqlx::Error> {
+            Ok(EntityId { id: 1 })
+        }
+    }
+
+    #[async_trait]
+    impl QueryDeveloperFn for MockDbRepo {
+        async fn query_developer(&self, _: i64) -> Result<Option<Developer>, sqlx::Error> {
+            Ok(Some(Developer { 
+                id: 1, 
+                user_name: Username().fake::<String>(), 
+                created_at: Utc::now(), 
+                updated_at: Utc::now(), 
+                full_name: get_fake_fullname(), 
+                email: FreeEmail().fake::<String>(), 
+                primary_lang_id: 1 
+            }))
+        }
+    }
+
+    #[tokio::test]
+    async fn test_insert_developer_route() {
+        let repo = MockDbRepo::init().await;
+        let app_data = get_app_data(repo).await;
+
+        let result = app_data.repo.insert_developer(NewDeveloper { user_name: Username().fake::<String>(), full_name: get_fake_fullname(), email: FreeEmail().fake::<String>(), primary_lang_id: 1 }).await.unwrap();
+
+        assert!(result.id == 1);
+    }
+
+    #[tokio::test]
+    async fn test_get_developer_route() {
+        let repo = MockDbRepo::init().await;
+        let app_data = get_app_data(repo).await;
+
+        let result = get_developer(app_data, Path::from(1)).await.unwrap();
+
+        assert!(result.unwrap().id == 1);
+    }
+}

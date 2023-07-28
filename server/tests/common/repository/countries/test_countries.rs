@@ -1,4 +1,4 @@
-use syntaxmakers_server::common::repository::base::{DbRepo, Repository, ConnGetter};
+use syntaxmakers_server::common::repository::base::{DbRepo, Repository};
 use syntaxmakers_server::common::repository::countries::repo::QueryAllCountriesFn;
 use syntaxmakers_server::common_test::fixtures::{COUNTRY_NAMES, init_fixtures};
 

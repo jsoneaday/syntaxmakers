@@ -3,7 +3,7 @@ use fake::Fake;
 use fake::faker::name::en::{FirstName, LastName};
 use crate::app_state::AppState;
 use crate::common::repository::base::Repository;
-
+use async_trait::async_trait;
 pub static COUNTRY_NAMES: OnceLock<Vec<&'static str>> = OnceLock::new();
 pub static INDUSTRY_NAMES: OnceLock<Vec<&'static str>> = OnceLock::new();
 pub static LANGUAGE_NAMES: OnceLock<Vec<&'static str>> = OnceLock::new();
@@ -52,4 +52,13 @@ pub async fn get_app_data<T: Repository>(repo: T) -> actix_web::web::Data<AppSta
 
 pub fn get_fake_fullname() -> String {
     format!("{} {}", FirstName().fake::<String>(), LastName().fake::<String>())
+}
+
+pub struct MockDbRepo;
+
+#[async_trait]
+impl Repository for MockDbRepo {
+    async fn init() -> Self {
+        MockDbRepo
+    }
 }
