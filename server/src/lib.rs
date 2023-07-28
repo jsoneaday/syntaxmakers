@@ -46,6 +46,10 @@ pub mod routes {
         pub mod model;
         pub mod routes;
     }
+    pub mod countries {
+        pub mod model;
+        pub mod routes;
+    }
 }
 
 use actix_web::{HttpServer, App, middleware::Logger};

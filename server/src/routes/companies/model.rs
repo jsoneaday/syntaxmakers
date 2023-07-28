@@ -4,7 +4,7 @@ use chrono::{Utc, DateTime};
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Debug)]
-pub struct NewCompany {
+pub struct NewCompanyForRoute {
     pub name: String
 }
 

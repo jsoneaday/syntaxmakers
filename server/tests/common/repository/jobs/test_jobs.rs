@@ -9,7 +9,7 @@ use syntaxmakers_server::common::repository::employers::repo::CreateEmployerFn;
 use syntaxmakers_server::common::repository::jobs::models::NewJob;
 use syntaxmakers_server::common::repository::jobs::repo::{GetJobFn, GetAllJobsFn, CreateJobFn};
 use syntaxmakers_server::common::repository::industries::repo::GetAllIndustriesFn;
-use syntaxmakers_server::common::repository::countries::repo::GetAllCountriesFn;
+use syntaxmakers_server::common::repository::countries::repo::QueryAllCountriesFn;
 use syntaxmakers_server::common::repository::languages::repo::GetAllLanguagesFn;
 use syntaxmakers_server::common::repository::salaries::repo::GetAllSalariesFn;
 use syntaxmakers_server::common::repository::companies::repo::InsertCompanyFn;
@@ -32,7 +32,7 @@ async fn test_create_job_and_get_back() {
         email: email.clone(),
         company_id
     }).await.unwrap();
-    let countries_result = repo.get_all_countrie(conn).await.unwrap();
+    let countries_result = repo.query_all_countries().await.unwrap();
     let languages_result = repo.get_all_languages(conn).await.unwrap();
     let industry_result = repo.get_all_industries(conn).await.unwrap();
     let salary_result = repo.get_all_salaries(conn).await.unwrap();
@@ -72,7 +72,7 @@ async fn test_create_two_jobs_and_get_back_both() {
         email: email.clone(),
         company_id
     }).await.unwrap();
-    let countries_result = repo.get_all_countrie(conn).await.unwrap();
+    let countries_result = repo.query_all_countries().await.unwrap();
     let languages_result = repo.get_all_languages(conn).await.unwrap();
     let industry_result = repo.get_all_industries(conn).await.unwrap();
     let salary_result = repo.get_all_salaries(conn).await.unwrap();

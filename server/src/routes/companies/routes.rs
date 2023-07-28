@@ -1,6 +1,6 @@
 use actix_web::web::{Json, Data};
 use crate::{common::repository::{companies::{repo::{InsertCompanyFn, QueryAllCompaniesFn}, models::NewCompany}, base::Repository}, app_state::AppState, routes::{base_model::OutputId, user_error::UserError}};
-use super::model::{NewCompany as NewCompanyForRoute, CompanyResponder, CompanyResponders};
+use super::model::{NewCompanyForRoute, CompanyResponder, CompanyResponders};
 
 pub async fn create_company<T: InsertCompanyFn + Repository>(
     app_state: Data<AppState<T>>, 
@@ -72,9 +72,9 @@ mod tests {
     #[tokio::test]
     async fn test_create_company_route() {
         let repo = MockDbRepo::init().await;
-        let app_state = get_app_data(repo).await;
+        let app_data = get_app_data(repo).await;
 
-        let output = create_company(app_state, Json(NewCompanyForRoute{ name: CompanyName().fake::<String>()})).await.unwrap();
+        let output = create_company(app_data, Json(NewCompanyForRoute{ name: CompanyName().fake::<String>()})).await.unwrap();
         
         assert!(output.id == ID);
     }
@@ -82,9 +82,9 @@ mod tests {
     #[tokio::test]
     async fn test_get_all_companies_route() {
         let repo = MockDbRepo::init().await;
-        let app_state = get_app_data(repo).await;
+        let app_data = get_app_data(repo).await;
 
-        let result = get_all_companies(app_state).await.unwrap();
+        let result = get_all_companies(app_data).await.unwrap();
 
         assert!(result.0.get(0).unwrap().id == ID);
     }
