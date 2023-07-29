@@ -7,7 +7,7 @@ use syntaxmakers_server::common::repository::companies::models::NewCompany;
 use syntaxmakers_server::common::repository::employers::models::NewEmployer;
 use syntaxmakers_server::common::repository::employers::repo::InsertEmployerFn;
 use syntaxmakers_server::common::repository::jobs::models::NewJob;
-use syntaxmakers_server::common::repository::jobs::repo::{GetJobFn, GetAllJobsFn, CreateJobFn};
+use syntaxmakers_server::common::repository::jobs::repo::{QueryJobFn, QueryAllJobsFn, InsertJobFn};
 use syntaxmakers_server::common::repository::industries::repo::QueryAllIndustriesFn;
 use syntaxmakers_server::common::repository::countries::repo::QueryAllCountriesFn;
 use syntaxmakers_server::common::repository::languages::repo::GetAllLanguagesFn;
@@ -37,7 +37,7 @@ async fn test_create_job_and_get_back() {
     let industry_result = repo.query_all_industries().await.unwrap();
     let salary_result = repo.get_all_salaries(conn).await.unwrap();
 
-    let create_result = repo.create_job(conn, NewJob {
+    let create_result = repo.insert_job(NewJob {
         employer_id: create_employer_result.id,
         title: Sentence(5..6).fake::<String>(),
         description: Sentence(5..6).fake::<String>(),
@@ -48,7 +48,7 @@ async fn test_create_job_and_get_back() {
         industry_id: industry_result.first().unwrap().id,
         salary_id: salary_result.first().unwrap().id
     }).await.unwrap();
-    let get_result = repo.get_job(conn, create_result.id).await.unwrap().unwrap();
+    let get_result = repo.query_job(create_result.id).await.unwrap().unwrap();
     
     assert!(get_result.clone().id == create_result.id);
 }
@@ -78,7 +78,7 @@ async fn test_create_two_jobs_and_get_back_both() {
     let salary_result = repo.get_all_salaries(conn).await.unwrap();
 
     // create two jobs
-    let create_result1 = repo.create_job(conn, NewJob {
+    let create_result1 = repo.insert_job(NewJob {
         employer_id: create_employer_result.id,
         title: Sentence(5..6).fake::<String>(),
         description: Sentence(5..6).fake::<String>(),
@@ -89,7 +89,7 @@ async fn test_create_two_jobs_and_get_back_both() {
         industry_id: industry_result.first().unwrap().id,
         salary_id: salary_result.first().unwrap().id
     }).await.unwrap();
-    let create_result2 = repo.create_job(conn, NewJob {
+    let create_result2 = repo.insert_job(NewJob {
         employer_id: create_employer_result.id,
         title: Sentence(5..6).fake::<String>(),
         description: Sentence(5..6).fake::<String>(),
@@ -102,7 +102,7 @@ async fn test_create_two_jobs_and_get_back_both() {
     }).await.unwrap();
 
     // get all jobs and find two created
-    let get_result = repo.get_all_jobs(conn, 10, 0).await.unwrap();
+    let get_result = repo.query_all_jobs(10, 0).await.unwrap();
     
     assert!(get_result.iter().find(|job| { job.id == create_result1.id }).is_some());
     assert!(get_result.iter().find(|job| { job.id == create_result2.id }).is_some());

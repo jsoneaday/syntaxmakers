@@ -1,5 +1,6 @@
 use std::sync::OnceLock;
 use fake::Fake;
+use fake::faker::lorem::en::Sentence;
 use fake::faker::name::en::{FirstName, LastName};
 use crate::app_state::AppState;
 use crate::common::repository::base::Repository;
@@ -52,6 +53,14 @@ pub async fn get_app_data<T: Repository>(repo: T) -> actix_web::web::Data<AppSta
 
 pub fn get_fake_fullname() -> String {
     format!("{} {}", FirstName().fake::<String>(), LastName().fake::<String>())
+}
+
+pub fn get_fake_title() -> String {
+    Sentence(5..6).fake::<String>()
+}
+
+pub fn get_fake_desc() -> String {
+    Sentence(9..10).fake::<String>()
 }
 
 pub struct MockDbRepo;
