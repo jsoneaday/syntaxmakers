@@ -2,7 +2,7 @@ use fake::Fake;
 use fake::faker::company::en::CompanyName;
 use fake::faker::internet::en::{Username, SafeEmail};
 use fake::faker::lorem::en::Sentence;
-use syntaxmakers_server::common::repository::base::{ConnGetter, Repository, DbRepo};
+use syntaxmakers_server::common::repository::base::{Repository, DbRepo};
 use syntaxmakers_server::common::repository::companies::models::NewCompany;
 use syntaxmakers_server::common::repository::employers::models::NewEmployer;
 use syntaxmakers_server::common::repository::employers::repo::InsertEmployerFn;
@@ -11,7 +11,7 @@ use syntaxmakers_server::common::repository::jobs::repo::{QueryJobFn, QueryAllJo
 use syntaxmakers_server::common::repository::industries::repo::QueryAllIndustriesFn;
 use syntaxmakers_server::common::repository::countries::repo::QueryAllCountriesFn;
 use syntaxmakers_server::common::repository::languages::repo::QueryAllLanguagesFn;
-use syntaxmakers_server::common::repository::salaries::repo::GetAllSalariesFn;
+use syntaxmakers_server::common::repository::salaries::repo::QueryAllSalariesFn;
 use syntaxmakers_server::common::repository::companies::repo::InsertCompanyFn;
 use syntaxmakers_server::common_test::fixtures::{ init_fixtures, get_fake_fullname};
 
@@ -19,7 +19,6 @@ use syntaxmakers_server::common_test::fixtures::{ init_fixtures, get_fake_fullna
 async fn test_create_job_and_get_back() {
     init_fixtures();
     let repo = DbRepo::init().await;
-    let conn = &repo.get_conn();
     let user_name = Username().fake::<String>();
     let full_name = get_fake_fullname();
     let email = SafeEmail().fake::<String>();
@@ -35,7 +34,7 @@ async fn test_create_job_and_get_back() {
     let countries_result = repo.query_all_countries().await.unwrap();
     let languages_result = repo.query_all_languages().await.unwrap();
     let industry_result = repo.query_all_industries().await.unwrap();
-    let salary_result = repo.get_all_salaries(conn).await.unwrap();
+    let salary_result = repo.query_all_salaries().await.unwrap();
 
     let create_result = repo.insert_job(NewJob {
         employer_id: create_employer_result.id,
@@ -58,7 +57,6 @@ async fn test_create_job_and_get_back() {
 async fn test_create_two_jobs_and_get_back_both() {
     init_fixtures();
     let repo = DbRepo::init().await;
-    let conn = &repo.get_conn();
     let user_name = Username().fake::<String>();
     let full_name = get_fake_fullname();
     let email = SafeEmail().fake::<String>();
@@ -75,7 +73,7 @@ async fn test_create_two_jobs_and_get_back_both() {
     let countries_result = repo.query_all_countries().await.unwrap();
     let languages_result = repo.query_all_languages().await.unwrap();
     let industry_result = repo.query_all_industries().await.unwrap();
-    let salary_result = repo.get_all_salaries(conn).await.unwrap();
+    let salary_result = repo.query_all_salaries().await.unwrap();
 
     // create two jobs
     let create_result1 = repo.insert_job(NewJob {
