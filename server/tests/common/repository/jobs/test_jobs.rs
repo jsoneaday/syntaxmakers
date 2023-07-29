@@ -10,7 +10,7 @@ use syntaxmakers_server::common::repository::jobs::models::NewJob;
 use syntaxmakers_server::common::repository::jobs::repo::{QueryJobFn, QueryAllJobsFn, InsertJobFn};
 use syntaxmakers_server::common::repository::industries::repo::QueryAllIndustriesFn;
 use syntaxmakers_server::common::repository::countries::repo::QueryAllCountriesFn;
-use syntaxmakers_server::common::repository::languages::repo::GetAllLanguagesFn;
+use syntaxmakers_server::common::repository::languages::repo::QueryAllLanguagesFn;
 use syntaxmakers_server::common::repository::salaries::repo::GetAllSalariesFn;
 use syntaxmakers_server::common::repository::companies::repo::InsertCompanyFn;
 use syntaxmakers_server::common_test::fixtures::{ init_fixtures, get_fake_fullname};
@@ -33,7 +33,7 @@ async fn test_create_job_and_get_back() {
         company_id
     }).await.unwrap();
     let countries_result = repo.query_all_countries().await.unwrap();
-    let languages_result = repo.get_all_languages(conn).await.unwrap();
+    let languages_result = repo.query_all_languages().await.unwrap();
     let industry_result = repo.query_all_industries().await.unwrap();
     let salary_result = repo.get_all_salaries(conn).await.unwrap();
 
@@ -73,7 +73,7 @@ async fn test_create_two_jobs_and_get_back_both() {
         company_id
     }).await.unwrap();
     let countries_result = repo.query_all_countries().await.unwrap();
-    let languages_result = repo.get_all_languages(conn).await.unwrap();
+    let languages_result = repo.query_all_languages().await.unwrap();
     let industry_result = repo.query_all_industries().await.unwrap();
     let salary_result = repo.get_all_salaries(conn).await.unwrap();
 

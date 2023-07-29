@@ -1,5 +1,5 @@
 use actix_web::web::{Data, Json, Path};
-use crate::{common::repository::{jobs::{repo::{InsertJobFn, QueryJobFn, QueryAllJobsFn}, models::{NewJob, Job}}, base::Repository}, app_state::AppState, routes::{base_model::{OutputId, PagingModel}, user_error::UserError}};
+use crate::{common::repository::{jobs::{repo::{InsertJobFn, QueryJobFn, QueryAllJobsFn}, models::NewJob}, base::Repository}, app_state::AppState, routes::{base_model::{OutputId, PagingModel}, user_error::UserError}};
 use super::models::{NewJobForRoute, JobResponders, JobResponder};
 
 #[allow(unused)]
@@ -77,6 +77,7 @@ async fn get_all_jobs<T: QueryAllJobsFn + Repository>(app_data: Data<AppState<T>
 
 #[cfg(test)]
 mod tests {
+    use crate::common::repository::jobs::models::Job;
     use super::*;
     use async_trait::async_trait;
     use chrono::Utc;
