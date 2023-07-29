@@ -5,7 +5,7 @@ use fake::faker::lorem::en::Sentence;
 use syntaxmakers_server::common::repository::base::{ConnGetter, Repository, DbRepo};
 use syntaxmakers_server::common::repository::companies::models::NewCompany;
 use syntaxmakers_server::common::repository::employers::models::NewEmployer;
-use syntaxmakers_server::common::repository::employers::repo::CreateEmployerFn;
+use syntaxmakers_server::common::repository::employers::repo::InsertEmployerFn;
 use syntaxmakers_server::common::repository::jobs::models::NewJob;
 use syntaxmakers_server::common::repository::jobs::repo::{GetJobFn, GetAllJobsFn, CreateJobFn};
 use syntaxmakers_server::common::repository::industries::repo::GetAllIndustriesFn;
@@ -26,7 +26,7 @@ async fn test_create_job_and_get_back() {
     
     let company_create_result = repo.insert_company(NewCompany{ name: CompanyName().fake::<String>() }).await.unwrap();
     let company_id = company_create_result.id;
-    let create_employer_result = repo.create_employer(conn, NewEmployer {
+    let create_employer_result = repo.insert_employer(NewEmployer {
         user_name: user_name.clone(),
         full_name: full_name.clone(),
         email: email.clone(),
@@ -66,7 +66,7 @@ async fn test_create_two_jobs_and_get_back_both() {
     // setup needed data
     let company_create_result = repo.insert_company(NewCompany{ name: CompanyName().fake::<String>() }).await.unwrap();
     let company_id = company_create_result.id;
-    let create_employer_result = repo.create_employer(conn, NewEmployer {
+    let create_employer_result = repo.insert_employer(NewEmployer {
         user_name: user_name.clone(),
         full_name: full_name.clone(),
         email: email.clone(),

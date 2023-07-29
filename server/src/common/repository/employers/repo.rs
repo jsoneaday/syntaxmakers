@@ -1,14 +1,14 @@
 use async_trait::async_trait;
 use sqlx::error::Error;
 use sqlx::{Postgres, Pool, query_as};
-use crate::common::repository::base::DbRepo;
+use crate::common::repository::base::{DbRepo, ConnGetter};
 use crate::common::repository::employers::models::{NewEmployer, Employer};
 use crate::common::repository::base::EntityId;
 
 mod internal {
     use super::*;    
 
-    pub async fn create_employer(conn: &Pool<Postgres>, new_employer: NewEmployer) -> Result<EntityId, Error> {
+    pub async fn insert_employer(conn: &Pool<Postgres>, new_employer: NewEmployer) -> Result<EntityId, Error> {
         let result = query_as::<_, EntityId>("insert into employer (user_name, full_name, email, company_id) values ($1, $2, $3, $4) returning id")
             .bind(new_employer.user_name)
             .bind(new_employer.full_name)
@@ -26,13 +26,13 @@ mod internal {
         }
     }
 
-    pub async fn get_employer(conn: &Pool<Postgres>, id: i64) -> Result<Option<Employer>, Error> {
+    pub async fn query_employer(conn: &Pool<Postgres>, id: i64) -> Result<Option<Employer>, Error> {
         query_as::<_, Employer>("select * from employer where id = $1")
             .bind(id)
             .fetch_optional(conn).await
     }
 
-    pub async fn get_all_employers(conn: &Pool<Postgres>, page_size: i32, last_offset: i64) -> Result<Vec<Employer>, Error> {
+    pub async fn query_all_employers(conn: &Pool<Postgres>, page_size: i32, last_offset: i64) -> Result<Vec<Employer>, Error> {
         query_as::<_, Employer>(
             r"
             select * from employer
@@ -48,37 +48,37 @@ mod internal {
 }
 
 #[async_trait]
-pub trait CreateEmployerFn {
-    async fn create_employer(&self, conn: &Pool<Postgres>, new_developer: NewEmployer) -> Result<EntityId, Error>;
+pub trait InsertEmployerFn {
+    async fn insert_employer(&self, new_employer: NewEmployer) -> Result<EntityId, Error>;
 }
 
 #[async_trait]
-impl CreateEmployerFn for DbRepo {
-    async fn create_employer(&self, conn: &Pool<Postgres>, new_developer: NewEmployer) -> Result<EntityId, Error> {
-        internal::create_employer(conn, new_developer).await
+impl InsertEmployerFn for DbRepo {
+    async fn insert_employer(&self, new_employer: NewEmployer) -> Result<EntityId, Error> {
+        internal::insert_employer(self.get_conn(), new_employer).await
     }
 }
 
 #[async_trait]
-pub trait GetEmployerFn {
-    async fn get_employer(&self, conn: &Pool<Postgres>, id: i64) -> Result<Option<Employer>, Error>;
+pub trait QueryEmployerFn {
+    async fn query_employer(&self, id: i64) -> Result<Option<Employer>, Error>;
 }
 
 #[async_trait]
-impl GetEmployerFn for DbRepo {
-    async fn get_employer(&self, conn: &Pool<Postgres>, id: i64) -> Result<Option<Employer>, Error> {
-        internal::get_employer(conn, id).await
+impl QueryEmployerFn for DbRepo {
+    async fn query_employer(&self, id: i64) -> Result<Option<Employer>, Error> {
+        internal::query_employer(self.get_conn(), id).await
     }
 }
 
 #[async_trait]
-pub trait GetAllEmployersFn {
-    async fn get_all_employers(&self, conn: &Pool<Postgres>, page_size: i32, last_offset: i64) -> Result<Vec<Employer>, Error>;
+pub trait QueryAllEmployersFn {
+    async fn query_all_employers(&self, page_size: i32, last_offset: i64) -> Result<Vec<Employer>, Error>;
 }
 
 #[async_trait]
-impl GetAllEmployersFn for DbRepo {
-    async fn get_all_employers(&self, conn: &Pool<Postgres>, page_size: i32, last_offset: i64) -> Result<Vec<Employer>, Error> {
-        internal::get_all_employers(conn, page_size, last_offset).await
+impl QueryAllEmployersFn for DbRepo {
+    async fn query_all_employers(&self, page_size: i32, last_offset: i64) -> Result<Vec<Employer>, Error> {
+        internal::query_all_employers(self.get_conn(), page_size, last_offset).await
     }
 }

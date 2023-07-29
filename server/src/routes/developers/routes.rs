@@ -2,9 +2,9 @@ use actix_web::web::{Data, Json, Path};
 use crate::{
     app_state::AppState, 
     common::repository::{developers::{repo::{InsertDeveloperFn, QueryDeveloperFn, QueryAllDevelopersFn}, models::NewDeveloper}, base::Repository}, 
-    routes::{base_model::OutputId, user_error::UserError}
+    routes::{base_model::{OutputId, PagingModel}, user_error::UserError}
 };
-use super::models::{NewDeveloperForRoute, DeveloperResponder, QueryAllDevelopers, DeveloperResponders};
+use super::models::{NewDeveloperForRoute, DeveloperResponder, DeveloperResponders};
 
 pub async fn create_developer<T: InsertDeveloperFn + Repository>(
     app_data: Data<AppState<T>>, 
@@ -48,7 +48,7 @@ pub async fn get_developer<T: QueryDeveloperFn + Repository>(
 
 pub async fn get_all_developers<T: QueryAllDevelopersFn + Repository>(
     app_data: Data<AppState<T>>, 
-    json: Json<QueryAllDevelopers>
+    json: Json<PagingModel>
 ) -> Result<DeveloperResponders, UserError> {
     let result = app_data.repo.query_all_developers(json.page_size, json.last_offset).await;
 
