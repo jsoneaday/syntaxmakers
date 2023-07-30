@@ -66,6 +66,10 @@ pub mod routes {
         pub mod models;
         pub mod routes;
     }
+    pub mod languages {
+        pub mod models;
+        pub mod routes;
+    }
 }
 
 use actix_web::{HttpServer, App, middleware::Logger};
