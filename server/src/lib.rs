@@ -70,6 +70,10 @@ pub mod routes {
         pub mod models;
         pub mod routes;
     }
+    pub mod salaries {
+        pub mod models;
+        pub mod routes;
+    }
 }
 
 use actix_web::{HttpServer, App, middleware::Logger};
