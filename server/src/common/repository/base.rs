@@ -22,7 +22,7 @@ pub struct DbRepo {
 impl Repository for DbRepo {
     async fn init() -> Self {
         DbRepo {
-            conn: get_conn().await
+            conn: get_conn_pool().await
         }
     }
 }
@@ -41,7 +41,7 @@ impl ConnGetter for DbRepo {
     }
 }
 
-async fn get_conn() -> Pool<Postgres> {
+async fn get_conn_pool() -> Pool<Postgres> {
     dotenv().ok();
     let postgres_host = env::var("POSTGRES_HOST").unwrap();
     let postgres_port = env::var("POSTGRES_PORT").unwrap().parse::<u16>().unwrap();

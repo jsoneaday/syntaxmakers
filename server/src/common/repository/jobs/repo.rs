@@ -60,13 +60,13 @@ mod internal {
 
 #[async_trait]
 pub trait InsertJobFn {
-    async fn insert_job(&self, new_developer: NewJob) -> Result<EntityId, Error>;
+    async fn insert_job(&self, new_job: NewJob) -> Result<EntityId, Error>;
 }
 
 #[async_trait]
 impl InsertJobFn for DbRepo {
-    async fn insert_job(&self, new_developer: NewJob) -> Result<EntityId, Error> {
-        internal::insert_job(self.get_conn(), new_developer).await
+    async fn insert_job(&self, new_job: NewJob) -> Result<EntityId, Error> {
+        internal::insert_job(self.get_conn(), new_job).await
     }
 }
 

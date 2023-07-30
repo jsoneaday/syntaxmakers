@@ -3,7 +3,8 @@ use crate::{common::repository::{jobs::{repo::{InsertJobFn, QueryJobFn, QueryAll
 use super::models::{NewJobForRoute, JobResponders, JobResponder};
 
 #[allow(unused)]
-async fn create_job<T: InsertJobFn + Repository>(app_data: Data<AppState<T>>, json: Json<NewJobForRoute>) -> Result<OutputId, UserError> {
+async fn create_job<T: InsertJobFn + Repository>(app_data: Data<AppState<T>>, json: Json<NewJobForRoute>)
+ -> Result<OutputId, UserError> {
     let result = app_data.repo.insert_job(NewJob {
         employer_id: json.employer_id,
         title: json.title.to_owned(),

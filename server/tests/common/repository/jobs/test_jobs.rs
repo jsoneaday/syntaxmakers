@@ -49,7 +49,7 @@ async fn test_create_job_and_get_back() {
     }).await.unwrap();
     let get_result = repo.query_job(create_result.id).await.unwrap().unwrap();
     
-    assert!(get_result.clone().id == create_result.id);
+    assert!(get_result.id == create_result.id);
 }
 
 
