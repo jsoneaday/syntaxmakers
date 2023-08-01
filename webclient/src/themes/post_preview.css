@@ -1,0 +1,41 @@
+.post-preview-container {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: flex-start;
+}
+
+.preview-icon {
+  width: 3.25em;
+  height: 3.25em;
+  border: 1px solid var(--primary-cl);
+  border-radius: 50%;
+}
+
+.preview-content {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  margin-left: 1em;
+}
+
+.preview-salary {
+  color: var(--primary-cl);
+}
+
+.preview-timestamp {
+  margin-top: 0.5em;
+}
+
+.preview-small-title-font {
+  font-size: 1em;
+}
+
+.preview-small-sub-title-font {
+  font-size: 0.85em;
+}
+
+.preview-small-normal-font {
+  font-size: 0.85em;
+}
