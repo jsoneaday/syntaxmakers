@@ -24,10 +24,7 @@
   align-items: flex-start;
   justify-content: flex-start;
   width: 100%;
-  padding-top: 1.5em;
-  padding-right: 2em;
-  padding-left: 2em;
-  margin-bottom: 1.5em;
+  padding: 2em;
 }
 
 .dev-header {

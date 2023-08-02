@@ -1,4 +1,4 @@
-import "../../theme/content.css";
+import "../../theme/developer.css";
 import LeftMenu from "../components/LeftMenu";
 import PromotedJobs from "../components/PromotedJobs";
 import JobPost from "../models/JobPost";
@@ -16,14 +16,14 @@ export default function Developer() {
     <div className="dev-container">
       <LeftMenu />
       <div className="dev-main">
-        <div className="dev-top header-container">
+        <div className="dev-top">
           <div className="title-font dev-header">Developer job search</div>
           <div className="sub-title-font dev-sub-header">
             Enter your preferences to find your next job
           </div>
           <div className="search-header">
             <input className="search-input" type="text" value={searchInput} />
-            <button className="primary-btn">"search"</button>
+            <button className="primary-btn">search</button>
           </div>
         </div>
         <div className="info-band">
