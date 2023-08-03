@@ -23,7 +23,8 @@ pub async fn get_all_companies<T: QueryAllCompaniesFn + Repository>(app_state: D
                 CompanyResponder {
                     id: company.id,
                     updated_at: company.updated_at,
-                    name: company.name.to_owned()
+                    name: company.name.to_owned(),
+                    logo: company.logo.clone()
                 }
             }).collect::<Vec<CompanyResponder>>();
 
@@ -58,7 +59,7 @@ mod tests {
     impl QueryAllCompaniesFn for MockDbRepo {
         async fn query_all_companies(&self) -> Result<Vec<Company>, SqlxError> {
             Ok(vec![
-                Company { id: ID, created_at: Utc::now(), updated_at: Utc::now(), name: CompanyName().fake::<String>() }
+                Company { id: ID, created_at: Utc::now(), updated_at: Utc::now(), name: CompanyName().fake::<String>(), logo: None }
             ])
         }
     }

@@ -1,1 +1,1 @@
-psql -h localhost -p 5432 -d chatter -U chatter
+psql -h localhost -p 5432 -d syntaxmakers -U syntaxmakers
