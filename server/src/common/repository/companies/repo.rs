@@ -9,8 +9,17 @@ mod internal {
     use super::*;    
 
     pub async fn insert_company(conn: &Pool<Postgres>, new_company: NewCompany) -> Result<EntityId, Error> {
-        query_as::<_, EntityId>("insert into company (name) values ($1) returning id")
+        query_as::<_, EntityId>(
+            r"
+            insert into company 
+            (name, logo, headquarters_country_id) 
+            values 
+            ($1, $2, $3) 
+            returning id
+            ")
             .bind(new_company.name)
+            .bind(new_company.logo)
+            .bind(new_company.headquarters_country_id)
             .fetch_one(conn).await
     }
 

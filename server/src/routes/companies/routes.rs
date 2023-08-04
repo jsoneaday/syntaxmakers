@@ -6,7 +6,7 @@ pub async fn create_company<T: InsertCompanyFn + Repository>(
     app_state: Data<AppState<T>>, 
     json: Json<NewCompanyForRoute>
 ) -> Result<OutputId, UserError> {
-    let result = app_state.repo.insert_company(NewCompany { name: json.name.clone() }).await;
+    let result = app_state.repo.insert_company(NewCompany { name: json.name.clone(), logo: json.logo.clone(), headquarters_country_id: json.headquarters_country_id }).await;
 
     match result {
         Ok(entity) => Ok(OutputId { id: entity.id }),
@@ -24,7 +24,8 @@ pub async fn get_all_companies<T: QueryAllCompaniesFn + Repository>(app_state: D
                     id: company.id,
                     updated_at: company.updated_at,
                     name: company.name.to_owned(),
-                    logo: company.logo.clone()
+                    logo: company.logo.clone(),
+                    headquarters_country_id: company.headquarters_country_id
                 }
             }).collect::<Vec<CompanyResponder>>();
 
@@ -59,7 +60,7 @@ mod tests {
     impl QueryAllCompaniesFn for MockDbRepo {
         async fn query_all_companies(&self) -> Result<Vec<Company>, SqlxError> {
             Ok(vec![
-                Company { id: ID, created_at: Utc::now(), updated_at: Utc::now(), name: CompanyName().fake::<String>(), logo: None }
+                Company { id: ID, created_at: Utc::now(), updated_at: Utc::now(), name: CompanyName().fake::<String>(), logo: None, headquarters_country_id: 1 }
             ])
         }
     }
@@ -69,7 +70,7 @@ mod tests {
         let repo = MockDbRepo::init().await;
         let app_data = get_app_data(repo).await;
 
-        let output = create_company(app_data, Json(NewCompanyForRoute{ name: CompanyName().fake::<String>()})).await.unwrap();
+        let output = create_company(app_data, Json(NewCompanyForRoute{ name: CompanyName().fake::<String>(), logo: None, headquarters_country_id: 1 })).await.unwrap();
         
         assert!(output.id == ID);
     }

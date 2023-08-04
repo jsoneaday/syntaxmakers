@@ -18,7 +18,8 @@ async fn test_create_developer_and_get_back() {
         user_name: user_name.clone(),
         full_name: full_name.clone(),
         email: email.clone(),
-        primary_lang_id
+        primary_lang_id,
+        secondary_lang_id: None
     }).await.unwrap();
     let get_result = repo.query_developer(create_result.id).await.unwrap().unwrap();
     
@@ -38,13 +39,15 @@ async fn test_create_two_developers_and_get_all() {
         user_name: Username().fake::<String>(),
         full_name: get_fake_fullname(),
         email: SafeEmail().fake::<String>(),
-        primary_lang_id: 1
+        primary_lang_id: 1,
+        secondary_lang_id: None
     }).await.unwrap();
     let create_result2 = repo.insert_developer(NewDeveloper {
         user_name: Username().fake::<String>(),
         full_name: get_fake_fullname(),
         email: SafeEmail().fake::<String>(),
-        primary_lang_id: 1
+        primary_lang_id: 1,
+        secondary_lang_id: None
     }).await.unwrap();
 
     let get_all_result = repo.query_all_developers(10, 0).await.unwrap();

@@ -16,7 +16,7 @@ async fn test_create_employer_and_get_back() {
     let full_name = get_fake_fullname();
     let email = SafeEmail().fake::<String>();
     
-    let company_create_result = repo.insert_company(NewCompany{ name: CompanyName().fake::<String>() }).await.unwrap();
+    let company_create_result = repo.insert_company(NewCompany{ name: CompanyName().fake::<String>(), logo: None, headquarters_country_id: 1 }).await.unwrap();
     let company_id = company_create_result.id;
 
     let create_result = repo.insert_employer(NewEmployer {
@@ -39,7 +39,7 @@ async fn test_create_two_employers_and_get_back_both() {
     init_fixtures();
     let repo = DbRepo::init().await;
 
-    let company_create_result = repo.insert_company(NewCompany{ name: CompanyName().fake::<String>() }).await.unwrap();
+    let company_create_result = repo.insert_company(NewCompany{ name: CompanyName().fake::<String>(), logo: None, headquarters_country_id: 1 }).await.unwrap();
     let company_id = company_create_result.id;
 
     let create_result1 = repo.insert_employer(NewEmployer {

@@ -1,6 +1,7 @@
 pub mod common {
     pub mod repository {
         pub mod base;
+        pub mod error;
         pub mod countries {
             pub mod models;
             pub mod repo;

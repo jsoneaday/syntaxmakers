@@ -7,10 +7,13 @@ pub struct Company {
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
     pub name: String,
-    pub logo: Option<Vec<u8>>
+    pub logo: Option<Vec<u8>>,
+    pub headquarters_country_id: i64
 }
 
 #[derive(Debug)]
 pub struct NewCompany {
-    pub name: String
+    pub name: String,
+    pub logo: Option<Vec<u8>>,
+    pub headquarters_country_id: i64
 }

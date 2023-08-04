@@ -8,7 +8,8 @@ pub struct NewDeveloperForRoute {
     pub user_name: String,
     pub full_name: String,
     pub email: String,
-    pub primary_lang_id: i64
+    pub primary_lang_id: i64,
+    pub secondary_lang_id: Option<i64>
 }
 
 #[derive(Serialize)]
@@ -18,7 +19,8 @@ pub struct DeveloperResponder {
     pub user_name: String,
     pub full_name: String,
     pub email: String,
-    pub primary_lang_id: i64
+    pub primary_lang_id: i64,
+    pub secondary_lang_id: Option<i64>
 }
 
 impl Responder for DeveloperResponder {

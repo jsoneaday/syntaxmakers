@@ -9,7 +9,6 @@ use syntaxmakers_server::common::repository::employers::repo::InsertEmployerFn;
 use syntaxmakers_server::common::repository::jobs::models::NewJob;
 use syntaxmakers_server::common::repository::jobs::repo::{QueryJobFn, QueryAllJobsFn, InsertJobFn};
 use syntaxmakers_server::common::repository::industries::repo::QueryAllIndustriesFn;
-use syntaxmakers_server::common::repository::countries::repo::QueryAllCountriesFn;
 use syntaxmakers_server::common::repository::languages::repo::QueryAllLanguagesFn;
 use syntaxmakers_server::common::repository::salaries::repo::QueryAllSalariesFn;
 use syntaxmakers_server::common::repository::companies::repo::InsertCompanyFn;
@@ -23,7 +22,7 @@ async fn test_create_job_and_get_back() {
     let full_name = get_fake_fullname();
     let email = SafeEmail().fake::<String>();
     
-    let company_create_result = repo.insert_company(NewCompany{ name: CompanyName().fake::<String>() }).await.unwrap();
+    let company_create_result = repo.insert_company(NewCompany{ name: CompanyName().fake::<String>(), logo: None, headquarters_country_id: 1 }).await.unwrap();
     let company_id = company_create_result.id;
     let create_employer_result = repo.insert_employer(NewEmployer {
         user_name: user_name.clone(),
@@ -31,7 +30,6 @@ async fn test_create_job_and_get_back() {
         email: email.clone(),
         company_id
     }).await.unwrap();
-    let countries_result = repo.query_all_countries().await.unwrap();
     let languages_result = repo.query_all_languages().await.unwrap();
     let industry_result = repo.query_all_industries().await.unwrap();
     let salary_result = repo.query_all_salaries().await.unwrap();
@@ -41,7 +39,7 @@ async fn test_create_job_and_get_back() {
         title: Sentence(5..6).fake::<String>(),
         description: Sentence(5..6).fake::<String>(),
         is_remote: true,
-        headquarters_country_id: Some(countries_result.first().unwrap().id),
+        country_id: None,
         primary_lang_id: languages_result.first().unwrap().id,
         secondary_lang_id: Some(languages_result.first().unwrap().id),
         industry_id: industry_result.first().unwrap().id,
@@ -62,7 +60,7 @@ async fn test_create_two_jobs_and_get_back_both() {
     let email = SafeEmail().fake::<String>();
     
     // setup needed data
-    let company_create_result = repo.insert_company(NewCompany{ name: CompanyName().fake::<String>() }).await.unwrap();
+    let company_create_result = repo.insert_company(NewCompany{ name: CompanyName().fake::<String>(), logo: None, headquarters_country_id: 1 }).await.unwrap();
     let company_id = company_create_result.id;
     let create_employer_result = repo.insert_employer(NewEmployer {
         user_name: user_name.clone(),
@@ -70,7 +68,6 @@ async fn test_create_two_jobs_and_get_back_both() {
         email: email.clone(),
         company_id
     }).await.unwrap();
-    let countries_result = repo.query_all_countries().await.unwrap();
     let languages_result = repo.query_all_languages().await.unwrap();
     let industry_result = repo.query_all_industries().await.unwrap();
     let salary_result = repo.query_all_salaries().await.unwrap();
@@ -81,7 +78,7 @@ async fn test_create_two_jobs_and_get_back_both() {
         title: Sentence(5..6).fake::<String>(),
         description: Sentence(5..6).fake::<String>(),
         is_remote: true,
-        headquarters_country_id: Some(countries_result.first().unwrap().id),
+        country_id: None,
         primary_lang_id: languages_result.first().unwrap().id,
         secondary_lang_id: Some(languages_result.first().unwrap().id),
         industry_id: industry_result.first().unwrap().id,
@@ -92,7 +89,7 @@ async fn test_create_two_jobs_and_get_back_both() {
         title: Sentence(5..6).fake::<String>(),
         description: Sentence(5..6).fake::<String>(),
         is_remote: true,
-        headquarters_country_id: Some(countries_result.first().unwrap().id),
+        country_id: None,
         primary_lang_id: languages_result.first().unwrap().id,
         secondary_lang_id: Some(languages_result.first().unwrap().id),
         industry_id: industry_result.first().unwrap().id,

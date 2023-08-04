@@ -10,25 +10,63 @@ mod internal {
     use super::*;    
 
     pub async fn insert_developer(conn: &Pool<Postgres>, new_developer: NewDeveloper) -> Result<EntityId, Error> {
-        let result = query_as::<_, EntityId>("insert into developer (user_name, full_name, email, primary_lang_id) values ($1, $2, $3, $4) returning id")
+        let mut tx = conn.begin().await.unwrap();
+        
+        let insert_result = query_as::<_, EntityId>(
+            r"
+            insert into developer 
+            (user_name, full_name, email, primary_lang_id) 
+            values 
+            ($1, $2, $3, $4)
+            returning id
+            ")
             .bind(new_developer.user_name)
             .bind(new_developer.full_name)
             .bind(new_developer.email)
             .bind(new_developer.primary_lang_id)
-            .fetch_one(conn)
+            .fetch_one(&mut *tx)
             .await;
 
-        match result {
+        let inserted_entity = match insert_result {
             Ok(row) => Ok(row),
             Err(e) => {
                 println!("create developer error: {:?}", e);
                 Err(e)
             }
+        };
+        if let Err(e) = inserted_entity {
+            return Err(e);
         }
+
+        let dev_id = inserted_entity.unwrap().id;
+        if let Some(secondary_lang_id) = new_developer.secondary_lang_id {
+            _ = query_as::<_, EntityId>(
+                r"
+                insert into developers_secondary_langs
+                (developer_id, secondary_lang_id)
+                values
+                ($1, $2)
+                returning id
+                "
+            )
+            .bind(dev_id)
+            .bind(secondary_lang_id)
+            .fetch_one(&mut *tx)
+            .await;
+        }
+
+        _ = tx.commit().await;
+
+        Ok(EntityId { id: dev_id })
     }
 
     pub async fn query_developer(conn: &Pool<Postgres>, id: i64) -> Result<Option<Developer>, Error> {
-        query_as::<_, Developer>("select * from developer where id = $1")
+        query_as::<_, Developer>(
+            r"
+            select d.id, d.created_at, d.updated_at, d.user_name, d.full_name, d.email, d.primary_lang_id, dsl.secondary_lang_id
+            from developer d left join developers_secondary_langs dsl on d.id = dsl.developer_id
+            where d.id = $1
+            ")
             .bind(id)
             .fetch_optional(conn).await
     }
@@ -36,7 +74,8 @@ mod internal {
     pub async fn query_all_developers(conn: &Pool<Postgres>, page_size: i32, last_offset: i64) -> Result<Vec<Developer>, Error> {
         query_as::<_, Developer>(
             r"
-            select * from developer
+            select d.id, d.created_at, d.updated_at, d.user_name, d.full_name, d.email, d.primary_lang_id, dsl.secondary_lang_id
+            from developer d left join developers_secondary_langs dsl on d.id = dsl.developer_id
             order by updated_at desc
             limit $1
             offset $2

@@ -41,7 +41,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_get_all_companies_route() {
+    async fn test_get_all_countries_route() {
         let repo = MockDbRepo::init().await;
         let app_data = get_app_data(repo).await;
 

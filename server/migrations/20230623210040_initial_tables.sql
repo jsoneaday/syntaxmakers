@@ -1,13 +1,25 @@
 -- Add migration script here
+create table country (
+    "id" bigserial primary key,
+    "created_at" timestamptz(3) not null default current_timestamp,
+    "updated_at" timestamptz(3) not null default current_timestamp,
+    "name" varchar(100) not null
+);
+
+insert into country (name) values ('United States');
+
 create table company (
     "id" bigserial primary key,
     "created_at" timestamptz(3) not null default current_timestamp,
     "updated_at" timestamptz(3) not null default current_timestamp,
     "name" varchar(120) not null,
-    "logo" bytea
+    "logo" bytea,
+    "headquarters_country_id" bigserial not null,
+
+    constraint fk_headquarters_country_id foreign key(headquarters_country_id) references country(id)
 );
 
-insert into company (name, logo) values (
+insert into company (name, logo, headquarters_country_id) values (
     'Fantastic Stuff Inc',
     decode('89504e470d0a1a0a0000000d4948445200000040000000400806000000aa' ||
         '6971de0000000473424954080808087c0864880000000970485973000001' ||
@@ -165,10 +177,11 @@ insert into company (name, logo) values (
         '4ce9c833a523238aa1db8aa148d1dba6184391a6ad4b336a88482883605b' ||
         'a1e1db133123ffbd6dd5bf9cb35a25c0ff038e25e3b4d6210ac200000000' ||
         '49454e44ae426082', 'hex'
-        )
+        ),
+        1
 );
 
-insert into company (name, logo) values (
+insert into company (name, logo, headquarters_country_id) values (
     'Amazing and Co',
     decode('89504e470d0a1a0a0000000d4948445200000040000000400806000000aa' ||
         '6971de0000000473424954080808087c0864880000000970485973000001' ||
@@ -326,10 +339,11 @@ insert into company (name, logo) values (
         '4ce9c833a523238aa1db8aa148d1dba6184391a6ad4b336a88482883605b' ||
         'a1e1db133123ffbd6dd5bf9cb35a25c0ff038e25e3b4d6210ac200000000' ||
         '49454e44ae426082', 'hex'
-        )
+        ),
+        1
 );
 
-insert into company (name, logo) values (
+insert into company (name, logo, headquarters_country_id) values (
     'Super Duper Corp',
     decode('89504e470d0a1a0a0000000d4948445200000040000000400806000000aa' ||
         '6971de0000000473424954080808087c0864880000000970485973000001' ||
@@ -487,10 +501,11 @@ insert into company (name, logo) values (
         '4ce9c833a523238aa1db8aa148d1dba6184391a6ad4b336a88482883605b' ||
         'a1e1db133123ffbd6dd5bf9cb35a25c0ff038e25e3b4d6210ac200000000' ||
         '49454e44ae426082', 'hex'
-        )
+        ),
+        1
 );
 
-insert into company (name, logo) values (
+insert into company (name, logo, headquarters_country_id) values (
     'Acme Corp',
     decode('89504e470d0a1a0a0000000d4948445200000040000000400806000000aa' ||
         '6971de0000000473424954080808087c0864880000000970485973000001' ||
@@ -648,17 +663,9 @@ insert into company (name, logo) values (
         '4ce9c833a523238aa1db8aa148d1dba6184391a6ad4b336a88482883605b' ||
         'a1e1db133123ffbd6dd5bf9cb35a25c0ff038e25e3b4d6210ac200000000' ||
         '49454e44ae426082', 'hex'
-        )
+        ),
+        1
 );
-
-create table country (
-    "id" bigserial primary key,
-    "created_at" timestamptz(3) not null default current_timestamp,
-    "updated_at" timestamptz(3) not null default current_timestamp,
-    "name" varchar(100) not null
-);
-
-insert into country (name) values ('United States');
 
 create table prog_language (
     "id" bigserial primary key,
@@ -711,6 +718,24 @@ create table developer (
     constraint fk_primary_lang foreign key(primary_lang_id) references prog_language(id)
 );
 
+insert into developer 
+(user_name, full_name, email, primary_lang_id) 
+values 
+('jon', 'John Jones', 'jon@jon.com', 1);
+
+create table developers_secondary_langs (
+    "id" bigserial primary key,
+    "created_at" timestamptz(3) not null default current_timestamp,
+    "updated_at" timestamptz(3) not null default current_timestamp,
+    "developer_id" bigserial not null,
+    "secondary_lang_id" bigserial not null
+);
+
+insert into developers_secondary_langs 
+(developer_id, secondary_lang_id)
+values
+(1, 2);
+
 create table employer (
     "id" bigserial primary key,
     "created_at" timestamptz(3) not null default current_timestamp,
@@ -723,24 +748,116 @@ create table employer (
     constraint fk_company foreign key(company_id) references company(id)
 );
 
+insert into employer (user_name, full_name, email, company_id) values ('jim', 'Jim Tim', 'jon@FantasticStuff.com', 1);
+insert into employer (user_name, full_name, email, company_id) values ('linda', 'Linda Shin', 'lshin@AmazingAndCo.com', 1);
+insert into employer (user_name, full_name, email, company_id) values ('dave', 'David Waver', 'jon@SuperDuperCorp.com', 1);
+insert into employer (user_name, full_name, email, company_id) values ('dawn', 'Dawn Happ', 'jon@acmecorp.com', 1);
+
 create table job (
     "id" bigserial primary key,
     "created_at" timestamptz(3) not null default current_timestamp,
     "updated_at" timestamptz(3) not null default current_timestamp,
     "employer_id" bigserial not null,
     "title" varchar(60) not null,
-    "description" varchar(600) not null,
+    "description" varchar(2500) not null,
     "is_remote" boolean not null,
-    "headquarters_country_id" bigserial not null,
     "primary_lang_id" bigserial not null,
     "secondary_lang_id" bigserial,
     "industry_id" bigserial not null,
     "salary_id" bigserial not null,
 
     constraint fk_employer foreign key(employer_id) references employer(id),
-    constraint fk_headquarters_country foreign key(headquarters_country_id) references country(id),
     constraint fk_primary_lang foreign key(primary_lang_id) references prog_language(id),
     constraint fk_secondary_lang foreign key(secondary_lang_id) references prog_language(id),
     constraint fk_industry foreign key(industry_id) references industry(id),
     constraint fk_salary foreign key(salary_id) references salary(id)
+);
+
+create table jobs_countries (
+    "id" bigserial primary key,
+    "created_at" timestamptz(3) not null default current_timestamp,
+    "updated_at" timestamptz(3) not null default current_timestamp,
+    "job_id" bigserial not null,
+    "country_id" bigserial not null,
+
+    constraint fk_job foreign key(job_id) references job(id),
+    constraint fk_country foreign key(country_id) references country(id)
+);
+
+insert into job 
+(employer_id, title, description, is_remote, primary_lang_id, secondary_lang_id, industry_id, salary_id)
+values 
+(
+    1, 
+    'Senior Blockchain Developer', 
+    'quis vel eros donec ac odio tempor orci dapibus ultrices in iaculis nunc sed augue lacus viverra vitae congue eu consequat ac felis donec et odio pellentesque diam volutpat commodo sed egestas egestas fringilla phasellus faucibus scelerisque eleifend donec pretium vulputate sapien nec sagittis aliquam malesuada bibendum arcu vitae elementum curabitur vitae nunc sed velit dignissim sodales ut eu sem integer vitae justo eget magna fermentum iaculis eu non diam phasellus vestibulum lorem sed risus ultricies tristique nulla aliquet enim tortor at auctor urna nunc id cursus metus aliquam eleifend mi in nulla posuere sollicitudin aliquam ultrices sagittis orci a scelerisque purus semper eget duis at tellus at urna condimentum mattis pellentesque id nibh tortor id aliquet lectus proin nibh nisl condimentum id venenatis a condimentum vitae sapien pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas sed tempus urna et pharetra pharetra massa massa ultricies
+quis vel eros donec ac odio tempor orci dapibus ultrices in iaculis nunc sed augue lacus viverra vitae congue eu consequat ac felis donec et odio pellentesque diam volutpat commodo sed egestas egestas fringilla phasellus faucibus scelerisque eleifend donec pretium vulputate sapien nec sagittis aliquam malesuada bibendum arcu vitae elementum curabitur vitae nunc sed velit dignissim sodales ut eu sem integer vitae justo eget magna fermentum iaculis eu non diam phasellus vestibulum lorem sed risus ultricies tristique nulla aliquet enim tortor at auctor urna nunc id cursus metus aliquam eleifend mi in nulla posuere sollicitudin aliquam ultrices sagittis orci a scelerisque purus semper eget duis at tellus at urna condimentum mattis pellentesque id nibh tortor id aliquet lectus proin nibh nisl condimentum id venenatis a condimentum vitae sapien pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas sed tempus urna et pharetra pharetra massa massa ultricies', 
+    false, 
+    1, 
+    2, 
+    1, 
+    3
+);
+insert into jobs_countries (job_id, country_id) values (1, 1);
+
+insert into job 
+(employer_id, title, description, is_remote, primary_lang_id, secondary_lang_id, industry_id, salary_id)
+values 
+(
+    1, 
+    'Senior Runt Developer', 
+    'quis vel eros donec ac odio tempor orci dapibus ultrices in iaculis nunc sed augue lacus viverra vitae congue eu consequat ac felis donec et odio pellentesque diam volutpat commodo sed egestas egestas fringilla phasellus faucibus scelerisque eleifend donec pretium vulputate sapien nec sagittis aliquam malesuada bibendum arcu vitae elementum curabitur vitae nunc sed velit dignissim sodales ut eu sem integer vitae justo eget magna fermentum iaculis eu non diam phasellus vestibulum lorem sed risus ultricies tristique nulla aliquet enim tortor at auctor urna nunc id cursus metus aliquam eleifend mi in nulla posuere sollicitudin aliquam ultrices sagittis orci a scelerisque purus semper eget duis at tellus at urna condimentum mattis pellentesque id nibh tortor id aliquet lectus proin nibh nisl condimentum id venenatis a condimentum vitae sapien pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas sed tempus urna et pharetra pharetra massa massa ultricies
+quis vel eros donec ac odio tempor orci dapibus ultrices in iaculis nunc sed augue lacus viverra vitae congue eu consequat ac felis donec et odio pellentesque diam volutpat commodo sed egestas egestas fringilla phasellus faucibus scelerisque eleifend donec pretium vulputate sapien nec sagittis aliquam malesuada bibendum arcu vitae elementum curabitur vitae nunc sed velit dignissim sodales ut eu sem integer vitae justo eget magna fermentum iaculis eu non diam phasellus vestibulum lorem sed risus ultricies tristique nulla aliquet enim tortor at auctor urna nunc id cursus metus aliquam eleifend mi in nulla posuere sollicitudin aliquam ultrices sagittis orci a scelerisque purus semper eget duis at tellus at urna condimentum mattis pellentesque id nibh tortor id aliquet lectus proin nibh nisl condimentum id venenatis a condimentum vitae sapien pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas sed tempus urna et pharetra pharetra massa massa ultricies', 
+    false, 
+    1, 
+    2, 
+    1, 
+    3
+);
+insert into jobs_countries (job_id, country_id) values (2, 1);
+
+insert into job 
+(employer_id, title, description, is_remote, primary_lang_id, secondary_lang_id, industry_id, salary_id)
+values 
+(
+    1, 
+    'Staff Runt Developer', 
+    'quis vel eros donec ac odio tempor orci dapibus ultrices in iaculis nunc sed augue lacus viverra vitae congue eu consequat ac felis donec et odio pellentesque diam volutpat commodo sed egestas egestas fringilla phasellus faucibus scelerisque eleifend donec pretium vulputate sapien nec sagittis aliquam malesuada bibendum arcu vitae elementum curabitur vitae nunc sed velit dignissim sodales ut eu sem integer vitae justo eget magna fermentum iaculis eu non diam phasellus vestibulum lorem sed risus ultricies tristique nulla aliquet enim tortor at auctor urna nunc id cursus metus aliquam eleifend mi in nulla posuere sollicitudin aliquam ultrices sagittis orci a scelerisque purus semper eget duis at tellus at urna condimentum mattis pellentesque id nibh tortor id aliquet lectus proin nibh nisl condimentum id venenatis a condimentum vitae sapien pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas sed tempus urna et pharetra pharetra massa massa ultricies
+quis vel eros donec ac odio tempor orci dapibus ultrices in iaculis nunc sed augue lacus viverra vitae congue eu consequat ac felis donec et odio pellentesque diam volutpat commodo sed egestas egestas fringilla phasellus faucibus scelerisque eleifend donec pretium vulputate sapien nec sagittis aliquam malesuada bibendum arcu vitae elementum curabitur vitae nunc sed velit dignissim sodales ut eu sem integer vitae justo eget magna fermentum iaculis eu non diam phasellus vestibulum lorem sed risus ultricies tristique nulla aliquet enim tortor at auctor urna nunc id cursus metus aliquam eleifend mi in nulla posuere sollicitudin aliquam ultrices sagittis orci a scelerisque purus semper eget duis at tellus at urna condimentum mattis pellentesque id nibh tortor id aliquet lectus proin nibh nisl condimentum id venenatis a condimentum vitae sapien pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas sed tempus urna et pharetra pharetra massa massa ultricies', 
+    false, 
+    1, 
+    2, 
+    1, 
+    3
+);
+insert into jobs_countries (job_id, country_id) values (3, 1);
+
+insert into job 
+(employer_id, title, description, is_remote, primary_lang_id, secondary_lang_id, industry_id, salary_id)
+values 
+(
+    1, 
+    'Staff Go Developer', 
+    'quis vel eros donec ac odio tempor orci dapibus ultrices in iaculis nunc sed augue lacus viverra vitae congue eu consequat ac felis donec et odio pellentesque diam volutpat commodo sed egestas egestas fringilla phasellus faucibus scelerisque eleifend donec pretium vulputate sapien nec sagittis aliquam malesuada bibendum arcu vitae elementum curabitur vitae nunc sed velit dignissim sodales ut eu sem integer vitae justo eget magna fermentum iaculis eu non diam phasellus vestibulum lorem sed risus ultricies tristique nulla aliquet enim tortor at auctor urna nunc id cursus metus aliquam eleifend mi in nulla posuere sollicitudin aliquam ultrices sagittis orci a scelerisque purus semper eget duis at tellus at urna condimentum mattis pellentesque id nibh tortor id aliquet lectus proin nibh nisl condimentum id venenatis a condimentum vitae sapien pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas sed tempus urna et pharetra pharetra massa massa ultricies
+quis vel eros donec ac odio tempor orci dapibus ultrices in iaculis nunc sed augue lacus viverra vitae congue eu consequat ac felis donec et odio pellentesque diam volutpat commodo sed egestas egestas fringilla phasellus faucibus scelerisque eleifend donec pretium vulputate sapien nec sagittis aliquam malesuada bibendum arcu vitae elementum curabitur vitae nunc sed velit dignissim sodales ut eu sem integer vitae justo eget magna fermentum iaculis eu non diam phasellus vestibulum lorem sed risus ultricies tristique nulla aliquet enim tortor at auctor urna nunc id cursus metus aliquam eleifend mi in nulla posuere sollicitudin aliquam ultrices sagittis orci a scelerisque purus semper eget duis at tellus at urna condimentum mattis pellentesque id nibh tortor id aliquet lectus proin nibh nisl condimentum id venenatis a condimentum vitae sapien pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas sed tempus urna et pharetra pharetra massa massa ultricies', 
+    true, 
+    2, 
+    1, 
+    1, 
+    3
+);
+
+insert into job 
+(employer_id, title, description, is_remote, primary_lang_id, secondary_lang_id, industry_id, salary_id)
+values 
+(
+    1, 
+    'Staff Distributed Services Developer', 
+    'quis vel eros donec ac odio tempor orci dapibus ultrices in iaculis nunc sed augue lacus viverra vitae congue eu consequat ac felis donec et odio pellentesque diam volutpat commodo sed egestas egestas fringilla phasellus faucibus scelerisque eleifend donec pretium vulputate sapien nec sagittis aliquam malesuada bibendum arcu vitae elementum curabitur vitae nunc sed velit dignissim sodales ut eu sem integer vitae justo eget magna fermentum iaculis eu non diam phasellus vestibulum lorem sed risus ultricies tristique nulla aliquet enim tortor at auctor urna nunc id cursus metus aliquam eleifend mi in nulla posuere sollicitudin aliquam ultrices sagittis orci a scelerisque purus semper eget duis at tellus at urna condimentum mattis pellentesque id nibh tortor id aliquet lectus proin nibh nisl condimentum id venenatis a condimentum vitae sapien pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas sed tempus urna et pharetra pharetra massa massa ultricies
+quis vel eros donec ac odio tempor orci dapibus ultrices in iaculis nunc sed augue lacus viverra vitae congue eu consequat ac felis donec et odio pellentesque diam volutpat commodo sed egestas egestas fringilla phasellus faucibus scelerisque eleifend donec pretium vulputate sapien nec sagittis aliquam malesuada bibendum arcu vitae elementum curabitur vitae nunc sed velit dignissim sodales ut eu sem integer vitae justo eget magna fermentum iaculis eu non diam phasellus vestibulum lorem sed risus ultricies tristique nulla aliquet enim tortor at auctor urna nunc id cursus metus aliquam eleifend mi in nulla posuere sollicitudin aliquam ultrices sagittis orci a scelerisque purus semper eget duis at tellus at urna condimentum mattis pellentesque id nibh tortor id aliquet lectus proin nibh nisl condimentum id venenatis a condimentum vitae sapien pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas sed tempus urna et pharetra pharetra massa massa ultricies', 
+    true, 
+    1, 
+    2, 
+    1, 
+    3
 );

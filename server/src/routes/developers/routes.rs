@@ -14,7 +14,8 @@ pub async fn create_developer<T: InsertDeveloperFn + Repository>(
         user_name: json.user_name.to_owned(),
         full_name: json.full_name.to_owned(),
         email: json.email.to_owned(),
-        primary_lang_id: json.primary_lang_id
+        primary_lang_id: json.primary_lang_id,
+        secondary_lang_id: json.secondary_lang_id
     }).await;
 
     match result {
@@ -38,7 +39,8 @@ pub async fn get_developer<T: QueryDeveloperFn + Repository>(
                 user_name: dev.user_name.to_owned(), 
                 full_name: dev.full_name.to_owned(), 
                 email: dev.email.to_owned(), 
-                primary_lang_id: dev.primary_lang_id
+                primary_lang_id: dev.primary_lang_id,
+                secondary_lang_id: dev.secondary_lang_id
             })),
             None => Ok(None)
         },
@@ -61,7 +63,8 @@ pub async fn get_all_developers<T: QueryAllDevelopersFn + Repository>(
                     user_name: dev.user_name.to_owned(), 
                     full_name: dev.full_name.to_owned(), 
                     email: dev.email.to_owned(), 
-                    primary_lang_id: dev.primary_lang_id
+                    primary_lang_id: dev.primary_lang_id,
+                    secondary_lang_id: dev.secondary_lang_id
                 }
             })
             .collect::<Vec<DeveloperResponder>>();
@@ -96,8 +99,27 @@ mod tests {
                 updated_at: Utc::now(), 
                 full_name: get_fake_fullname(), 
                 email: FreeEmail().fake::<String>(), 
-                primary_lang_id: 1 
+                primary_lang_id: 1,
+                secondary_lang_id: Some(2)
             }))
+        }
+    }
+
+    #[async_trait]
+    impl QueryAllDevelopersFn for MockDbRepo {
+        async fn query_all_developers(&self, _: i32, _: i64) -> Result<Vec<Developer>, sqlx::Error> {
+            Ok(vec![
+                Developer { 
+                    id: 1, 
+                    user_name: Username().fake::<String>(), 
+                    created_at: Utc::now(), 
+                    updated_at: Utc::now(), 
+                    full_name: get_fake_fullname(), 
+                    email: FreeEmail().fake::<String>(), 
+                    primary_lang_id: 1,
+                    secondary_lang_id: Some(2)
+                }
+            ])
         }
     }
 
@@ -106,7 +128,7 @@ mod tests {
         let repo = MockDbRepo::init().await;
         let app_data = get_app_data(repo).await;
 
-        let result = app_data.repo.insert_developer(NewDeveloper { user_name: Username().fake::<String>(), full_name: get_fake_fullname(), email: FreeEmail().fake::<String>(), primary_lang_id: 1 }).await.unwrap();
+        let result = app_data.repo.insert_developer(NewDeveloper { user_name: Username().fake::<String>(), full_name: get_fake_fullname(), email: FreeEmail().fake::<String>(), primary_lang_id: 1, secondary_lang_id: Some(2) }).await.unwrap();
 
         assert!(result.id == 1);
     }
@@ -119,5 +141,15 @@ mod tests {
         let result = get_developer(app_data, Path::from(1)).await.unwrap();
 
         assert!(result.unwrap().id == 1);
+    }
+
+    #[tokio::test]
+    async fn test_get_all_developers_route() {
+        let repo = MockDbRepo::init().await;
+        let app_data = get_app_data(repo).await;
+
+        let result = get_all_developers(app_data, Json(PagingModel { page_size: 10, last_offset: 1 })).await.unwrap();
+
+        assert!(result.0.get(0).unwrap().id == 1);
     }
 }

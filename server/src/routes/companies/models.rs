@@ -5,7 +5,9 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Debug)]
 pub struct NewCompanyForRoute {
-    pub name: String
+    pub name: String,
+    pub logo: Option<Vec<u8>>,
+    pub headquarters_country_id: i64
 }
 
 #[derive(Serialize)]
@@ -13,7 +15,8 @@ pub struct CompanyResponder {
     pub id: i64,
     pub updated_at: DateTime<Utc>,
     pub name: String,
-    pub logo: Option<Vec<u8>>
+    pub logo: Option<Vec<u8>>,
+    pub headquarters_country_id: i64
 }
 
 impl Responder for CompanyResponder {
