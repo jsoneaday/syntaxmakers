@@ -6,7 +6,7 @@ use crate::common::repository::jobs::models::{NewJob, Job};
 use crate::common::repository::base::EntityId;
 
 mod internal {
-    use crate::common::repository::error::SqlxError;
+    use crate::common::repository::{error::SqlxError, developers::models::Developer};
     use super::*;    
 
     pub async fn insert_job(conn: &Pool<Postgres>, new_job: NewJob) -> Result<EntityId, Error> {
@@ -120,6 +120,55 @@ mod internal {
             .bind(last_offset)
             .fetch_all(conn).await
     }
+
+    pub async fn query_jobs_by_dev_profile(conn: &Pool<Postgres>, dev_id: i64, page_size: i32, last_offset: i64) -> Result<Vec<Job>, Error> {
+        let developer_result = query_as::<_, Developer>(
+            r"
+            select d.id, d.created_at, d.updated_at, d.user_name, d.full_name, d.email, d.primary_lang_id, dsl.secondary_lang_id
+            from developer d left join developers_secondary_langs dsl on d.id = dsl.developer_id
+            where d.id = $1
+            "
+        )
+        .bind(dev_id)
+        .fetch_one(conn)
+        .await;
+
+        #[allow(unused)]
+        let mut developer: Option<Developer> = None;
+        if let Ok(dev) = developer_result {
+            developer = Some(dev);
+        } else {
+            return Err(developer_result.err().unwrap());
+        }
+        let developer = developer.unwrap();
+
+        query_as::<_, Job>(
+            r"
+            select 
+                j.id, 
+                j.created_at, 
+                j.updated_at, 
+                j.employer_id, 
+                j.title, 
+                j.description, 
+                j.is_remote, 
+                jc.country_id,
+                j.primary_lang_id,
+                j.secondary_lang_id,
+                j.industry_id,
+                j.salary_id
+            from job j left join jobs_countries jc on j.id = jc.job_id 
+            where j.primary_lang_id = $1 or j.secondary_lang_id = $2
+            order by updated_at desc 
+            limit $3
+            offset $4
+            ")
+            .bind(developer.primary_lang_id)
+            .bind(developer.secondary_lang_id)
+            .bind(page_size)
+            .bind(last_offset)
+            .fetch_all(conn).await
+    }
 }
 
 #[async_trait]
@@ -155,5 +204,17 @@ pub trait QueryAllJobsFn {
 impl QueryAllJobsFn for DbRepo {
     async fn query_all_jobs(&self, page_size: i32, last_offset: i64) -> Result<Vec<Job>, Error> {
         internal::query_all_jobs(self.get_conn(), page_size, last_offset).await
+    }
+}
+
+#[async_trait]
+pub trait QueryJobsByDevProfile {
+    async fn query_jobs_by_dev_profile(&self, dev_id: i64, page_size: i32, last_offset: i64) -> Result<Vec<Job>, Error>;
+}
+
+#[async_trait]
+impl QueryJobsByDevProfile for DbRepo {
+    async fn query_jobs_by_dev_profile(&self, dev_id: i64, page_size: i32, last_offset: i64) -> Result<Vec<Job>, Error> {
+        internal::query_jobs_by_dev_profile(self.get_conn(), dev_id, page_size, last_offset).await
     }
 }
