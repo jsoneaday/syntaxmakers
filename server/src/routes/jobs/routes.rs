@@ -1,5 +1,5 @@
 use actix_web::web::{Data, Json, Path};
-use crate::{common::repository::{jobs::{repo::{InsertJobFn, QueryJobFn, QueryAllJobsFn}, models::NewJob}, base::Repository}, app_state::AppState, routes::{base_model::{OutputId, PagingModel}, user_error::UserError}};
+use crate::{common::repository::{jobs::{repo::{InsertJobFn, QueryJobFn, QueryAllJobsFn, QueryJobsByDevProfile}, models::NewJob}, base::Repository}, app_state::AppState, routes::{base_model::{OutputId, PagingModel, IdAndPagingModel}, user_error::UserError}};
 use super::models::{NewJobForRoute, JobResponders, JobResponder};
 
 #[allow(unused)]
@@ -51,6 +51,34 @@ async fn get_job<T: QueryJobFn + Repository>(app_data: Data<AppState<T>>, path: 
 #[allow(unused)]
 async fn get_all_jobs<T: QueryAllJobsFn + Repository>(app_data: Data<AppState<T>>, json: Json<PagingModel>) -> Result<JobResponders, UserError> {
     let result = app_data.repo.query_all_jobs(json.page_size, json.last_offset).await;
+    
+    match result {
+        Ok(jobs) => {
+            let responders = jobs.iter().map(|job| {
+                JobResponder { 
+                    id: job.id, 
+                    updated_at: job.updated_at, 
+                    employer_id: job.employer_id, 
+                    title: job.title.to_owned(), 
+                    description: job.description.to_owned(), 
+                    is_remote: job.is_remote, 
+                    country_id: job.country_id, 
+                    primary_lang_id: job.primary_lang_id, 
+                    secondary_lang_id: job.secondary_lang_id, 
+                    industry_id: job.industry_id, 
+                    salary_id: job.salary_id 
+                }
+            })
+            .collect::<Vec<JobResponder>>();
+            Ok(JobResponders(responders))
+        },
+        Err(e) => Err(e.into())
+    }
+}
+
+#[allow(unused)]
+async fn get_jobs_by_dev_profile<T: QueryJobsByDevProfile + Repository>(app_data: Data<AppState<T>>, json: Json<IdAndPagingModel>) -> Result<JobResponders, UserError> {
+    let result = app_data.repo.query_jobs_by_dev_profile(json.id, json.page_size, json.last_offset).await;
     
     match result {
         Ok(jobs) => {
@@ -135,6 +163,28 @@ mod tests {
         }
     }
 
+    #[async_trait]
+    impl QueryJobsByDevProfile for MockDbRepo {
+        async fn query_jobs_by_dev_profile(&self, _: i64, _: i32, _: i64) -> Result<Vec<Job>, sqlx::Error> {
+            Ok(vec![
+                Job { 
+                    id: 1, 
+                    created_at: Utc::now(), 
+                    updated_at: Utc::now(), 
+                    employer_id: 1, 
+                    title: get_fake_title(), 
+                    description: get_fake_desc(), 
+                    is_remote: false, 
+                    country_id: Some(1), 
+                    primary_lang_id: 1, 
+                    secondary_lang_id: 2, 
+                    industry_id: 1, 
+                    salary_id: 1 
+                }
+            ])
+        }
+    }
+
     #[tokio::test]
     async fn test_create_job_route() {
         let repo = MockDbRepo::init().await;
@@ -171,6 +221,16 @@ mod tests {
         let app_data = get_app_data(repo).await;
 
         let result = get_all_jobs(app_data, Json(PagingModel { page_size: 10, last_offset: 1 })).await.unwrap();
+
+        assert!(result.0.get(0).unwrap().id == 1);
+    }
+
+    #[tokio::test]
+    async fn test_get_jobs_by_dev_profile() {
+        let repo = MockDbRepo::init().await;
+        let app_data = get_app_data(repo).await;
+
+        let result = get_jobs_by_dev_profile(app_data, Json(IdAndPagingModel { id: 1, page_size: 10, last_offset: 1 })).await.unwrap();
 
         assert!(result.0.get(0).unwrap().id == 1);
     }
