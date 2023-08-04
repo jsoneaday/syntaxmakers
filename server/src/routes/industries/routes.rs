@@ -3,7 +3,7 @@ use crate::{routes::user_error::UserError, app_state::AppState, common::reposito
 use super::models::{IndustryResponders, IndustryResponder};
 
 #[allow(unused)]
-async fn get_all_industries<T: QueryAllIndustriesFn + Repository>(app_data: Data<AppState<T>>) -> Result<IndustryResponders, UserError>{
+pub async fn get_all_industries<T: QueryAllIndustriesFn + Repository>(app_data: Data<AppState<T>>) -> Result<IndustryResponders, UserError>{
     let result = app_data.repo.query_all_industries().await;
 
     match result {

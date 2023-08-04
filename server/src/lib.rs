@@ -77,8 +77,9 @@ pub mod routes {
     }
 }
 
-use actix_web::{HttpServer, App, middleware::Logger};
+use actix_web::{HttpServer, App, middleware::Logger, web};
 use common::repository::base::{DbRepo, Repository};
+use routes::{salaries::routes::get_all_salaries, languages::routes::get_all_languages, jobs::routes::{get_job, create_job}, industries::routes::get_all_industries, employers::routes::{get_employer, create_employer, get_all_employers}, developers::routes::{get_developer, create_developer, get_all_developers}, countries::routes::get_all_countries, companies::routes::{get_all_companies, create_company}};
 use crate::app_state::AppState;
 use std::env;
 use dotenv::dotenv;
@@ -98,7 +99,37 @@ pub async fn run() -> std::io::Result<()> {
         App::new()
             .wrap(Logger::default())
             .app_data(app_data.clone())
-            
+            .service(
+                web::scope("/v1")
+                    .service(web::resource("/salaries")
+                        .route(web::get().to(get_all_salaries::<DbRepo>)))
+                    .service(web::resource("/languages")
+                        .route(web::get().to(get_all_languages::<DbRepo>)))
+                    .service(web::resource("/job/{id}")
+                        .route(web::get().to(get_job::<DbRepo>)))
+                    .service(web::resource("/job")
+                        .route(web::post().to(create_job::<DbRepo>)))
+                    .service(web::resource("/industries")
+                        .route(web::get().to(get_all_industries::<DbRepo>)))
+                    .service(web::resource("/employer/{id}")
+                        .route(web::get().to(get_employer::<DbRepo>)))
+                    .service(web::resource("/employer")
+                        .route(web::post().to(create_employer::<DbRepo>)))
+                    .service(web::resource("/employers")
+                        .route(web::get().to(get_all_employers::<DbRepo>)))
+                    .service(web::resource("/developer/{id}")
+                        .route(web::get().to(get_developer::<DbRepo>)))
+                    .service(web::resource("/developer")
+                        .route(web::post().to(create_developer::<DbRepo>)))
+                    .service(web::resource("/developers")
+                        .route(web::get().to(get_all_developers::<DbRepo>)))
+                    .service(web::resource("/countries")
+                        .route(web::get().to(get_all_countries::<DbRepo>)))
+                    .service(web::resource("/company")
+                        .route(web::post().to(create_company::<DbRepo>)))
+                    .service(web::resource("/companies")
+                        .route(web::get().to(get_all_companies::<DbRepo>)))
+            )
     })
     .bind((host, port))?
     .run()

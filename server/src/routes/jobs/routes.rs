@@ -3,7 +3,7 @@ use crate::{common::repository::{jobs::{repo::{InsertJobFn, QueryJobFn, QueryAll
 use super::models::{NewJobForRoute, JobResponders, JobResponder};
 
 #[allow(unused)]
-async fn create_job<T: InsertJobFn + Repository>(app_data: Data<AppState<T>>, json: Json<NewJobForRoute>)
+pub async fn create_job<T: InsertJobFn + Repository>(app_data: Data<AppState<T>>, json: Json<NewJobForRoute>)
  -> Result<OutputId, UserError> {
     let result = app_data.repo.insert_job(NewJob {
         employer_id: json.employer_id,
@@ -24,7 +24,7 @@ async fn create_job<T: InsertJobFn + Repository>(app_data: Data<AppState<T>>, js
 }
 
 #[allow(unused)]
-async fn get_job<T: QueryJobFn + Repository>(app_data: Data<AppState<T>>, path: Path<i64>) -> Result<Option<JobResponder>, UserError> {
+pub async fn get_job<T: QueryJobFn + Repository>(app_data: Data<AppState<T>>, path: Path<i64>) -> Result<Option<JobResponder>, UserError> {
     let result = app_data.repo.query_job(path.into_inner()).await;
     
     match result {
@@ -49,7 +49,7 @@ async fn get_job<T: QueryJobFn + Repository>(app_data: Data<AppState<T>>, path: 
 }
 
 #[allow(unused)]
-async fn get_all_jobs<T: QueryAllJobsFn + Repository>(app_data: Data<AppState<T>>, json: Json<PagingModel>) -> Result<JobResponders, UserError> {
+pub async fn get_all_jobs<T: QueryAllJobsFn + Repository>(app_data: Data<AppState<T>>, json: Json<PagingModel>) -> Result<JobResponders, UserError> {
     let result = app_data.repo.query_all_jobs(json.page_size, json.last_offset).await;
     
     match result {
@@ -77,7 +77,7 @@ async fn get_all_jobs<T: QueryAllJobsFn + Repository>(app_data: Data<AppState<T>
 }
 
 #[allow(unused)]
-async fn get_jobs_by_dev_profile<T: QueryJobsByDevProfile + Repository>(app_data: Data<AppState<T>>, json: Json<IdAndPagingModel>) -> Result<JobResponders, UserError> {
+pub async fn get_jobs_by_dev_profile<T: QueryJobsByDevProfile + Repository>(app_data: Data<AppState<T>>, json: Json<IdAndPagingModel>) -> Result<JobResponders, UserError> {
     let result = app_data.repo.query_jobs_by_dev_profile(json.id, json.page_size, json.last_offset).await;
     
     match result {
