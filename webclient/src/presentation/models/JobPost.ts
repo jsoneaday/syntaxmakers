@@ -5,11 +5,16 @@ export default class JobPost implements KeyItem {
   constructor(
     public key: Key,
     public id: bigint,
+    public updatedAt: string,
     public title: string,
-    public company: string,
-    public location: string,
+    public description: string,
+    public companyName: string,
+    public isRemote: boolean,
+    public primaryLangName: string,
+    public secondaryLangName: string,
+    public industryName: String,
     public salary: string,
-    public timestamp: string,
-    public icon_src: string
+    public logo?: Blob,
+    public countryName?: string
   ) {}
 }

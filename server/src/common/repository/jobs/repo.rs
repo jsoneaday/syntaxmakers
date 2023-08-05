@@ -79,15 +79,32 @@ mod internal {
                 j.created_at, 
                 j.updated_at, 
                 j.employer_id, 
+                e.full_name as employer_name,
+                co.id as company_id,
+                co.name as company_name,
                 j.title, 
                 j.description, 
                 j.is_remote, 
                 jc.country_id,
+                cy.name as country_name,
                 j.primary_lang_id,
+                ppl.name as primary_lang_name,
                 j.secondary_lang_id,
+                spl.name as secondary_lang_name,
                 j.industry_id,
-                j.salary_id
-            from job j left join jobs_countries jc on j.id = jc.job_id 
+                i.name as industry_name,
+                j.salary_id,
+                s.base as salary
+            from 
+                job j 
+                    join employer e on j.employer_id = e.id
+                    join company co on e.company_id = co.id
+                    left join jobs_countries jc on j.id = jc.job_id 
+                    full outer join country cy on jc.country_id = cy.id
+                    join prog_language ppl on j.primary_lang_id = ppl.id
+                    join prog_language spl on j.secondary_lang_id = spl.id
+                    join industry i on j.industry_id = i.id
+                    join salary s on j.salary_id = s.id
             where j.id = $1
             "
         )
@@ -103,15 +120,32 @@ mod internal {
                 j.created_at, 
                 j.updated_at, 
                 j.employer_id, 
+                e.full_name as employer_name,
+                co.id as company_id,
+                co.name as company_name,
                 j.title, 
                 j.description, 
                 j.is_remote, 
                 jc.country_id,
+                cy.name as country_name,
                 j.primary_lang_id,
+                ppl.name as primary_lang_name,
                 j.secondary_lang_id,
+                spl.name as secondary_lang_name,
                 j.industry_id,
-                j.salary_id
-            from job j left join jobs_countries jc on j.id = jc.job_id 
+                i.name as industry_name,
+                j.salary_id,
+                s.base as salary
+            from 
+                job j 
+                    join employer e on j.employer_id = e.id
+                    join company co on e.company_id = co.id
+                    left join jobs_countries jc on j.id = jc.job_id 
+                    full outer join country cy on jc.country_id = cy.id
+                    join prog_language ppl on j.primary_lang_id = ppl.id
+                    join prog_language spl on j.secondary_lang_id = spl.id
+                    join industry i on j.industry_id = i.id
+                    join salary s on j.salary_id = s.id
             order by updated_at desc 
             limit $1
             offset $2
@@ -149,15 +183,32 @@ mod internal {
                 j.created_at, 
                 j.updated_at, 
                 j.employer_id, 
+                e.full_name as employer_name,
+                co.id as company_id,
+                co.name as company_name,
                 j.title, 
                 j.description, 
                 j.is_remote, 
                 jc.country_id,
+                cy.name as country_name,
                 j.primary_lang_id,
+                ppl.name as primary_lang_name,
                 j.secondary_lang_id,
+                spl.name as secondary_lang_name,
                 j.industry_id,
-                j.salary_id
-            from job j left join jobs_countries jc on j.id = jc.job_id 
+                i.name as industry_name,
+                j.salary_id,
+                s.base as salary
+            from 
+                job j
+                    join employer e on j.employer_id = e.id
+                    join company co on e.company_id = co.id
+                    left join jobs_countries jc on j.id = jc.job_id 
+                    full outer join country cy on jc.country_id = cy.id
+                    join prog_language ppl on j.primary_lang_id = ppl.id
+                    join prog_language spl on j.secondary_lang_id = spl.id
+                    join industry i on j.industry_id = i.id
+                    join salary s on j.salary_id = s.id
             where j.primary_lang_id = $1 or j.secondary_lang_id = $2
             order by updated_at desc 
             limit $3

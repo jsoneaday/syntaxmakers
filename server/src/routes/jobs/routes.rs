@@ -1,5 +1,5 @@
 use actix_web::web::{Data, Json, Path};
-use crate::{common::repository::{jobs::{repo::{InsertJobFn, QueryJobFn, QueryAllJobsFn, QueryJobsByDevProfile}, models::NewJob}, base::Repository}, app_state::AppState, routes::{base_model::{OutputId, PagingModel, IdAndPagingModel}, user_error::UserError}};
+use crate::{common::repository::{jobs::{repo::{InsertJobFn, QueryJobFn, QueryAllJobsFn, QueryJobsByDevProfile}, models::{NewJob, Job}}, base::Repository}, app_state::AppState, routes::{base_model::{OutputId, PagingModel, IdAndPagingModel}, user_error::UserError}};
 use super::models::{NewJobForRoute, JobResponders, JobResponder};
 
 #[allow(unused)]
@@ -29,19 +29,7 @@ pub async fn get_job<T: QueryJobFn + Repository>(app_data: Data<AppState<T>>, pa
     
     match result {
         Ok(opt_job) => match opt_job {
-            Some(job) => Ok(Some(JobResponder { 
-                id: job.id, 
-                updated_at: job.updated_at, 
-                employer_id: job.employer_id, 
-                title: job.title, 
-                description: job.description, 
-                is_remote: job.is_remote, 
-                country_id: job.country_id, 
-                primary_lang_id: job.primary_lang_id, 
-                secondary_lang_id: job.secondary_lang_id, 
-                industry_id: job.industry_id, 
-                salary_id: job.salary_id 
-            })),
+            Some(job) => Ok(Some(convert(&job))),
             None => Ok(None)
         },
         Err(e) => Err(e.into())
@@ -55,19 +43,7 @@ pub async fn get_all_jobs<T: QueryAllJobsFn + Repository>(app_data: Data<AppStat
     match result {
         Ok(jobs) => {
             let responders = jobs.iter().map(|job| {
-                JobResponder { 
-                    id: job.id, 
-                    updated_at: job.updated_at, 
-                    employer_id: job.employer_id, 
-                    title: job.title.to_owned(), 
-                    description: job.description.to_owned(), 
-                    is_remote: job.is_remote, 
-                    country_id: job.country_id, 
-                    primary_lang_id: job.primary_lang_id, 
-                    secondary_lang_id: job.secondary_lang_id, 
-                    industry_id: job.industry_id, 
-                    salary_id: job.salary_id 
-                }
+                convert(job)
             })
             .collect::<Vec<JobResponder>>();
             Ok(JobResponders(responders))
@@ -83,19 +59,7 @@ pub async fn get_jobs_by_dev_profile<T: QueryJobsByDevProfile + Repository>(app_
     match result {
         Ok(jobs) => {
             let responders = jobs.iter().map(|job| {
-                JobResponder { 
-                    id: job.id, 
-                    updated_at: job.updated_at, 
-                    employer_id: job.employer_id, 
-                    title: job.title.to_owned(), 
-                    description: job.description.to_owned(), 
-                    is_remote: job.is_remote, 
-                    country_id: job.country_id, 
-                    primary_lang_id: job.primary_lang_id, 
-                    secondary_lang_id: job.secondary_lang_id, 
-                    industry_id: job.industry_id, 
-                    salary_id: job.salary_id 
-                }
+                convert(job)
             })
             .collect::<Vec<JobResponder>>();
             Ok(JobResponders(responders))
@@ -104,13 +68,68 @@ pub async fn get_jobs_by_dev_profile<T: QueryJobsByDevProfile + Repository>(app_
     }
 }
 
+fn convert(job: &Job) -> JobResponder {
+    JobResponder {
+        id: job.id, 
+        updated_at: job.updated_at, 
+        employer_id: job.employer_id, 
+        employer_name: job.employer_name.to_string(),
+        company_id: job.company_id,
+        company_name: job.company_name.to_string(),
+        title: job.title.to_string(), 
+        description: job.description.to_string(), 
+        is_remote: job.is_remote, 
+        country_id: job.country_id, 
+        country_name: if let Some(country_name) = job.country_name.to_owned() {
+            Some(country_name)
+        } else {
+            None
+        },
+        primary_lang_id: job.primary_lang_id, 
+        primary_lang_name: job.primary_lang_name.to_string(),
+        secondary_lang_id: job.secondary_lang_id,
+        secondary_lang_name: job.secondary_lang_name.to_string(), 
+        industry_id: job.industry_id, 
+        industry_name: job.industry_name.to_string(),
+        salary_id: job.salary_id,
+        salary: job.salary
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use crate::common::repository::jobs::models::Job;
+    use crate::{common::repository::jobs::models::Job, common_test::fixtures::{get_fake_fullname, init_fixtures, COUNTRY_NAMES, LANGUAGE_NAMES, INDUSTRY_NAMES, SALARY_BASE}};
     use super::*;
     use async_trait::async_trait;
     use chrono::Utc;
+    use fake::{faker::company::en::CompanyName, Fake};
     use crate::{common::repository::{jobs::repo::InsertJobFn, base::EntityId}, common_test::fixtures::{MockDbRepo, get_app_data, get_fake_title, get_fake_desc}};
+
+    fn get_test_job(id: i64) -> Job {
+        init_fixtures();
+        Job { 
+            id, 
+            created_at: Utc::now(), 
+            updated_at: Utc::now(), 
+            employer_id: id, 
+            employer_name: get_fake_fullname(),
+            company_id: id,
+            company_name: CompanyName().fake::<String>(),
+            title: get_fake_title(), 
+            description: get_fake_desc(), 
+            is_remote: true, 
+            country_id: None, 
+            country_name: Some(COUNTRY_NAMES.get().unwrap().get(0).unwrap().to_string()),
+            primary_lang_id: id, 
+            primary_lang_name: LANGUAGE_NAMES.get().unwrap().get(0).unwrap().to_string(),
+            secondary_lang_id: id + 1, 
+            secondary_lang_name: LANGUAGE_NAMES.get().unwrap().get(1).unwrap().to_string(),
+            industry_id: id, 
+            industry_name: INDUSTRY_NAMES.get().unwrap().get(0).unwrap().to_string(),
+            salary_id: id,
+            salary: SALARY_BASE.get().unwrap().get(0).unwrap().to_string().parse::<i32>().unwrap()
+        }
+    }
 
     #[async_trait]
     impl InsertJobFn for MockDbRepo {
@@ -123,20 +142,7 @@ mod tests {
     impl QueryJobFn for MockDbRepo {
         async fn query_job(&self, _: i64) -> Result<Option<Job>, sqlx::Error> {
             Ok(Some(
-                Job { 
-                    id: 1, 
-                    created_at: Utc::now(), 
-                    updated_at: Utc::now(), 
-                    employer_id: 1, 
-                    title: get_fake_title(), 
-                    description: get_fake_desc(), 
-                    is_remote: true, 
-                    country_id: None, 
-                    primary_lang_id: 1, 
-                    secondary_lang_id: 2, 
-                    industry_id: 1, 
-                    salary_id: 1 
-                }
+                get_test_job(1)
             ))
         }
     }
@@ -145,20 +151,7 @@ mod tests {
     impl QueryAllJobsFn for MockDbRepo {
         async fn query_all_jobs(&self, _: i32, _: i64) -> Result<Vec<Job>, sqlx::Error> {
             Ok(vec![
-                Job { 
-                    id: 1, 
-                    created_at: Utc::now(), 
-                    updated_at: Utc::now(), 
-                    employer_id: 1, 
-                    title: get_fake_title(), 
-                    description: get_fake_desc(), 
-                    is_remote: false, 
-                    country_id: Some(1), 
-                    primary_lang_id: 1, 
-                    secondary_lang_id: 2, 
-                    industry_id: 1, 
-                    salary_id: 1 
-                }
+                get_test_job(1)
             ])
         }
     }
@@ -167,20 +160,7 @@ mod tests {
     impl QueryJobsByDevProfile for MockDbRepo {
         async fn query_jobs_by_dev_profile(&self, _: i64, _: i32, _: i64) -> Result<Vec<Job>, sqlx::Error> {
             Ok(vec![
-                Job { 
-                    id: 1, 
-                    created_at: Utc::now(), 
-                    updated_at: Utc::now(), 
-                    employer_id: 1, 
-                    title: get_fake_title(), 
-                    description: get_fake_desc(), 
-                    is_remote: false, 
-                    country_id: Some(1), 
-                    primary_lang_id: 1, 
-                    secondary_lang_id: 2, 
-                    industry_id: 1, 
-                    salary_id: 1 
-                }
+                get_test_job(1)
             ])
         }
     }
