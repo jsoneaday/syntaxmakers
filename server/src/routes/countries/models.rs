@@ -4,6 +4,7 @@ use chrono::{Utc, DateTime};
 use serde::Serialize;
 
 #[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct CountryResponder {
     pub id: i64,    
     pub updated_at: DateTime<Utc>,

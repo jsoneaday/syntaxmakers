@@ -4,6 +4,7 @@ use serde::{Serialize, Deserialize};
 use actix_web::{Responder, HttpResponse, http::header::ContentType};
 
 #[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct NewDeveloperForRoute {
     pub user_name: String,
     pub full_name: String,
@@ -13,6 +14,7 @@ pub struct NewDeveloperForRoute {
 }
 
 #[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct DeveloperResponder {
     pub id: i64,
     pub updated_at: DateTime<Utc>,

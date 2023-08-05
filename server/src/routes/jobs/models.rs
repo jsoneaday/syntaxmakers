@@ -4,6 +4,7 @@ use chrono::{Utc, DateTime};
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct NewJobForRoute {
     pub employer_id: i64,
     pub title: String,
@@ -17,6 +18,7 @@ pub struct NewJobForRoute {
 }
 
 #[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct JobResponder {
     pub id: i64,
     pub updated_at: DateTime<Utc>,

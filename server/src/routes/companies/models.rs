@@ -4,6 +4,7 @@ use chrono::{Utc, DateTime};
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct NewCompanyForRoute {
     pub name: String,
     pub logo: Option<Vec<u8>>,
@@ -11,6 +12,7 @@ pub struct NewCompanyForRoute {
 }
 
 #[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct CompanyResponder {
     pub id: i64,
     pub updated_at: DateTime<Utc>,

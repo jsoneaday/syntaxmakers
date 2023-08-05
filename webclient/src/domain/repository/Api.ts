@@ -1,0 +1,13 @@
+export const API_ROOT_URL = "http://localhost:4002/v1/";
+export const SALARIES_URL = `${API_ROOT_URL}salaries`;
+export const LANGS_URL = `${API_ROOT_URL}languages`;
+export const JOB_URL = `${API_ROOT_URL}job`;
+export const JOBS_URL = `${API_ROOT_URL}jobS`;
+export const INDUSTRIES_URL = `${API_ROOT_URL}industries`;
+export const EMPLOYER_URL = `${API_ROOT_URL}employer`;
+export const EMPLOYERS_URL = `${API_ROOT_URL}employers`;
+export const DEVELOPER_URL = `${API_ROOT_URL}developer`;
+export const DEVELOPERS_URL = `${API_ROOT_URL}developers`;
+export const COUNTRIES_URL = `${API_ROOT_URL}countries`;
+export const COMPANY_URL = `${API_ROOT_URL}company`;
+export const COMPANIES_URL = `${API_ROOT_URL}companies`;

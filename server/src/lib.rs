@@ -79,7 +79,7 @@ pub mod routes {
 
 use actix_web::{HttpServer, App, middleware::Logger, web};
 use common::repository::base::{DbRepo, Repository};
-use routes::{salaries::routes::get_all_salaries, languages::routes::get_all_languages, jobs::routes::{get_job, create_job}, industries::routes::get_all_industries, employers::routes::{get_employer, create_employer, get_all_employers}, developers::routes::{get_developer, create_developer, get_all_developers}, countries::routes::get_all_countries, companies::routes::{get_all_companies, create_company}};
+use routes::{salaries::routes::get_all_salaries, languages::routes::get_all_languages, jobs::routes::{get_job, create_job, get_jobs_by_dev_profile}, industries::routes::get_all_industries, employers::routes::{get_employer, create_employer, get_all_employers}, developers::routes::{get_developer, create_developer, get_all_developers}, countries::routes::get_all_countries, companies::routes::{get_all_companies, create_company}};
 use crate::app_state::AppState;
 use std::env;
 use dotenv::dotenv;
@@ -109,6 +109,8 @@ pub async fn run() -> std::io::Result<()> {
                         .route(web::get().to(get_job::<DbRepo>)))
                     .service(web::resource("/job")
                         .route(web::post().to(create_job::<DbRepo>)))
+                    .service(web::resource("/jobs")
+                        .route(web::post().to(get_jobs_by_dev_profile::<DbRepo>)))
                     .service(web::resource("/industries")
                         .route(web::get().to(get_all_industries::<DbRepo>)))
                     .service(web::resource("/employer/{id}")
