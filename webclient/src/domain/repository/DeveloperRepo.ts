@@ -13,7 +13,9 @@ export class Developer {
 }
 
 export async function getDeveloper(id: bigint) {
-  const response = await fetch(`${DEVELOPER_URL}/${id}`);
+  const response = await fetch(`${DEVELOPER_URL}/${id}`, {
+    method: "get",
+  });
 
   if (response.ok) {
     const developerObj: Developer = await response.json();

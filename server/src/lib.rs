@@ -77,7 +77,8 @@ pub mod routes {
     }
 }
 
-use actix_web::{HttpServer, App, middleware::Logger, web};
+use actix_cors::Cors;
+use actix_web::{HttpServer, http::header, App, middleware::Logger, web};
 use common::repository::base::{DbRepo, Repository};
 use routes::{salaries::routes::get_all_salaries, languages::routes::get_all_languages, jobs::routes::{get_job, create_job, get_jobs_by_dev_profile}, industries::routes::get_all_industries, employers::routes::{get_employer, create_employer, get_all_employers}, developers::routes::{get_developer, create_developer, get_all_developers}, countries::routes::get_all_countries, companies::routes::{get_all_companies, create_company}};
 use crate::app_state::AppState;
@@ -97,8 +98,14 @@ pub async fn run() -> std::io::Result<()> {
 
     HttpServer::new(move || {
         App::new()
-            .wrap(Logger::default())
             .app_data(app_data.clone())
+            .wrap(Logger::default())
+            .wrap(
+                Cors::default()
+                    .allowed_origin("http://localhost:5173")
+                    .allowed_methods(vec!["GET", "POST"])
+                    .allowed_header(header::CONTENT_TYPE)
+            )
             .service(
                 web::scope("/v1")
                     .service(web::resource("/salaries")

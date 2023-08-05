@@ -3,16 +3,25 @@ import { JOBS_URL } from "./Api";
 export class Job {
   constructor(
     public id: bigint,
-    public updated_at: Date,
-    public employer_id: bigint,
+    public updatedAt: Date,
+    public employerId: bigint,
+    public employerName: string,
+    public companyId: bigint,
+    public companyName: string,
     public title: string,
     public description: string,
     public isRemote: boolean,
-    public countryId: bigint | undefined,
     public primaryLangId: bigint,
+    public primaryLangName: string,
     public secondaryLangId: bigint,
+    public secondaryLangName: string,
     public industryId: bigint,
-    public salaryId: bigint
+    public industryName: string,
+    public salaryId: bigint,
+    public salary: string,
+    public companyLogo?: Blob,
+    public countryId?: bigint,
+    public countryName?: string
   ) {}
 }
 
@@ -35,6 +44,7 @@ export async function getJobsByDevProfile(
 
   if (result.ok) {
     const jobs: Job[] = await result.json();
+    console.log("jobs", jobs);
     return jobs;
   }
   return [];

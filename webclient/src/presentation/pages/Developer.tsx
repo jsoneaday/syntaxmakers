@@ -1,19 +1,20 @@
 import "../../theme/developer.css";
 import LeftMenu from "../components/LeftMenu";
 import PromotedJobs from "../components/PromotedJobs";
-import JobPost from "../models/JobPost";
+import JobPost, { convert } from "../models/JobPost";
 import Lister from "../components/Lister";
-import { useEffect, useState } from "react";
+import { ChangeEvent, useEffect, useState } from "react";
 import JobPreview from "../components/JobPreview";
 import clipboard from "../../theme/assets/clipboard.png";
 import clock from "../../theme/assets/wall-clock.png";
 import { useProfile } from "../../domain/redux/profile/ProfileHooks";
 import { getDeveloper } from "../../domain/repository/DeveloperRepo";
 import { getJobsByDevProfile } from "../../domain/repository/JobRepo";
-import { v4 as uuidv4 } from "crypto";
+/// @ts-ignore
+import { v4 as uuidv4 } from "uuid";
 
 export default function Developer() {
-  const [dataItems, setDataItems] = useState<JobPost[]>([]);
+  const [jobData, setJobsData] = useState<JobPost[]>([]);
   const [searchInput, setSearchInput] = useState("");
   const [profile, setProfile] = useProfile();
 
@@ -28,27 +29,26 @@ export default function Developer() {
   }, []);
 
   useEffect(() => {
+    setJobsData([]);
     if (profile) {
       getJobsByDevProfile(profile.id)
         .then((jobs) => {
-          setDataItems(jobs.map(job => {
-            return new JobPost(
-              uuidv4(), 
-              job.id, 
-              job.title, 
-              job.company, 
-              location: string, 
-              salary: string, 
-              timestamp: string, 
-              icon_src: string
-            )
-          }));
+          setJobsData(
+            jobs.map((job) => {
+              return convert(job);
+            })
+          );
         })
         .catch((error) => {
-          console.log("failed to get jobs for current profile");
+          console.log("failed to get jobs for current profile", error);
         });
     }
   }, [profile]);
+
+  const onSearchTxtChanged = (e: ChangeEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    setSearchInput(e.target.value);
+  };
 
   return (
     <div className="dev-container">
@@ -60,7 +60,12 @@ export default function Developer() {
             Enter your preferences to find your next job
           </div>
           <div className="search-header">
-            <input className="search-input" type="text" value={searchInput} />
+            <input
+              className="search-input"
+              type="text"
+              value={searchInput}
+              onChange={onSearchTxtChanged}
+            />
             <button className="primary-btn">search</button>
           </div>
         </div>
@@ -77,7 +82,7 @@ export default function Developer() {
         <div className="dev-post-preview-container">
           <ul>
             <Lister
-              dataItems={dataItems}
+              dataItems={jobData}
               elementCreator={(dataItem) => (
                 <li key={dataItem.key} className="dev-preview-item">
                   <JobPreview jobPost={dataItem} isSmall={false} />

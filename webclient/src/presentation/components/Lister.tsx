@@ -21,7 +21,7 @@ export default function Lister<T extends KeyItem>({
     }
 
     setElements(elementList);
-  }, [elements]);
+  }, [dataItems]);
 
   return <ul>{elements}</ul>;
 }
