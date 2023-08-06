@@ -796,7 +796,7 @@ quis vel eros donec ac odio tempor orci dapibus ultrices in iaculis nunc sed aug
     1, 
     2, 
     1, 
-    3
+    1
 );
 insert into jobs_countries (job_id, country_id) values (1, 1);
 
@@ -828,7 +828,7 @@ quis vel eros donec ac odio tempor orci dapibus ultrices in iaculis nunc sed aug
     1, 
     2, 
     1, 
-    3
+    2
 );
 insert into jobs_countries (job_id, country_id) values (3, 1);
 
@@ -844,7 +844,7 @@ quis vel eros donec ac odio tempor orci dapibus ultrices in iaculis nunc sed aug
     2, 
     1, 
     1, 
-    3
+    4
 );
 
 insert into job 
@@ -859,5 +859,5 @@ quis vel eros donec ac odio tempor orci dapibus ultrices in iaculis nunc sed aug
     1, 
     2, 
     1, 
-    3
+    2
 );

@@ -17,7 +17,7 @@
   --regular-font: 300;
   --bold-font: 400;
   --primary-font-cl: black;
-  --secondary-font-cl: gray;
+  --secondary-font-cl: rgb(72, 72, 72);
   --tertiary-font-cl: rgb(43, 90, 130);
 
   --bg-cl: white;
@@ -37,8 +37,8 @@
 
 .sub-title-font {
   font-size: 1em;
-  font-weight: var(--bold-font);
-  color: var(--secondary-font-cl);
+  font-weight: var(--secondary-font-font);
+  color: var(--band-cl);
 }
 
 .normal-font {

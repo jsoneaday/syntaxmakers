@@ -36,9 +36,11 @@ export default function JobPreview({ jobPost, isSmall }: JobPreviewProps) {
       <div className="preview-content">
         <div className={smallTitleFont}>{jobPost.title}</div>
         <div className={smallSubTitleFont}>{jobPost.companyName}</div>
-        <div className={smallNormalFont}>{jobPost.countryName}</div>
+        <div className={smallNormalFont}>
+          {jobPost.isRemote ? "Remote" : jobPost.countryName}
+        </div>
         <div className={"normal-font preview-salary"}>
-          Base Salary: <i>{jobPost.salary}</i>
+          Base Salary: <i>{`$${jobPost.salary}`}</i>
         </div>
         {timestamp}
       </div>
