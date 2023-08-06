@@ -1,12 +1,12 @@
-import "../../theme/developer.css";
+import "../../presentation/theme/developer.css";
 import LeftMenu from "../components/LeftMenu";
 import PromotedJobs from "../components/PromotedJobs";
 import JobPost, { convert } from "../models/JobPost";
 import Lister from "../components/Lister";
 import { ChangeEvent, useEffect, useState } from "react";
 import JobPreview from "../components/JobPreview";
-import clipboard from "../../theme/assets/clipboard.png";
-import clock from "../../theme/assets/wall-clock.png";
+import clipboard from "../../presentation/theme/assets/clipboard.png";
+import clock from "../../presentation/theme/assets/wall-clock.png";
 import { useProfile } from "../../domain/redux/profile/ProfileHooks";
 import { getDeveloper } from "../../domain/repository/DeveloperRepo";
 import { getJobsByDevProfile } from "../../domain/repository/JobRepo";

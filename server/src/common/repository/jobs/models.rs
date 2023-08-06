@@ -10,6 +10,7 @@ pub struct Job {
     pub employer_name: String,
     pub company_id: i64,
     pub company_name: String,
+    pub company_logo: Option<Vec<u8>>,
     pub title: String,
     pub description: String,
     pub is_remote: bool,

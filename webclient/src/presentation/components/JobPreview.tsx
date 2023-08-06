@@ -1,4 +1,5 @@
 import JobPost from "../models/JobPost";
+import "../theme//post_preview.css";
 
 interface JobPreviewProps {
   jobPost: JobPost;
@@ -19,11 +20,14 @@ export default function JobPreview({ jobPost, isSmall }: JobPreviewProps) {
     : "normal-font";
 
   const icon = isSmall ? null : (
-    <img className="preview-icon" src={jobPost.icon_src} />
+    <img
+      className="preview-icon"
+      src={jobPost.companyLogo ? URL.createObjectURL(jobPost.companyLogo) : ""}
+    />
   );
 
   const timestamp = isSmall ? null : (
-    <div className="small-font preview-timestamp">{jobPost.timestamp}</div>
+    <div className="small-font preview-timestamp">{jobPost.updatedAt}</div>
   );
 
   return (
@@ -31,8 +35,8 @@ export default function JobPreview({ jobPost, isSmall }: JobPreviewProps) {
       {icon}
       <div className="preview-content">
         <div className={smallTitleFont}>{jobPost.title}</div>
-        <div className={smallSubTitleFont}>{jobPost.company}</div>
-        <div className={smallNormalFont}>{jobPost.location}</div>
+        <div className={smallSubTitleFont}>{jobPost.companyName}</div>
+        <div className={smallNormalFont}>{jobPost.countryName}</div>
         <div className={"normal-font preview-salary"}>
           Base Salary: <i>{jobPost.salary}</i>
         </div>

@@ -1,5 +1,6 @@
 import { ReactNode, useEffect, useState } from "react";
 import { KeyItem } from "../common/utils";
+import "../theme/lister.css";
 
 interface ListerProps<T extends KeyItem> {
   dataItems: T[];
@@ -23,5 +24,5 @@ export default function Lister<T extends KeyItem>({
     setElements(elementList);
   }, [dataItems]);
 
-  return <ul>{elements}</ul>;
+  return <ul className="lister-container">{elements}</ul>;
 }

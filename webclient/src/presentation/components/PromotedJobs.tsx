@@ -1,6 +1,7 @@
 import JobPost from "../models/JobPost";
 import JobPreview from "./JobPreview";
 import Lister from "./Lister";
+import "../theme/promoted_jobs.css";
 
 interface PromotedJobsProps {
   posts: JobPost[];

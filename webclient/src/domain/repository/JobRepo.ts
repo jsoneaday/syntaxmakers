@@ -3,7 +3,7 @@ import { JOBS_URL } from "./Api";
 export class Job {
   constructor(
     public id: bigint,
-    public updatedAt: Date,
+    public updatedAt: string, // comes from api as utc string
     public employerId: bigint,
     public employerName: string,
     public companyId: bigint,
@@ -19,7 +19,7 @@ export class Job {
     public industryName: string,
     public salaryId: bigint,
     public salary: string,
-    public companyLogo?: Blob,
+    public companyLogo?: ArrayBuffer, // normal format for file data received over wire
     public countryId?: bigint,
     public countryName?: string
   ) {}

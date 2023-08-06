@@ -3,7 +3,7 @@ import { KeyItem } from "../common/utils";
 import { Job } from "../../domain/repository/JobRepo";
 /// @ts-ignore
 import { v4 as uuidv4 } from "uuid";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow, parseISO } from "date-fns";
 
 export default class JobPost implements KeyItem {
   constructor(
@@ -19,15 +19,18 @@ export default class JobPost implements KeyItem {
     public secondaryLangName: string,
     public industryName: String,
     public salary: string,
-    public logo?: Blob,
+    public companyLogo?: Blob,
     public countryName?: string
   ) {}
 }
 
 export function convert(job: Job) {
-  const updatedAt = formatDistanceToNow(job.updatedAt, {
+  const updatedAt = formatDistanceToNow(parseISO(job.updatedAt), {
     addSuffix: true,
   });
+  const companyLogoUInt8Array = job.companyLogo
+    ? new Uint8Array(job.companyLogo)
+    : undefined;
 
   return new JobPost(
     uuidv4(),
@@ -42,7 +45,7 @@ export function convert(job: Job) {
     job.secondaryLangName,
     job.industryName,
     job.salary,
-    job.companyLogo,
+    companyLogoUInt8Array ? new Blob([companyLogoUInt8Array]) : undefined,
     job.countryName
   );
 }

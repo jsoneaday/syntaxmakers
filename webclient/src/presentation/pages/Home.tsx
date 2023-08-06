@@ -1,6 +1,6 @@
-import developer from "../../theme/assets/programmer.png";
-import employer from "../../theme/assets/businessman.png";
-import "../../theme/home.css";
+import developer from "../../presentation/theme/assets/programmer.png";
+import employer from "../../presentation/theme/assets/businessman.png";
+import "../../presentation/theme/home.css";
 import { Link } from "react-router-dom";
 
 export default function Home() {
