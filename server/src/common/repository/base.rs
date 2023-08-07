@@ -14,6 +14,7 @@ pub trait Repository{
     async fn init() -> Self;
 }
 
+#[derive(Debug)]
 pub struct DbRepo {
     conn: Pool<Postgres>
 }

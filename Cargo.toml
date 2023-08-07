@@ -1,6 +1,5 @@
 [workspace]
 members = [
-    "wclient",
     "server"
 ]
 resolver = "2"

@@ -43,6 +43,10 @@ pub mod app_state;
 pub mod routes {
     pub mod base_model;
     pub mod user_error;
+    pub mod auth {
+        pub mod models;
+        pub mod routes;
+    }
     pub mod companies {
         pub mod models;
         pub mod routes;
@@ -79,11 +83,26 @@ pub mod routes {
 
 use actix_cors::Cors;
 use actix_web::{HttpServer, http::header, App, middleware::Logger, web};
+use actix_jwt_auth_middleware::use_jwt::UseJWTOnApp;
+use actix_jwt_auth_middleware::{Authority, TokenSigner};
 use common::repository::base::{DbRepo, Repository};
-use routes::{salaries::routes::get_all_salaries, languages::routes::get_all_languages, jobs::routes::{get_job, create_job, get_jobs_by_dev_profile}, industries::routes::get_all_industries, employers::routes::{get_employer, create_employer, get_all_employers}, developers::routes::{get_developer, create_developer, get_all_developers}, countries::routes::get_all_countries, companies::routes::{get_all_companies, create_company}};
+use routes::auth::routes::{login, hello};
+use routes::{
+    salaries::routes::get_all_salaries, 
+    languages::routes::get_all_languages, 
+    jobs::routes::{get_job, create_job, get_jobs_by_dev_profile}, 
+    industries::routes::get_all_industries, 
+    employers::routes::{get_employer, create_employer, get_all_employers}, 
+    developers::routes::{get_developer, create_developer, get_all_developers}, 
+    countries::routes::get_all_countries, 
+    companies::routes::{get_all_companies, create_company}
+};
 use crate::app_state::AppState;
 use std::env;
 use dotenv::dotenv;
+use exonum_crypto::KeyPair;
+use jwt_compact::alg::Ed25519;
+use crate::routes::auth::models::User;
 
 pub async fn run() -> std::io::Result<()> {
     env_logger::init_from_env(env_logger::Env::new().default_filter_or("debug"));
@@ -95,8 +114,22 @@ pub async fn run() -> std::io::Result<()> {
     let app_data = actix_web::web::Data::new(AppState{
         repo
     });    
+    let key_pair = KeyPair::random();
 
     HttpServer::new(move || {
+        let authority = Authority::<User, Ed25519, _, _>::new()
+            .refresh_authorizer(|| async move { Ok(()) })
+            .token_signer(Some(
+                TokenSigner::new()
+                    .signing_key(key_pair.secret_key().clone())
+                    .algorithm(Ed25519)
+                    .build()
+                    .expect("Failed to sign token")
+            ))
+            .verifying_key(key_pair.public_key())
+            .build()
+            .expect("Failed to setup Authority");
+
         App::new()
             .app_data(app_data.clone())
             .wrap(Logger::default())
@@ -105,6 +138,9 @@ pub async fn run() -> std::io::Result<()> {
                     .allowed_origin("http://localhost:5173")
                     .allowed_methods(vec!["GET", "POST"])
                     .allowed_header(header::CONTENT_TYPE)
+            )
+            .service(
+                login
             )
             .service(
                 web::scope("/v1")
@@ -138,6 +174,10 @@ pub async fn run() -> std::io::Result<()> {
                         .route(web::post().to(create_company::<DbRepo>)))
                     .service(web::resource("/companies")
                         .route(web::get().to(get_all_companies::<DbRepo>)))
+            )
+            .use_jwt(
+                authority,
+                web::scope("").service(hello)
             )
     })
     .bind((host, port))?
