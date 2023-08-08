@@ -140,9 +140,11 @@ pub async fn run() -> std::io::Result<()> {
                     .allowed_header(header::CONTENT_TYPE)
             )
             .service(
-                login
+                web::resource("login")
+                    .route(web::post().to(login))
             )
-            .service(
+            .use_jwt(
+                authority,
                 web::scope("/v1")
                     .service(web::resource("/salaries")
                         .route(web::get().to(get_all_salaries::<DbRepo>)))
@@ -174,10 +176,6 @@ pub async fn run() -> std::io::Result<()> {
                         .route(web::post().to(create_company::<DbRepo>)))
                     .service(web::resource("/companies")
                         .route(web::get().to(get_all_companies::<DbRepo>)))
-            )
-            .use_jwt(
-                authority,
-                web::scope("").service(hello)
             )
     })
     .bind((host, port))?
