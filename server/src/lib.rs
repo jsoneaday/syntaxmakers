@@ -34,6 +34,13 @@ pub mod common {
             pub mod models;
             pub mod repo;
         }
+        pub mod user {
+            pub mod models;
+            pub mod repo;
+        }        
+    }
+    pub mod authentication {
+        pub mod auth_service;
     }
 }
 pub mod common_test {
@@ -83,10 +90,9 @@ pub mod routes {
 
 use actix_cors::Cors;
 use actix_web::{HttpServer, http::header, App, middleware::Logger, web};
-use actix_jwt_auth_middleware::use_jwt::UseJWTOnApp;
-use actix_jwt_auth_middleware::{Authority, TokenSigner};
+use common::authentication::auth_service::init_auth_keys;
 use common::repository::base::{DbRepo, Repository};
-use routes::auth::routes::{login, hello};
+use routes::auth::routes::login;
 use routes::{
     salaries::routes::get_all_salaries, 
     languages::routes::get_all_languages, 
@@ -100,9 +106,6 @@ use routes::{
 use crate::app_state::AppState;
 use std::env;
 use dotenv::dotenv;
-use exonum_crypto::KeyPair;
-use jwt_compact::alg::Ed25519;
-use crate::routes::auth::models::User;
 
 pub async fn run() -> std::io::Result<()> {
     env_logger::init_from_env(env_logger::Env::new().default_filter_or("debug"));
@@ -112,40 +115,17 @@ pub async fn run() -> std::io::Result<()> {
     let port = env::var("PORT").unwrap().parse::<u16>().unwrap();
     let repo = DbRepo::init().await;
     let app_data = actix_web::web::Data::new(AppState{
-        repo
+        repo,
+        auth_keys: init_auth_keys().await
     });    
-    let key_pair = KeyPair::random();
 
     HttpServer::new(move || {
-        let authority = Authority::<User, Ed25519, _, _>::new()
-            .refresh_authorizer(|| async move { Ok(()) })
-            .token_signer(Some(
-                TokenSigner::new()
-                    .signing_key(key_pair.secret_key().clone())
-                    .algorithm(Ed25519)
-                    .build()
-                    .expect("Failed to sign token")
-            ))
-            .verifying_key(key_pair.public_key())
-            .build()
-            .expect("Failed to setup Authority");
-
         App::new()
-            .app_data(app_data.clone())
-            .wrap(Logger::default())
-            .wrap(
-                Cors::default()
-                    .allowed_origin("http://localhost:5173")
-                    .allowed_methods(vec!["GET", "POST"])
-                    .allowed_header(header::CONTENT_TYPE)
-            )
+            .app_data(app_data.clone())                       
             .service(
-                web::resource("login")
-                    .route(web::post().to(login))
-            )
-            .use_jwt(
-                authority,
                 web::scope("/v1")
+                    .service(web::resource("login")
+                        .route(web::post().to(login::<DbRepo>)))
                     .service(web::resource("/salaries")
                         .route(web::get().to(get_all_salaries::<DbRepo>)))
                     .service(web::resource("/languages")
@@ -176,6 +156,18 @@ pub async fn run() -> std::io::Result<()> {
                         .route(web::post().to(create_company::<DbRepo>)))
                     .service(web::resource("/companies")
                         .route(web::get().to(get_all_companies::<DbRepo>)))
+            )
+            .wrap(Logger::default())
+            .wrap(
+                Cors::default()
+                    .allowed_origin("http://localhost:5173")
+                    .allowed_methods(vec!["GET", "POST"])
+                    .allowed_headers(vec![
+                        header::CONTENT_TYPE,
+                        header::AUTHORIZATION,
+                        header::ACCEPT,
+                    ])
+                    .supports_credentials()
             )
     })
     .bind((host, port))?

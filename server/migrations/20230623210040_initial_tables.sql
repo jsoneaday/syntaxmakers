@@ -1,4 +1,5 @@
--- Add migration script here
+CREATE EXTENSION pgcrypto;
+
 create table country (
     "id" bigserial primary key,
     "created_at" timestamptz(3) not null default current_timestamp,
@@ -706,16 +707,25 @@ insert into salary (base) values (300000);
 insert into salary (base) values (400000);
 insert into salary (base) values (500000);
 
+create table user (
+    "id" bigserial primary key,
+    "created_at" timestamptz(3) not null default current_timestamp,
+    "updated_at" timestamptz(3) not null default current_timestamp,
+    "email" varchar(120) not null unique,
+    "password" varchar(60) not null,
+);
+
 create table developer (
     "id" bigserial primary key,
     "created_at" timestamptz(3) not null default current_timestamp,
     "updated_at" timestamptz(3) not null default current_timestamp,
     "user_name" varchar(50) not null,
     "full_name" varchar(100) not null,
-    "email" varchar(120) not null unique,
+    "user_id" bigserial not null,
     "primary_lang_id" bigserial not null,
 
-    constraint fk_primary_lang foreign key(primary_lang_id) references prog_language(id)
+    constraint fk_primary_lang foreign key(primary_lang_id) references prog_language(id),
+    constraint fk_user foreign key(user_id) references user(id)
 );
 
 insert into developer 
@@ -742,10 +752,11 @@ create table employer (
     "updated_at" timestamptz(3) not null default current_timestamp,    
     "user_name" varchar(50) not null,
     "full_name" varchar(100) not null,
-    "email" varchar(120) not null unique,
+    "user_id" bigserial not null,
     "company_id" bigserial not null,
 
-    constraint fk_company foreign key(company_id) references company(id)
+    constraint fk_company foreign key(company_id) references company(id),
+    constraint fk_user foreign key(user_id) references user(id)
 );
 
 insert into employer (user_name, full_name, email, company_id) values ('jim', 'Jim Tim', 'jon@FantasticStuff.com', 1);

@@ -3,6 +3,7 @@ use fake::Fake;
 use fake::faker::lorem::en::Sentence;
 use fake::faker::name::en::{FirstName, LastName};
 use crate::app_state::AppState;
+use crate::common::authentication::auth_service::init_auth_keys;
 use crate::common::repository::base::Repository;
 use async_trait::async_trait;
 pub static COUNTRY_NAMES: OnceLock<Vec<&'static str>> = OnceLock::new();
@@ -48,7 +49,7 @@ pub fn init_fixtures() {
 }
 
 pub async fn get_app_data<T: Repository>(repo: T) -> actix_web::web::Data<AppState<T>> {
-    actix_web::web::Data::new(AppState { repo })
+    actix_web::web::Data::new(AppState { repo, auth_keys: init_auth_keys().await })
 }
 
 pub fn get_fake_fullname() -> String {

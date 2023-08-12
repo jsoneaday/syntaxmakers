@@ -1,7 +1,7 @@
-use actix_jwt_auth_middleware::FromRequest;
-use serde::{Serialize, Deserialize};
+use serde::Deserialize;
 
-#[derive(Serialize, Deserialize, Debug, Clone, FromRequest)]
-pub struct User {
-    pub id: i32
+#[derive(Deserialize)]
+pub struct LoginCredential {
+    pub email: String,
+    pub password: String
 }

@@ -1,37 +1,43 @@
-use actix_http::StatusCode;
-use actix_jwt_auth_middleware::{TokenSigner, AuthResult, AuthError};
-use actix_web::{web::{Data, Json}, get, HttpResponse, Responder, error::InternalError};
-use jwt_compact::alg::Ed25519;
-use serde::Deserialize;
-use crate::{routes::auth::models::User, app_state::AppState, common::repository::base::DbRepo};
+use actix_web::{
+    cookie::{time::Duration as ActixWebDuration, Cookie},
+    web::{Data, Json}, HttpResponse, http::header::ContentType
+};
+use chrono::{Utc, Duration};
+use jsonwebtoken::encode;
+use crate::{app_state::AppState, common::{repository::{base::Repository, user::{repo::AuthenticateFn, models::AuthenticateResult}}, authentication::auth_service::Claims}};
+use super::models::LoginCredential;
 
-#[derive(Deserialize)]
-pub struct LoginCredential {
-    email: String,
-    password: String
-}
-
-pub async fn login(cookie_signer: Data<TokenSigner<User, Ed25519>>, json: Json<LoginCredential>) -> AuthResult<HttpResponse> {
+pub async fn login<T: AuthenticateFn + Repository>(app_data: Data<AppState<T>>, json: Json<LoginCredential>) -> HttpResponse {
     println!("start login {}, {}", json.email, json.password);
+
+    let auth_result = app_data.repo.authenticate(json.email.clone(), json.password.clone()).await;
     
-    if json.email == "test@test.com".to_string() && json.password == "test123".to_string() {
-        let user = User { id: 1 };
-        Ok(HttpResponse::Ok()
-            .cookie(cookie_signer.create_access_cookie(&user)?)
-            .cookie(cookie_signer.create_refresh_cookie(&user)?)
-            .body("You are now logged in"))
-    } else {
-        Err(AuthError::RefreshAuthorizerDenied(InternalError::new(
-            "Wrong email or password",
-            StatusCode::UNAUTHORIZED
-        ).into()))
-    }    
+    match auth_result {
+        Ok(result) => {
+            if result == AuthenticateResult::Success {
+                let claims = Claims { sub: "dave".to_string(), exp: (Utc::now() + Duration::days(90)).timestamp() as usize };
+                let token = encode(&jsonwebtoken::Header::new(jsonwebtoken::Algorithm::EdDSA), &claims, &app_data.auth_keys.encoding_key).unwrap();
+                let cookie = Cookie::build("token", token.to_owned())
+                    .path("/")
+                    .max_age(ActixWebDuration::new(60 * 60, 0))
+                    .http_only(true)
+                    .finish();
+
+                HttpResponse::Ok()
+                    .cookie(cookie)
+                    .body("Login successful")
+            } else {
+                HttpResponse::Unauthorized()
+                .content_type(ContentType::json())
+                .body("Authentication failed. Wrong email or password")
+            }
+        }
+        Err(_) => {
+            HttpResponse::Unauthorized()
+                .content_type(ContentType::json())
+                .body("Server error occurred while trying to authenticate")
+        }
+    }  
 }
 
 //pub async fn register()
-
-#[get("/hello")]
-pub async fn hello(app_data: Data<AppState<DbRepo>>, user: User) -> impl Responder {
-    println!("Hello there, i see your user id is {} {:?}.", user.id, app_data);
-    format!("Hello there, i see your user id is {}.", user.id)
-}

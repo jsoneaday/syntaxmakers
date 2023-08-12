@@ -1,6 +1,6 @@
-use crate::common::repository::base::Repository;
+use crate::common::{repository::base::Repository, authentication::auth_service::AuthKeys};
 
-#[derive(Debug)]
 pub struct AppState<T: Repository> {
-    pub repo: T
+    pub repo: T,
+    pub auth_keys: AuthKeys
 }
