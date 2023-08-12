@@ -1,15 +1,16 @@
 import "../../presentation/theme/developer.css";
 import LeftMenu from "../components/LeftMenu";
 import PromotedJobs from "../components/PromotedJobs";
-import JobPost, { convert } from "../models/JobPost";
+import JobPost, { convert as convertJob } from "../models/JobPost";
 import Lister from "../components/Lister";
 import { ChangeEvent, useEffect, useState } from "react";
 import JobPreview from "../components/JobPreview";
 import clipboard from "../../presentation/theme/assets/clipboard.png";
 import clock from "../../presentation/theme/assets/wall-clock.png";
-import { useProfile } from "../../domain/redux/profile/ProfileHooks";
+import { useProfile } from "../common/redux/profile/ProfileHooks";
 import { getDeveloper } from "../../domain/repository/DeveloperRepo";
 import { getJobsByDevProfile } from "../../domain/repository/JobRepo";
+import { convert as convertDev } from "../models/DevProfile";
 /// @ts-ignore
 import { v4 as uuidv4 } from "uuid";
 
@@ -19,12 +20,12 @@ export default function Developer() {
   const [profile, setProfile] = useProfile();
 
   useEffect(() => {
-    getDeveloper(BigInt(1))
+    getDeveloper("1")
       .then((dev) => {
-        setProfile(dev);
+        setProfile(dev ? convertDev(dev) : null);
       })
       .catch((error) => {
-        console.log("failed to get developer", error);
+        console.log("Developer: failed to get developer", error);
       });
   }, []);
 
@@ -35,7 +36,7 @@ export default function Developer() {
         .then((jobs) => {
           setJobsData(
             jobs.map((job) => {
-              return convert(job);
+              return convertJob(job);
             })
           );
         })

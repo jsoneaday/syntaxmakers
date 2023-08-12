@@ -2,31 +2,31 @@ import { JOBS_URL } from "./Api";
 
 export class Job {
   constructor(
-    public id: bigint,
+    public id: string,
     public updatedAt: string, // comes from api as utc string
-    public employerId: bigint,
+    public employerId: string,
     public employerName: string,
-    public companyId: bigint,
+    public companyId: string,
     public companyName: string,
     public title: string,
     public description: string,
     public isRemote: boolean,
-    public primaryLangId: bigint,
+    public primaryLangId: string,
     public primaryLangName: string,
-    public secondaryLangId: bigint,
+    public secondaryLangId: string,
     public secondaryLangName: string,
-    public industryId: bigint,
+    public industryId: string,
     public industryName: string,
-    public salaryId: bigint,
+    public salaryId: string,
     public salary: string,
     public companyLogo?: ArrayBuffer, // normal format for file data received over wire
-    public countryId?: bigint,
+    public countryId?: string,
     public countryName?: string
   ) {}
 }
 
 export async function getJobsByDevProfile(
-  id: bigint,
+  id: string,
   pageSize: number = 20,
   lastOffset: number = 0
 ) {

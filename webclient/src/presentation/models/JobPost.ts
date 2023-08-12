@@ -8,7 +8,7 @@ import { formatDistanceToNow, parseISO } from "date-fns";
 export default class JobPost implements KeyItem {
   constructor(
     public key: Key,
-    public id: bigint,
+    public id: string,
     public updatedAt: string,
     public title: string,
     public description: string,

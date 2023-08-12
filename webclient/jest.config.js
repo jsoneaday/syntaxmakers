@@ -1,4 +1,5 @@
 export default {
+  setupFiles: ["whatwg-fetch"],
   roots: ["<rootDir>/src"],
   testMatch: [
     "**/__tests__/**/*.+(ts|tsx|js)",
