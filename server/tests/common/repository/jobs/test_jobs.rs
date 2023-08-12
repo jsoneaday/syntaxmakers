@@ -30,6 +30,7 @@ async fn test_create_job_and_get_back() {
         user_name: user_name.clone(),
         full_name: full_name.clone(),
         email: email.clone(),
+        password: "test123".to_string(),
         company_id
     }).await.unwrap();
     let languages_result = repo.query_all_languages().await.unwrap();
@@ -68,6 +69,7 @@ async fn test_create_two_jobs_and_get_back_both() {
         user_name: user_name.clone(),
         full_name: full_name.clone(),
         email: email.clone(),
+        password: "test123".to_string(),
         company_id
     }).await.unwrap();
     let languages_result = repo.query_all_languages().await.unwrap();
@@ -120,6 +122,7 @@ async fn test_create_two_jobs_and_get_back_only_one_that_matches_dev_profile() {
         user_name: user_name.clone(),
         full_name: full_name.clone(),
         email: email.clone(),
+        password: "test123".to_string(),
         company_id
     }).await.unwrap();
     let languages_result = repo.query_all_languages().await.unwrap();
@@ -129,6 +132,7 @@ async fn test_create_two_jobs_and_get_back_only_one_that_matches_dev_profile() {
         user_name: Username().fake::<String>(),
         full_name: get_fake_fullname(),
         email: FreeEmail().fake::<String>(),
+        password: "test123".to_string(),
         primary_lang_id: languages_result.get(0).unwrap().id,
         secondary_lang_id: Some(languages_result.get(1).unwrap().id)
     }).await.unwrap();

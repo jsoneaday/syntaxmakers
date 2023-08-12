@@ -707,31 +707,23 @@ insert into salary (base) values (300000);
 insert into salary (base) values (400000);
 insert into salary (base) values (500000);
 
-create table user (
-    "id" bigserial primary key,
-    "created_at" timestamptz(3) not null default current_timestamp,
-    "updated_at" timestamptz(3) not null default current_timestamp,
-    "email" varchar(120) not null unique,
-    "password" varchar(60) not null,
-);
-
 create table developer (
     "id" bigserial primary key,
     "created_at" timestamptz(3) not null default current_timestamp,
     "updated_at" timestamptz(3) not null default current_timestamp,
-    "user_name" varchar(50) not null,
+    "user_name" varchar(60) not null,
     "full_name" varchar(100) not null,
-    "user_id" bigserial not null,
+    "email" varchar(120) not null unique,
+    "password" varchar(60) not null,
     "primary_lang_id" bigserial not null,
 
-    constraint fk_primary_lang foreign key(primary_lang_id) references prog_language(id),
-    constraint fk_user foreign key(user_id) references user(id)
+    constraint fk_primary_lang foreign key(primary_lang_id) references prog_language(id)
 );
 
 insert into developer 
-(user_name, full_name, email, primary_lang_id) 
+(user_name, full_name, email, "password", primary_lang_id) 
 values 
-('jon', 'John Jones', 'jon@jon.com', 1);
+('jon', 'John Jones', 'jon@jon.com', 'test123', 1);
 
 create table developers_secondary_langs (
     "id" bigserial primary key,
@@ -749,20 +741,20 @@ values
 create table employer (
     "id" bigserial primary key,
     "created_at" timestamptz(3) not null default current_timestamp,
-    "updated_at" timestamptz(3) not null default current_timestamp,    
-    "user_name" varchar(50) not null,
+    "updated_at" timestamptz(3) not null default current_timestamp,        
+    "user_name" varchar(60) not null,
     "full_name" varchar(100) not null,
-    "user_id" bigserial not null,
+    "email" varchar(120) not null unique,
+    "password" varchar(60) not null,
     "company_id" bigserial not null,
 
-    constraint fk_company foreign key(company_id) references company(id),
-    constraint fk_user foreign key(user_id) references user(id)
+    constraint fk_company foreign key(company_id) references company(id)
 );
 
-insert into employer (user_name, full_name, email, company_id) values ('jim', 'Jim Tim', 'jon@FantasticStuff.com', 1);
-insert into employer (user_name, full_name, email, company_id) values ('linda', 'Linda Shin', 'lshin@AmazingAndCo.com', 2);
-insert into employer (user_name, full_name, email, company_id) values ('dave', 'David Waver', 'jon@SuperDuperCorp.com', 3);
-insert into employer (user_name, full_name, email, company_id) values ('dawn', 'Dawn Happ', 'jon@acmecorp.com', 4);
+insert into employer (user_name, full_name, email, "password", company_id) values ('jim', 'Jim Tim', 'jon@FantasticStuff.com', 'test123', 1);
+insert into employer (user_name, full_name, email, "password", company_id) values ('linda', 'Linda Shin', 'lshin@AmazingAndCo.com', 'test123', 2);
+insert into employer (user_name, full_name, email, "password", company_id) values ('dave', 'David Waver', 'jon@SuperDuperCorp.com', 'test123', 3);
+insert into employer (user_name, full_name, email, "password", company_id) values ('dawn', 'Dawn Happ', 'jon@acmecorp.com', 'test123', 4);
 
 create table job (
     "id" bigserial primary key,

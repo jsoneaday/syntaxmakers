@@ -14,6 +14,7 @@ pub async fn create_employer<T: InsertEmployerFn + Repository>(
         user_name: json.user_name.to_owned(),
         full_name: json.full_name.to_owned(),
         email: json.email.to_owned(),
+        password: json.password.to_owned(),
         company_id: json.company_id
     }).await;
 
@@ -121,7 +122,13 @@ mod tests {
         let repo = MockDbRepo::init().await;
         let app_data = get_app_data(repo).await;
 
-        let result = create_employer(app_data, Json(NewEmployerForRoute { user_name: Username().fake::<String>(), full_name: get_fake_fullname(), email: FreeEmail().fake::<String>(), company_id: 1 })).await.unwrap();
+        let result = create_employer(app_data, Json(NewEmployerForRoute { 
+            user_name: Username().fake::<String>(), 
+            full_name: get_fake_fullname(), 
+            email: FreeEmail().fake::<String>(), 
+            password: "test123".to_string(),
+            company_id: 1 
+        })).await.unwrap();
 
         assert!(result.id == 1)
     }

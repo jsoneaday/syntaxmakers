@@ -15,14 +15,15 @@ mod internal {
         let insert_result = query_as::<_, EntityId>(
             r"
             insert into developer 
-            (user_name, full_name, email, primary_lang_id) 
+            (user_name, full_name, email, password, primary_lang_id) 
             values 
-            ($1, $2, $3, $4)
+            ($1, $2, $3, $4, $5)
             returning id
             ")
             .bind(new_developer.user_name)
             .bind(new_developer.full_name)
             .bind(new_developer.email)
+            .bind(new_developer.password)
             .bind(new_developer.primary_lang_id)
             .fetch_one(&mut *tx)
             .await;

@@ -23,8 +23,10 @@ async fn test_create_employer_and_get_back() {
         user_name: user_name.clone(),
         full_name: full_name.clone(),
         email: email.clone(),
+        password: "test123".to_string(),
         company_id
     }).await.unwrap();
+    println!("id {}", create_result.id);
     let get_result = repo.query_employer(create_result.id).await.unwrap().unwrap();
     
     assert!(get_result.clone().id == create_result.id);
@@ -46,12 +48,14 @@ async fn test_create_two_employers_and_get_back_both() {
         user_name: Username().fake::<String>(),
         full_name: get_fake_fullname(),
         email: SafeEmail().fake::<String>(),
+        password: "test123".to_string(),
         company_id
     }).await.unwrap();
     let create_result2 = repo.insert_employer(NewEmployer {
         user_name: Username().fake::<String>(),
         full_name: get_fake_fullname(),
         email: SafeEmail().fake::<String>(),
+        password: "test123".to_string(),
         company_id
     }).await.unwrap();
 

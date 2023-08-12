@@ -9,6 +9,7 @@ pub struct NewDeveloperForRoute {
     pub user_name: String,
     pub full_name: String,
     pub email: String,
+    pub password: String,
     pub primary_lang_id: i64,
     pub secondary_lang_id: Option<i64>
 }

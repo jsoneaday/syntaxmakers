@@ -14,6 +14,7 @@ pub async fn create_developer<T: InsertDeveloperFn + Repository>(
         user_name: json.user_name.to_owned(),
         full_name: json.full_name.to_owned(),
         email: json.email.to_owned(),
+        password: json.password.to_owned(),
         primary_lang_id: json.primary_lang_id,
         secondary_lang_id: json.secondary_lang_id
     }).await;
@@ -128,7 +129,14 @@ mod tests {
         let repo = MockDbRepo::init().await;
         let app_data = get_app_data(repo).await;
 
-        let result = app_data.repo.insert_developer(NewDeveloper { user_name: Username().fake::<String>(), full_name: get_fake_fullname(), email: FreeEmail().fake::<String>(), primary_lang_id: 1, secondary_lang_id: Some(2) }).await.unwrap();
+        let result = app_data.repo.insert_developer(NewDeveloper { 
+            user_name: Username().fake::<String>(), 
+            full_name: get_fake_fullname(), 
+            email: FreeEmail().fake::<String>(), 
+            password: "test123".to_string(),
+            primary_lang_id: 1, 
+            secondary_lang_id: Some(2) 
+        }).await.unwrap();
 
         assert!(result.id == 1);
     }

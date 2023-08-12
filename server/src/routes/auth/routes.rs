@@ -4,13 +4,22 @@ use actix_web::{
 };
 use chrono::{Utc, Duration};
 use jsonwebtoken::encode;
-use crate::{app_state::AppState, common::{repository::{base::Repository, user::{repo::AuthenticateFn, models::AuthenticateResult}}, authentication::auth_service::Claims}};
+use crate::{
+    app_state::AppState, 
+    common::{repository::{base::Repository, user::{repo::AuthenticateFn, models::{AuthenticateResult, DeveloperOrEmployer as UserDeveloperOrEmployer}}}, authentication::auth_service::Claims}, 
+    routes::auth::models::DeveloperOrEmployer as AuthDeveloperOrEmployer
+};
 use super::models::LoginCredential;
 
 pub async fn login<T: AuthenticateFn + Repository>(app_data: Data<AppState<T>>, json: Json<LoginCredential>) -> HttpResponse {
     println!("start login {}, {}", json.email, json.password);
 
-    let auth_result = app_data.repo.authenticate(json.email.clone(), json.password.clone()).await;
+    let dev_or_emp = if json.is_dev_or_emp == AuthDeveloperOrEmployer::Developer {
+        UserDeveloperOrEmployer::Developer
+    } else {
+        UserDeveloperOrEmployer::Employer
+    };
+    let auth_result = app_data.repo.authenticate(dev_or_emp, json.email.clone(), json.password.clone()).await;
     
     match auth_result {
         Ok(result) => {

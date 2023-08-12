@@ -16,5 +16,6 @@ pub struct NewEmployer {
     pub user_name: String,
     pub full_name: String,
     pub email: String,
+    pub password: String,
     pub company_id: i64
 }

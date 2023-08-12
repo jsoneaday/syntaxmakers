@@ -18,6 +18,7 @@ async fn test_create_developer_and_get_back() {
         user_name: user_name.clone(),
         full_name: full_name.clone(),
         email: email.clone(),
+        password: "test123".to_string(),
         primary_lang_id,
         secondary_lang_id: None
     }).await.unwrap();
@@ -39,6 +40,7 @@ async fn test_create_two_developers_and_get_all() {
         user_name: Username().fake::<String>(),
         full_name: get_fake_fullname(),
         email: SafeEmail().fake::<String>(),
+        password: "test123".to_string(),
         primary_lang_id: 1,
         secondary_lang_id: None
     }).await.unwrap();
@@ -46,6 +48,7 @@ async fn test_create_two_developers_and_get_all() {
         user_name: Username().fake::<String>(),
         full_name: get_fake_fullname(),
         email: SafeEmail().fake::<String>(),
+        password: "test123".to_string(),
         primary_lang_id: 1,
         secondary_lang_id: None
     }).await.unwrap();
