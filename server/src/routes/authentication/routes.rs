@@ -7,7 +7,7 @@ use jsonwebtoken::encode;
 use crate::{
     app_state::AppState, 
     common::{repository::{base::Repository, user::{repo::AuthenticateFn, models::{AuthenticateResult, DeveloperOrEmployer as UserDeveloperOrEmployer}}}, authentication::auth_service::Claims}, 
-    routes::auth::models::DeveloperOrEmployer as AuthDeveloperOrEmployer
+    routes::authentication::models::DeveloperOrEmployer as AuthDeveloperOrEmployer
 };
 use super::models::LoginCredential;
 
@@ -50,3 +50,35 @@ pub async fn login<T: AuthenticateFn + Repository>(app_data: Data<AppState<T>>, 
 }
 
 //pub async fn register()
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use actix_http::StatusCode;
+    use async_trait::async_trait;
+    use fake::{faker::internet::en::FreeEmail, Fake};
+    use jsonwebtoken::{decode, Validation};
+    use crate::{common::repository::user::repo::AuthenticateFn, common_test::fixtures::{MockDbRepo, get_app_data}};
+
+    #[async_trait]
+    impl AuthenticateFn for MockDbRepo {
+        async fn authenticate(&self, _: UserDeveloperOrEmployer, _: String, _: String) -> Result<AuthenticateResult, sqlx::Error> {
+            Ok(AuthenticateResult::Success)
+        }
+    }
+
+    #[tokio::test]
+    async fn test_login_route() {
+        let repo = MockDbRepo::init().await;
+        let app_data = get_app_data(repo).await;
+
+        let result = login(app_data.clone(), Json(LoginCredential { is_dev_or_emp: AuthDeveloperOrEmployer::Developer, email: FreeEmail().fake::<String>(), password: "test123".to_string() })).await;
+
+        assert!(result.status() == StatusCode::OK);
+        let cookie = result.cookies().last().unwrap();
+        let token = cookie.value();
+        let claims = decode::<Claims>(token, &app_data.auth_keys.decoding_key, &Validation::new(jsonwebtoken::Algorithm::EdDSA)).unwrap().claims;
+        assert!(claims.sub == "dave".to_string());
+        assert!(claims.exp <= (Utc::now() + Duration::days(90)).timestamp() as usize);
+    }
+}

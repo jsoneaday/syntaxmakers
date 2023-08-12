@@ -50,7 +50,7 @@ pub mod app_state;
 pub mod routes {
     pub mod base_model;
     pub mod user_error;
-    pub mod auth {
+    pub mod authentication {
         pub mod models;
         pub mod routes;
     }
@@ -92,7 +92,7 @@ use actix_cors::Cors;
 use actix_web::{HttpServer, http::header, App, middleware::Logger, web};
 use common::authentication::auth_service::init_auth_keys;
 use common::repository::base::{DbRepo, Repository};
-use routes::auth::routes::login;
+use routes::authentication::routes::login;
 use routes::{
     salaries::routes::get_all_salaries, 
     languages::routes::get_all_languages, 

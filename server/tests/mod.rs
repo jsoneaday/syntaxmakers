@@ -1,4 +1,5 @@
 pub mod common {
+    pub mod authentication{}
     pub mod repository {
         pub mod companies {
             pub mod test_companies;
@@ -23,6 +24,9 @@ pub mod common {
         }
         pub mod jobs {
             pub mod test_jobs;
+        }
+        pub mod user {
+            pub mod test_user;
         }
     }
 }
