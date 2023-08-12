@@ -51,7 +51,7 @@ export default function Developer() {
   };
 
   return (
-    <div className="dev-container">
+    <div className="dev-container" data-testid="developer-page">
       <LeftMenu />
       <div className="dev-main">
         <div className="dev-top">

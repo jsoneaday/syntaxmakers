@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 
 export default function Home() {
   return (
-    <div className="home">
+    <div className="home" data-testid="home-page">
       <div className="panel-col home-item-dev">
         <Link to="developer" className="home-item-link">
           <img className="home-icon" src={developer} />
