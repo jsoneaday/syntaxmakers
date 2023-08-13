@@ -1,0 +1,155 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Test Developer page matches snapshot 1`] = `
+<div
+  class="dev-container"
+  data-testid="developer-page"
+>
+  <nav
+    class="panel-col dev-menu-container"
+  >
+    <span
+      class="title-font left-menu-header"
+    >
+      @jonny
+    </span>
+    <a
+      class="sub-title-font dev-menu-item"
+    >
+      <img
+        class="dev-menu-icon"
+        src="default"
+      />
+      <span>
+        Saved jobs
+      </span>
+    </a>
+    <a
+      class="sub-title-font dev-menu-item"
+    >
+      <img
+        class="dev-menu-icon"
+        src="default"
+      />
+      <span>
+        Job alerts
+      </span>
+    </a>
+  </nav>
+  <div
+    class="dev-main"
+  >
+    <div
+      class="dev-top"
+    >
+      <div
+        class="title-font dev-header"
+      >
+        Developer job search
+      </div>
+      <div
+        class="sub-title-font dev-sub-header"
+      >
+        Enter your preferences to find your next job
+      </div>
+      <div
+        class="search-header"
+      >
+        <input
+          class="search-input"
+          type="text"
+          value=""
+        />
+        <button
+          class="primary-btn"
+        >
+          search
+        </button>
+      </div>
+    </div>
+    <div
+      class="info-band"
+    >
+      <img
+        class="dev-info-band-icon"
+        src="default"
+      />
+      Result count 231
+      <img
+        class="dev-info-band-icon"
+        src="default"
+        style="margin-left: 1.5em;"
+      />
+      Date jun 16, 2023
+    </div>
+    <div
+      class="dev-post-preview-container"
+    >
+      <ul>
+        <ul
+          class="lister-container"
+        >
+          <li
+            class="dev-preview-item"
+          >
+            <div
+              class="post-preview-container"
+            >
+              <img
+                class="preview-icon"
+                src=""
+              />
+              <div
+                class="preview-content"
+              >
+                <div
+                  class="title-font"
+                >
+                  Senior React Developer
+                </div>
+                <div
+                  class="sub-title-font"
+                >
+                  Company A
+                </div>
+                <div
+                  class="normal-font"
+                >
+                  Remote
+                </div>
+                <div
+                  class="normal-font preview-salary"
+                >
+                  Base Salary: 
+                  <i>
+                    $200000
+                  </i>
+                </div>
+                <div
+                  class="small-font preview-timestamp"
+                >
+                  less than a minute ago
+                </div>
+              </div>
+            </div>
+          </li>
+        </ul>
+      </ul>
+    </div>
+  </div>
+  <div
+    class="panel-col job-menu-container"
+  >
+    <div
+      class="title-font"
+    >
+      Promoted jobs
+    </div>
+    <ul>
+      <ul
+        class="lister-container"
+      />
+    </ul>
+  </div>
+</div>
+`;
