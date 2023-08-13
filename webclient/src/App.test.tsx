@@ -3,12 +3,29 @@ import userEvent from "@testing-library/user-event";
 import "@testing-library/jest-dom/extend-expect";
 import App from "./App";
 import { Provider as ReduxProvider } from "react-redux";
-import { store } from "./presentation/common/redux/Store";
 import * as DevRepo from "./domain/repository/DeveloperRepo";
 import * as JobRepo from "./domain/repository/JobRepo";
 import { Developer } from "./domain/repository/DeveloperRepo";
 import { faker } from "@faker-js/faker";
 import { getFakeFullName } from "./domain/TestUtils";
+import configureStore from "redux-mock-store";
+import DevProfile from "./presentation/models/DevProfile";
+/// @ts-ignore
+import { v4 as uuidv4 } from "uuid";
+
+const defaultDevProfile: DevProfile = {
+  key: uuidv4(),
+  id: "1",
+  updatedAt: new Date().toISOString(),
+  userName: faker.internet.userName(),
+  fullName: getFakeFullName(),
+  email: faker.internet.email(),
+  primaryLangId: "1",
+};
+const mockStore = configureStore();
+const store = mockStore({
+  profile: defaultDevProfile,
+});
 
 describe("Test Home page", () => {
   beforeEach(() => {
@@ -18,12 +35,11 @@ describe("Test Home page", () => {
           res(
             new Developer(
               "1",
-              new Date(),
-              "dave",
-              "David Choi",
-              "test@test.com",
-              "1",
-              undefined
+              new Date().toISOString(),
+              faker.internet.userName(),
+              getFakeFullName(),
+              faker.internet.email(),
+              "1"
             )
           );
         })
@@ -50,10 +66,7 @@ describe("Test Home page", () => {
               "1",
               faker.commerce.product(),
               "1",
-              "200000",
-              undefined, // normal format for file data received over wire
-              undefined,
-              undefined
+              "200000"
             ),
           ]);
         })

@@ -1,4 +1,3 @@
-import "./App.css";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import Home from "./presentation/pages/Home";
 import Developer from "./presentation/pages/Developer";
