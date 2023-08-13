@@ -1,9 +1,14 @@
 import "../../theme/login.css";
 import Modal from "../Modal";
 
-export default function Login() {
+interface LoginProps {
+  isOpen: boolean;
+  onRequestClose: () => void;
+}
+
+export default function Login({ isOpen, onRequestClose }: LoginProps) {
   return (
-    <Modal>
+    <Modal isOpen={isOpen} onRequestClose={onRequestClose}>
       <form className="login-form">
         <div className="login-item">
           <span>Email</span>
