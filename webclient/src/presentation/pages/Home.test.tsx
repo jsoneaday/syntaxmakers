@@ -15,7 +15,7 @@ function WrappedHome() {
 }
 
 describe("Test Home", () => {
-  it("check snapshot", async () => {
+  it("matches snapshot", async () => {
     render(<WrappedHome />);
     const home = screen.getByTestId("home-page");
 

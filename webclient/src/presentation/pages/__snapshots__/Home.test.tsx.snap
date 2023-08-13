@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Test Home check snapshot 1`] = `
+exports[`Test Home matches snapshot 1`] = `
 <div
   class="home"
   data-testid="home-page"
