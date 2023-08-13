@@ -1,0 +1,47 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Test Home check snapshot 1`] = `
+<div
+  class="home"
+  data-testid="home-page"
+>
+  <div
+    class="panel-col home-item-dev"
+  >
+    <a
+      class="home-item-link"
+      data-testid="dev-link"
+      href="/developer"
+    >
+      <img
+        class="home-icon"
+        src="default"
+      />
+      <div
+        class="title-font home-item-content"
+      >
+        I'm a Developer
+      </div>
+    </a>
+  </div>
+  <div
+    class="panel-col home-item-emp"
+  >
+    <a
+      class="home-item-link"
+      data-testid="emp-link"
+      href="/employer"
+    >
+      <img
+        class="home-icon"
+        src="default"
+      />
+      <div
+        class="title-font home-item-content"
+      >
+        I'm an Employer
+      </div>
+    </a>
+  </div>
+</div>
+`;

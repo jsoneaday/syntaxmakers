@@ -23,7 +23,7 @@ describe("Test Home page", () => {
               "David Choi",
               "test@test.com",
               "1",
-              null
+              undefined
             )
           );
         })

@@ -8,7 +8,7 @@ export class Developer {
     public full_name: string,
     public email: string,
     public primary_lang_id: string,
-    public secondary_lang_id?: string | null
+    public secondary_lang_id?: string
   ) {}
 }
 
