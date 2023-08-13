@@ -1,5 +1,5 @@
 import { faker } from "@faker-js/faker";
-import { getFakeFullName } from "../../domain/TestUtils";
+import { getFakeFullName } from "../../domain/__test__/TestUtils";
 import { Provider as ReduxProvider } from "react-redux";
 import * as DevRepo from "../../domain/repository/DeveloperRepo";
 import * as JobRepo from "../../domain/repository/JobRepo";
