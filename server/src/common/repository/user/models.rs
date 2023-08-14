@@ -1,6 +1,7 @@
+
 #[derive(PartialEq)]
 pub enum AuthenticateResult {
-    Success,
+    Success{ id: i64 },
     Failure
 }
 

@@ -1,21 +1,19 @@
 import { ReactNode } from "react";
 import ReactModal from "react-modal";
+import "../theme/modal.css";
 
 interface ModalProps {
   isOpen: boolean;
-  onRequestClose: () => void;
+  toggleOpen: () => void;
   children: ReactNode;
 }
 
-export default function Modal({
-  isOpen,
-  onRequestClose,
-  children,
-}: ModalProps) {
+export default function Modal({ isOpen, toggleOpen, children }: ModalProps) {
   return (
     <ReactModal
+      className="modal-container"
       isOpen={isOpen}
-      onRequestClose={onRequestClose}
+      onRequestClose={toggleOpen}
       shouldCloseOnOverlayClick={true}
     >
       {children}

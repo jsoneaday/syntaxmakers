@@ -21,7 +21,7 @@ mod internal {
 
         match result {
             Ok(opt_entity) => match opt_entity {
-                Some(_) => Ok(AuthenticateResult::Success),
+                Some(entity) => Ok(AuthenticateResult::Success { id: entity.id }),
                 None => Ok(AuthenticateResult::Failure)
             },
             Err(e) => Err(e.into())

@@ -23,22 +23,26 @@ pub async fn login<T: AuthenticateFn + Repository>(app_data: Data<AppState<T>>, 
     
     match auth_result {
         Ok(result) => {
-            if result == AuthenticateResult::Success {
-                let claims = Claims { sub: "dave".to_string(), exp: (Utc::now() + Duration::days(90)).timestamp() as usize };
-                let token = encode(&jsonwebtoken::Header::new(jsonwebtoken::Algorithm::EdDSA), &claims, &app_data.auth_keys.encoding_key).unwrap();
-                let cookie = Cookie::build("token", token.to_owned())
-                    .path("/")
-                    .max_age(ActixWebDuration::new(60 * 60, 0))
-                    .http_only(true)
-                    .finish();
+            match result {
+                AuthenticateResult::Success { id } => {
+                    let claims = Claims { sub: "dave".to_string(), exp: (Utc::now() + Duration::days(90)).timestamp() as usize };
+                    let token = encode(&jsonwebtoken::Header::new(jsonwebtoken::Algorithm::EdDSA), &claims, &app_data.auth_keys.encoding_key).unwrap();
+                    let cookie = Cookie::build("token", token.to_owned())
+                        .path("/")
+                        .max_age(ActixWebDuration::new(60 * 60, 0))
+                        .http_only(true)
+                        .finish();
 
-                HttpResponse::Ok()
-                    .cookie(cookie)
-                    .body("Login successful")
-            } else {
-                HttpResponse::Unauthorized()
-                .content_type(ContentType::json())
-                .body("Authentication failed. Wrong email or password")
+                    HttpResponse::Ok()
+                        .cookie(cookie)
+                        .content_type(ContentType::json())
+                        .body(format!("{}", id))
+                },
+                _ => {
+                    HttpResponse::Unauthorized()
+                        .content_type(ContentType::json())
+                        .body("Authentication failed. Wrong email or password")
+                }
             }
         }
         Err(_) => {
@@ -63,7 +67,7 @@ mod tests {
     #[async_trait]
     impl AuthenticateFn for MockDbRepo {
         async fn authenticate(&self, _: UserDeveloperOrEmployer, _: String, _: String) -> Result<AuthenticateResult, sqlx::Error> {
-            Ok(AuthenticateResult::Success)
+            Ok(AuthenticateResult::Success{ id: 1 })
         }
     }
 

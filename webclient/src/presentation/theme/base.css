@@ -154,15 +154,3 @@ input[type="reset"] {
   cursor: pointer;
   outline: inherit;
 }
-
-.primary-btn {
-  background-color: var(--primary-btn-cl);
-  color: var(--bg-cl);
-  border-radius: var(--border-rad);
-  border: 1px solid var(--primary-btn-cl);
-  padding: 0.75em 1.1em;
-  font-size: 1rem;
-  font-weight: var(--bold-font);
-  cursor: pointer;
-  line-height: 1.1;
-}

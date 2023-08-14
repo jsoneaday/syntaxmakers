@@ -1,0 +1,9 @@
+.primary-btn {
+  justify-content: center;
+  background-color: var(--secondary-cl);
+  color: var(--bg-cl);
+  border-radius: 5px;
+  padding-top: 15px;
+  padding-bottom: 15px;
+  width: 100%;
+}

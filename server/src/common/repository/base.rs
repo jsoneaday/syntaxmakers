@@ -4,7 +4,7 @@ use std::env;
 use dotenv::dotenv;
 use async_trait::async_trait;
 
-#[derive(FromRow,Clone)]
+#[derive(FromRow, Clone)]
 pub struct EntityId {
     pub id: i64
 }
