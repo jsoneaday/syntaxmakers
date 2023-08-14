@@ -10,6 +10,7 @@ export async function login(
   email: string,
   password: string
 ) {
+  console.log("fetch", fetch);
   try {
     const result = await fetch(LOGIN_URL, {
       method: "post",

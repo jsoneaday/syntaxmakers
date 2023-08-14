@@ -16,13 +16,23 @@
   margin-bottom: 12px;
 }
 
+.login-item-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--secondary-font-cl);
+  width: 100%;
+  margin-bottom: 12px;
+}
+
 .login-label {
   margin-bottom: 6px;
 }
 
 .login-input {
   outline: 0;
-  border: solid 1px var(--secondary-font-cl);
+  border: solid 1px var(--tertiary-font-cl);
   border-radius: 5px;
   padding: 0.75em;
   width: 100%;

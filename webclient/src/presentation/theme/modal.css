@@ -1,6 +1,5 @@
 .modal-container {
   outline: 0;
-  position: fixed;
   top: 5em;
   width: 400px;
   height: 400px;
@@ -8,7 +7,7 @@
   border: solid 1px var(--border-cl);
   border-radius: 5px;
   margin: auto;
+  margin-top: 5em;
   opacity: 1;
   background-color: var(--bg-cl);
-  transform: translateX(130%);
 }
