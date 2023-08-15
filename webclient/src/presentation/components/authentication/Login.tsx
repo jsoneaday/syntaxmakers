@@ -7,7 +7,8 @@ import { PrimaryButton } from "../controls/Buttons";
 import Modal from "../Modal";
 import { convert as convertDev } from "../../models/DevProfile";
 import Checkbox from "../controls/Checkbox";
-import { useState } from "react";
+import { useState, useTransition } from "react";
+import { useAuthToken } from "../../common/redux/authToken/AuthTokenHooks";
 
 interface LoginProps {
   isDevOrEmployer: DevOrEmployer;
@@ -23,17 +24,27 @@ export default function Login({
   const [_profile, setProfile] = useProfile();
   const [email, setEmail] = useState("jon@jon.com");
   const [password, setPassword] = useState("test123");
+  const [_authToken, setAuthToken] = useAuthToken();
+  const [_isPending, startTransition] = useTransition();
 
   const onClickLogin = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
 
     login(isDevOrEmployer, email, password)
       .then((access_token: string) => {
-        console.log("cookie", document.cookie);
-        console.log("login success access_token:", access_token);
         getDeveloperByEmail(email, access_token)
           .then((dev) => {
-            setProfile(dev ? convertDev(dev) : null);
+            if (dev) {
+              startTransition(() => {
+                setProfile(convertDev(dev));
+                setAuthToken({ id: dev.id, token: access_token });
+              });
+            } else {
+              startTransition(() => {
+                setProfile(null);
+                setAuthToken(null);
+              });
+            }
           })
           .catch((error) => {
             console.log("Developer: failed to get developer", error);
