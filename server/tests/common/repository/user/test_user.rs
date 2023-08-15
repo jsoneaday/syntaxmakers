@@ -19,7 +19,7 @@ async fn test_authenticate_returns_authenticateresult() {
     let developer = app_data.repo.query_developer(dev_entity.id).await.unwrap().unwrap();
 
     let auth_result = app_data.repo.authenticate(DeveloperOrEmployer::Developer, developer.email.clone(), password).await.unwrap();
-    assert!(auth_result == AuthenticateResult::Success);
+    assert!(auth_result == AuthenticateResult::Success { id: developer.id });
 
     let auth_result = app_data.repo.authenticate(DeveloperOrEmployer::Developer, developer.email, "wrong password".to_string()).await.unwrap();
     assert!(auth_result == AuthenticateResult::Failure);

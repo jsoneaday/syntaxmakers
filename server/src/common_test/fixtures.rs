@@ -1,9 +1,14 @@
 use std::sync::OnceLock;
+use actix_http::header::HeaderValue;
+use actix_web::http::header;
+use actix_web::{HttpRequest, test};
 use fake::Fake;
 use fake::faker::lorem::en::Sentence;
 use fake::faker::name::en::{FirstName, LastName};
+use jsonwebtoken::EncodingKey;
+use serde::Serialize;
 use crate::app_state::AppState;
-use crate::common::authentication::auth_service::init_auth_keys;
+use crate::common::authentication::auth_service::{init_auth_keys, get_token};
 use crate::common::repository::base::Repository;
 use async_trait::async_trait;
 pub static COUNTRY_NAMES: OnceLock<Vec<&'static str>> = OnceLock::new();
@@ -71,4 +76,15 @@ impl Repository for MockDbRepo {
     async fn init() -> Self {
         MockDbRepo
     }
+}
+
+pub fn get_fake_request_with_bearer_token(user_name: String, encoding_key: &EncodingKey, url: &str, data: impl Serialize) -> HttpRequest {
+    let header_value_string = format!("Bearer {}", get_token(user_name, encoding_key, None));
+    let header_value = HeaderValue::from_str(&header_value_string).unwrap();
+    test::TestRequest
+        ::post()
+        .append_header((header::AUTHORIZATION, header_value.clone()))
+        .uri(url)
+        .set_json(data)
+        .to_http_request()
 }
