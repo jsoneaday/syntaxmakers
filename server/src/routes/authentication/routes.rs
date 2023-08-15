@@ -26,13 +26,13 @@ pub async fn is_authenticated(user_name: String, headers: &HeaderMap, decoding_k
     _ = headers.iter().for_each(|header| {
         let header_name = header.0.as_str();
         let header_val = header.1.to_str();
-        println!("header_name {}", header_name);
-        println!("header_val {:?}", header_val);
+        
         if header_name == "authorization" {
             match header_val {
                 Ok(bearer) => {
                     let bearer_items: Vec<&str> = bearer.split(' ').collect();
                     let claims = decode_token(bearer_items.get(1).unwrap(), decoding_key);
+                    
                     if claims.sub == user_name {
                         if claims.exp >= (Utc::now().timestamp() as usize) {
                             result = Ok(true);
