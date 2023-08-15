@@ -78,8 +78,8 @@ impl Repository for MockDbRepo {
     }
 }
 
-pub fn get_fake_request_with_bearer_token(user_name: String, encoding_key: &EncodingKey, url: &str, data: impl Serialize) -> HttpRequest {
-    let header_value_string = format!("Bearer {}", get_token(user_name, encoding_key, None));
+pub fn get_fake_httprequest_with_bearer_token(user_name: String, encoding_key: &EncodingKey, url: &str, data: impl Serialize, token_expiration_duration: Option<i64>) -> HttpRequest {
+    let header_value_string = format!("Bearer {}", get_token(user_name, encoding_key, token_expiration_duration));
     let header_value = HeaderValue::from_str(&header_value_string).unwrap();
     test::TestRequest
         ::post()

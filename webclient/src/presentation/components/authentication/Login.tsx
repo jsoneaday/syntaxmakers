@@ -1,5 +1,5 @@
 import { login } from "../../../domain/repository/AuthRepo";
-import { getDeveloper } from "../../../domain/repository/DeveloperRepo";
+import { getDeveloperByEmail } from "../../../domain/repository/DeveloperRepo";
 import { useProfile } from "../../common/redux/profile/ProfileHooks";
 import { DevOrEmployer } from "../../models/DevOrEmployer";
 import "../../theme/login.css";
@@ -28,9 +28,10 @@ export default function Login({
     e.preventDefault();
 
     login(isDevOrEmployer, email, password)
-      .then((id: BigInt) => {
-        console.log("login success id:", id.toString());
-        getDeveloper(id.toString())
+      .then((access_token: string) => {
+        console.log("cookie", document.cookie);
+        console.log("login success access_token:", access_token);
+        getDeveloperByEmail(email, access_token)
           .then((dev) => {
             setProfile(dev ? convertDev(dev) : null);
           })

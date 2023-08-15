@@ -1,6 +1,6 @@
 use actix_http::header::HeaderMap;
 use actix_web::{
-    cookie::{time::Duration as ActixWebDuration, Cookie},
+    cookie::{time::Duration as ActixWebDuration, Cookie, SameSite},
     web::{Data, Json}, 
     HttpResponse,
     http::header::ContentType
@@ -13,20 +13,21 @@ use crate::{
         repository::{
             base::Repository, user::{repo::AuthenticateFn, models::{AuthenticateResult, DeveloperOrEmployer as UserDeveloperOrEmployer}}, developers::repo::QueryDeveloperFn
         }, 
-        authentication::auth_service::{get_token, decode_token}
+        authentication::auth_service::{get_token, decode_token, STANDARD_REFRESH_TOKEN_EXPIRATION}
     }, 
     routes::{authentication::models::DeveloperOrEmployer as AuthDeveloperOrEmployer, user_error::UserError}
 };
 use super::models::LoginCredential;
 
 // todo: need to figure out how to mock this
+/// Checks headers for Authorization and Bearer token
 pub async fn is_authenticated(user_name: String, headers: &HeaderMap, decoding_key: &DecodingKey) -> Result<bool, UserError> {
     let mut result: Result<bool, UserError> = Err(UserError::InternalError);
 
     _ = headers.iter().for_each(|header| {
         let header_name = header.0.as_str();
         let header_val = header.1.to_str();
-        
+        println!("header_name {}", header_name);
         if header_name == "authorization" {
             match header_val {
                 Ok(bearer) => {
@@ -65,17 +66,19 @@ pub async fn login<T: AuthenticateFn + QueryDeveloperFn + Repository>(app_data: 
                     match developer {
                         Ok(opt_dev) => {
                             if let Some(dev) = opt_dev {
-                                let token = get_token(dev.user_name, &app_data.auth_keys.encoding_key, None);
-                                let cookie = Cookie::build("token", token.to_owned())
+                                let access_token = get_token(dev.user_name.clone(), &app_data.auth_keys.encoding_key, Some(60 * 10)); // todo: drop down to 2 min after testing
+                                let refresh_token = get_token(dev.user_name, &app_data.auth_keys.encoding_key, None);
+                                let refresh_cookie = Cookie::build("refresh_token", refresh_token.to_owned())
                                     .path("/")
-                                    .max_age(ActixWebDuration::new(60 * 60, 0))
+                                    .max_age(ActixWebDuration::new(STANDARD_REFRESH_TOKEN_EXPIRATION, 0))
                                     .http_only(true)
+                                    .secure(false) // todo: enable when https is ready
+                                    //.same_site(SameSite::Lax) // todo: activate once deployed
                                     .finish();
-            
+                                
                                 HttpResponse::Ok()
-                                    .cookie(cookie)
-                                    .content_type(ContentType::json())
-                                    .body(format!("{}", id))
+                                    .cookie(refresh_cookie)
+                                    .body(format!("{}", access_token))
                             } else {
                                 HttpResponse::Unauthorized()
                                     .content_type(ContentType::json())
@@ -111,10 +114,9 @@ mod tests {
     use super::*;
     use actix_http::StatusCode;
     use async_trait::async_trait;
-    use chrono::Duration;
     use fake::{faker::internet::en::FreeEmail, Fake};
     use jsonwebtoken::{decode, Validation};
-    use crate::{common::{repository::{user::repo::AuthenticateFn, developers::models::Developer}, authentication::auth_service::Claims}, common_test::fixtures::{get_app_data, get_fake_request_with_bearer_token}};
+    use crate::{common::{repository::{user::repo::AuthenticateFn, developers::models::Developer}, authentication::auth_service::{Claims, STANDARD_REFRESH_TOKEN_EXPIRATION}}, common_test::fixtures::{get_app_data, get_fake_httprequest_with_bearer_token}};
 
     const DEV_USERNAME: &str = "tester";
     struct MockDbRepo;
@@ -154,7 +156,7 @@ mod tests {
         let repo = MockDbRepo::init().await;
         let app_data = get_app_data(repo).await;
 
-        let req = get_fake_request_with_bearer_token(DEV_USERNAME.to_string(), &app_data.auth_keys.encoding_key, "/v1/developer", 1);
+        let req = get_fake_httprequest_with_bearer_token(DEV_USERNAME.to_string(), &app_data.auth_keys.encoding_key, "/v1/developer", 1, Some(60*2));
 
         let result = is_authenticated(DEV_USERNAME.to_string(), req.headers(), &app_data.auth_keys.decoding_key).await.unwrap();
 
@@ -170,9 +172,10 @@ mod tests {
 
         assert!(result.status() == StatusCode::OK);
         let cookie = result.cookies().last().unwrap();
-        let token = cookie.value();
-        let claims = decode::<Claims>(token, &app_data.auth_keys.decoding_key, &Validation::new(jsonwebtoken::Algorithm::EdDSA)).unwrap().claims;
-        assert!(claims.sub == DEV_USERNAME.to_string());
-        assert!(claims.exp <= (Utc::now() + Duration::days(90)).timestamp() as usize);
+        let refresh_token = cookie.value();
+        let claims = decode::<Claims>(refresh_token, &app_data.auth_keys.decoding_key, &Validation::new(jsonwebtoken::Algorithm::EdDSA)).unwrap().claims;
+        
+        assert!(claims.exp >= STANDARD_REFRESH_TOKEN_EXPIRATION as usize);
+        assert!(claims.sub == DEV_USERNAME.to_string());        
     }
 }

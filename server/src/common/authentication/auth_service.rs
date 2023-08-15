@@ -5,6 +5,8 @@ use serde::{Deserialize, Serialize};
 use derive_more::{Display, Error};
 use jsonwebtoken::{ Validation, encode, decode, Algorithm };
 
+pub const STANDARD_REFRESH_TOKEN_EXPIRATION: i64 = 60 * 60 * 24 * 30;
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Claims {
     pub sub: String,
@@ -33,13 +35,13 @@ pub async fn init_auth_keys() -> AuthKeys {
     AuthKeys { encoding_key, decoding_key, key_pair: pair }
 }
 
-pub fn get_token(user_name: String, encoding_key: &EncodingKey, exp_duration_days: Option<i64>) -> String {
-    let duration = if let None = exp_duration_days {
-        90
+pub fn get_token(user_name: String, encoding_key: &EncodingKey, exp_duration_seconds: Option<i64>) -> String {
+    let duration = if let None = exp_duration_seconds {
+        STANDARD_REFRESH_TOKEN_EXPIRATION
     } else {
-        exp_duration_days.unwrap()
+        exp_duration_seconds.unwrap()
     };
-    let claims = Claims { sub: user_name, exp: (Utc::now() + Duration::days(duration)).timestamp() as usize };
+    let claims = Claims { sub: user_name, exp: (Utc::now() + Duration::seconds(duration)).timestamp() as usize };
     let token = encode(&jsonwebtoken::Header::new(jsonwebtoken::Algorithm::EdDSA), &claims, encoding_key).unwrap();
 
     token

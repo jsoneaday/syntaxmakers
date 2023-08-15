@@ -1,4 +1,4 @@
-import { DEVELOPER_URL } from "./Api";
+import { DEVELOPER_EMAIL_URL, DEVELOPER_URL } from "./Api";
 
 export class Developer {
   constructor(
@@ -15,6 +15,23 @@ export class Developer {
 export async function getDeveloper(id: string) {
   const response = await fetch(`${DEVELOPER_URL}/${id}`, {
     method: "get",
+  });
+
+  if (response.ok) {
+    const developerObj: Developer = await response.json();
+    return developerObj;
+  }
+  return null;
+}
+
+export async function getDeveloperByEmail(email: string, access_token: string) {
+  const response = await fetch(`${DEVELOPER_EMAIL_URL}/${email}`, {
+    method: "get",
+    credentials: "include",
+    mode: "cors",
+    headers: {
+      Authorization: `Bearer ${access_token}`,
+    },
   });
 
   if (response.ok) {

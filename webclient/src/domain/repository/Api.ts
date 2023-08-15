@@ -7,6 +7,7 @@ export const INDUSTRIES_URL = `${API_ROOT_URL}industries`;
 export const EMPLOYER_URL = `${API_ROOT_URL}employer`;
 export const EMPLOYERS_URL = `${API_ROOT_URL}employers`;
 export const DEVELOPER_URL = `${API_ROOT_URL}developer`;
+export const DEVELOPER_EMAIL_URL = `${API_ROOT_URL}developer_email`;
 export const DEVELOPERS_URL = `${API_ROOT_URL}developers`;
 export const COUNTRIES_URL = `${API_ROOT_URL}countries`;
 export const COMPANY_URL = `${API_ROOT_URL}company`;

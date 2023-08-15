@@ -10,10 +10,10 @@ export async function login(
   email: string,
   password: string
 ) {
-  console.log("fetch", fetch);
   try {
-    const result = await fetch(LOGIN_URL, {
+    const response = await fetch(LOGIN_URL, {
       method: "post",
+      credentials: "include",
       headers: {
         "Content-Type": "application/json",
       },
@@ -23,13 +23,14 @@ export async function login(
         password,
       }),
     });
-    if (result.ok) {
-      const id: bigint = await result.json();
-      return id;
+
+    if (response.ok) {
+      const access_token: string = await response.text();
+      return access_token;
     }
   } catch (err) {
     console.log("login failed", err);
   }
 
-  return BigInt(0);
+  return "";
 }

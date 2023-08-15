@@ -30,6 +30,7 @@ lazy_static = "1.4.0"
 log = "0.4.16"
 mockall = "0.11.4"
 multipart = "0.18.0"
+openssl = "0.10.56"
 protoc = "2.28.0"
 ring = { version = "0.16.20", features = ["std"] }
 rand = "0.8.5"

@@ -72,6 +72,17 @@ mod internal {
             .fetch_optional(conn).await
     }
 
+    pub async fn query_developer_by_email(conn: &Pool<Postgres>, email: String) -> Result<Option<Developer>, Error> {
+        query_as::<_, Developer>(
+            r"
+            select d.id, d.created_at, d.updated_at, d.user_name, d.full_name, d.email, d.primary_lang_id, dsl.secondary_lang_id
+            from developer d left join developers_secondary_langs dsl on d.id = dsl.developer_id
+            where d.email = $1
+            ")
+            .bind(email)
+            .fetch_optional(conn).await
+    }
+
     pub async fn query_all_developers(conn: &Pool<Postgres>, page_size: i32, last_offset: i64) -> Result<Vec<Developer>, Error> {
         query_as::<_, Developer>(
             r"
@@ -109,6 +120,18 @@ pub trait QueryDeveloperFn {
 impl QueryDeveloperFn for DbRepo {
     async fn query_developer(&self, id: i64) -> Result<Option<Developer>, Error> {
         internal::query_developer(self.get_conn(), id).await
+    }
+}
+
+#[async_trait]
+pub trait QueryDeveloperByEmailFn {
+    async fn query_developer_by_email(&self, email: String) -> Result<Option<Developer>, Error>;
+}
+
+#[async_trait]
+impl QueryDeveloperByEmailFn for DbRepo {
+    async fn query_developer_by_email(&self, email: String) -> Result<Option<Developer>, Error> {
+        internal::query_developer_by_email(self.get_conn(), email).await
     }
 }
 
