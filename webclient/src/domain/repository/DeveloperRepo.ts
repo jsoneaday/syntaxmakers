@@ -28,7 +28,6 @@ export async function getDeveloperByEmail(email: string, access_token: string) {
   const response = await fetch(`${DEVELOPER_EMAIL_URL}/${email}`, {
     method: "get",
     credentials: "include",
-    mode: "cors",
     headers: {
       Authorization: `Bearer ${access_token}`,
     },
