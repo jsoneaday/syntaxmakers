@@ -2,7 +2,6 @@ use chrono::{Utc, Duration};
 use jsonwebtoken::{DecodingKey, EncodingKey};
 use ring::signature::{Ed25519KeyPair, KeyPair};
 use serde::{Deserialize, Serialize};
-use derive_more::{Display, Error};
 use jsonwebtoken::{ Validation, encode, decode, Algorithm };
 
 pub const STANDARD_REFRESH_TOKEN_EXPIRATION: i64 = 60 * 60 * 24 * 30;
@@ -13,16 +12,9 @@ pub struct Claims {
     pub exp: usize,
 }
 
-#[derive(Error, Display, Debug)]
-pub enum AuthError {
-    #[display(fmt = "Unable to create authentication keys")]
-    UnableToCreateKeys
-}
-
 pub struct AuthKeys {
     pub encoding_key: EncodingKey,
-    pub decoding_key: DecodingKey,
-    pub key_pair: Ed25519KeyPair
+    pub decoding_key: DecodingKey
 }
 
 pub async fn init_auth_keys() -> AuthKeys {
@@ -32,7 +24,7 @@ pub async fn init_auth_keys() -> AuthKeys {
     let pair = Ed25519KeyPair::from_pkcs8(doc.as_ref()).unwrap();
     let decoding_key = DecodingKey::from_ed_der(pair.public_key().as_ref());
 
-    AuthKeys { encoding_key, decoding_key, key_pair: pair }
+    AuthKeys { encoding_key, decoding_key }
 }
 
 pub fn get_token(user_name: String, encoding_key: &EncodingKey, exp_duration_seconds: Option<i64>) -> String {

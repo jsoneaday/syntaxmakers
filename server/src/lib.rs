@@ -131,7 +131,6 @@ pub async fn run() -> std::io::Result<()> {
         repo,
         auth_keys: init_auth_keys().await
     });    
-    //let ssl_builder = ssl_builder();
 
     HttpServer::new(move || {
         App::new()
@@ -144,9 +143,7 @@ pub async fn run() -> std::io::Result<()> {
                     .allowed_headers(vec![
                         header::CONTENT_TYPE,
                         header::AUTHORIZATION,
-                        header::ACCESS_CONTROL_ALLOW_ORIGIN,
                         header::ACCEPT,
-                        header::COOKIE
                     ])
                     .supports_credentials()
                     .max_age(3600)
@@ -190,7 +187,6 @@ pub async fn run() -> std::io::Result<()> {
             )            
     })
     .bind((host, port)).expect("")
-    //.bind_ssl("127.0.0.1:4004", ssl_builder)?
     .run()
     .await
 }

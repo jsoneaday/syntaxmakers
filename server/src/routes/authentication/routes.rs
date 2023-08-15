@@ -48,7 +48,8 @@ pub async fn is_authenticated(user_name: String, headers: &HeaderMap, decoding_k
     result
 }
 
-pub async fn login<T: AuthenticateFn + QueryDeveloperFn + Repository>(app_data: Data<AppState<T>>, json: Json<LoginCredential>) -> HttpResponse {
+pub async fn login<T: AuthenticateFn + QueryDeveloperFn + Repository>(app_data: Data<AppState<T>>, json: Json<LoginCredential>) 
+    -> HttpResponse {
     println!("start login {}, {}", json.email, json.password);
 
     let dev_or_emp = if json.is_dev_or_emp == AuthDeveloperOrEmployer::Developer {
