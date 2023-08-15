@@ -105,10 +105,11 @@ use routes::{
     companies::routes::{get_all_companies, create_company}
 };
 use crate::app_state::AppState;
-use std::{env, fs};
+use std::env;
 use dotenv::dotenv;
 use openssl::ssl::{SslAcceptorBuilder, SslAcceptor, SslMethod, SslFiletype};
 
+#[allow(unused)]
 fn ssl_builder() -> SslAcceptorBuilder {
     let mut builder = SslAcceptor::mozilla_intermediate(SslMethod::tls()).unwrap();
     builder
@@ -137,20 +138,18 @@ pub async fn run() -> std::io::Result<()> {
             .app_data(app_data.clone())     
             .wrap(Logger::default())
             .wrap(
-                Cors::permissive()
-                // Cors::default()
-                //     .allowed_origin("http://localhost:5173")
-                //     .allow_any_origin()
-                //     .allowed_methods(vec!["GET", "POST"])
-                //     .allowed_headers(vec![
-                //         header::CONTENT_TYPE,
-                //         header::AUTHORIZATION,
-                //         header::ACCESS_CONTROL_ALLOW_ORIGIN,
-                //         header::ACCEPT,
-                //         header::COOKIE
-                //     ])
-                //     .supports_credentials()
-                //     .max_age(3600)
+                Cors::default()
+                    .allowed_origin("http://localhost:5173")
+                    .allowed_methods(vec!["GET", "POST"])
+                    .allowed_headers(vec![
+                        header::CONTENT_TYPE,
+                        header::AUTHORIZATION,
+                        header::ACCESS_CONTROL_ALLOW_ORIGIN,
+                        header::ACCEPT,
+                        header::COOKIE
+                    ])
+                    .supports_credentials()
+                    .max_age(3600)
             )                              
             .service(
                 web::scope("/v1")

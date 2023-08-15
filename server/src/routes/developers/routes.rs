@@ -75,7 +75,6 @@ pub async fn get_developer_by_email<T: QueryDeveloperByEmailFn + Repository>(
     match result {
         Ok(optional_dev) => match optional_dev {
             Some(dev) => {
-                println!("cookies {:?}", req.cookies());
                 let authenticated = is_authenticated(dev.user_name.clone(), req.headers(), &app_data.auth_keys.decoding_key).await;
                 match authenticated {
                     Ok(auth) => {

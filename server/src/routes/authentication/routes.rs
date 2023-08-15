@@ -1,6 +1,6 @@
 use actix_http::header::HeaderMap;
 use actix_web::{
-    cookie::{time::Duration as ActixWebDuration, Cookie, SameSite},
+    cookie::{time::Duration as ActixWebDuration, Cookie},
     web::{Data, Json}, 
     HttpResponse,
     http::header::ContentType
@@ -27,7 +27,7 @@ pub async fn is_authenticated(user_name: String, headers: &HeaderMap, decoding_k
     _ = headers.iter().for_each(|header| {
         let header_name = header.0.as_str();
         let header_val = header.1.to_str();
-        println!("header_name {}", header_name);
+        
         if header_name == "authorization" {
             match header_val {
                 Ok(bearer) => {
