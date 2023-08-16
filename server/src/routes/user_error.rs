@@ -8,6 +8,8 @@ pub enum UserError {
     InternalError,
     #[display(fmt = "Validation error on field: {}", field)]
     ValidationError { field: String },
+    #[display(fmt = "Authentication Failed. Email or password is incorrect.")]
+    AuthenticationFailed,
 }
 
 impl UserError {
@@ -37,6 +39,7 @@ impl ResponseError for UserError {
         match *self {
             UserError::InternalError => StatusCode::INTERNAL_SERVER_ERROR,
             UserError::ValidationError { .. } => StatusCode::BAD_REQUEST,
+            UserError::AuthenticationFailed => StatusCode::UNAUTHORIZED
         }
     }
 }

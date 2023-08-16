@@ -51,7 +51,7 @@ pub async fn get_developer<T: QueryDeveloperFn + Repository, U: Authenticator>(
                                 secondary_lang_id: dev.secondary_lang_id
                             }))
                         } else {
-                            Err(UserError::InternalError)
+                            Err(UserError::AuthenticationFailed)
                         }
                     },
                     Err(_) => Err(UserError::InternalError)
@@ -89,7 +89,7 @@ pub async fn get_developer_by_email<T: QueryDeveloperByEmailFn + Repository, U: 
                                 secondary_lang_id: dev.secondary_lang_id
                             }))
                         } else {
-                            Err(UserError::InternalError)
+                            Err(UserError::AuthenticationFailed)
                         }
                     },
                     Err(_) => Err(UserError::InternalError)
@@ -134,7 +134,7 @@ pub async fn get_all_developers<T: QueryAllDevelopersFn + QueryDeveloperFn + Rep
                                     .collect::<Vec<DeveloperResponder>>();
                                     Ok(DeveloperResponders(devs))
                                 } else {
-                                    Err(UserError::InternalError)
+                                    Err(UserError::AuthenticationFailed)
                                 }
                             },
                             Err(_) => Err(UserError::InternalError)
