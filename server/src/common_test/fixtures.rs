@@ -10,6 +10,7 @@ use serde::Serialize;
 use crate::app_state::AppState;
 use crate::common::authentication::auth_service::{init_auth_keys, get_token};
 use crate::common::repository::base::Repository;
+use crate::common::repository::user::models::DeveloperOrEmployer;
 use async_trait::async_trait;
 pub static COUNTRY_NAMES: OnceLock<Vec<&'static str>> = OnceLock::new();
 pub static INDUSTRY_NAMES: OnceLock<Vec<&'static str>> = OnceLock::new();
@@ -78,13 +79,13 @@ impl Repository for MockDbRepo {
     }
 }
 
-pub fn get_fake_httprequest_with_bearer_token(user_name: String, encoding_key: &EncodingKey, url: &str, data: impl Serialize, token_expiration_duration: Option<i64>) -> HttpRequest {
-    let header_value_string = format!("Bearer {}", get_token(user_name, encoding_key, token_expiration_duration));
+pub fn get_fake_httprequest_with_bearer_token(user_name: String, dev_or_emp: DeveloperOrEmployer, encoding_key: &EncodingKey, url: &str, parameter_data: impl Serialize, token_expiration_duration: Option<i64>) -> HttpRequest {
+    let header_value_string = format!("Bearer {}", get_token(user_name, dev_or_emp, encoding_key, token_expiration_duration));
     let header_value = HeaderValue::from_str(&header_value_string).unwrap();
     test::TestRequest
         ::post()
         .append_header((header::AUTHORIZATION, header_value.clone()))
         .uri(url)
-        .set_json(data)
+        .set_json(parameter_data)
         .to_http_request()
 }

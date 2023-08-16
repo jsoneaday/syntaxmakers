@@ -2,7 +2,7 @@ use actix_web::{web::{Data, Json, Path}, HttpRequest};
 use crate::{
     app_state::AppState, 
     common::repository::{developers::{repo::{InsertDeveloperFn, QueryDeveloperFn, QueryAllDevelopersFn, QueryDeveloperByEmailFn}, models::NewDeveloper}, base::Repository}, 
-    routes::{base_model::{OutputId, PagingModel}, user_error::UserError, authentication::routes::is_authenticated}
+    routes::{base_model::{OutputId, IdAndPagingModel}, user_error::UserError, authentication::routes::is_authenticated}
 };
 use super::models::{NewDeveloperForRoute, DeveloperResponder, DeveloperResponders};
 
@@ -101,27 +101,49 @@ pub async fn get_developer_by_email<T: QueryDeveloperByEmailFn + Repository>(
     }
 }
 
-pub async fn get_all_developers<T: QueryAllDevelopersFn + Repository>(
+pub async fn get_all_developers<T: QueryAllDevelopersFn + QueryDeveloperFn + Repository>(
     app_data: Data<AppState<T>>, 
-    json: Json<PagingModel>
+    json: Json<IdAndPagingModel>,
+    req: HttpRequest
 ) -> Result<DeveloperResponders, UserError> {
     let result = app_data.repo.query_all_developers(json.page_size, json.last_offset).await;
 
     match result {
         Ok(developers) => {
-            let devs = developers.iter().map(|dev| {
-                DeveloperResponder { 
-                    id: dev.id, 
-                    updated_at: dev.updated_at, 
-                    user_name: dev.user_name.to_owned(), 
-                    full_name: dev.full_name.to_owned(), 
-                    email: dev.email.to_owned(), 
-                    primary_lang_id: dev.primary_lang_id,
-                    secondary_lang_id: dev.secondary_lang_id
-                }
-            })
-            .collect::<Vec<DeveloperResponder>>();
-            Ok(DeveloperResponders(devs))
+            let requestor_dev_result = app_data.repo.query_developer(json.id).await;
+            match requestor_dev_result {
+                Ok(opt_requestor_dev) => {
+                    if let Some(requestor_dev) = opt_requestor_dev {
+                        let is_auth_result = is_authenticated(requestor_dev.user_name, req.headers(), &app_data.auth_keys.decoding_key).await;
+                        
+                        match is_auth_result {
+                            Ok(is_auth) => {
+                                if is_auth {
+                                    let devs = developers.iter().map(|dev| {
+                                        DeveloperResponder { 
+                                            id: dev.id, 
+                                            updated_at: dev.updated_at, 
+                                            user_name: dev.user_name.to_owned(), 
+                                            full_name: dev.full_name.to_owned(), 
+                                            email: dev.email.to_owned(), 
+                                            primary_lang_id: dev.primary_lang_id,
+                                            secondary_lang_id: dev.secondary_lang_id
+                                        }
+                                    })
+                                    .collect::<Vec<DeveloperResponder>>();
+                                    Ok(DeveloperResponders(devs))
+                                } else {
+                                    Err(UserError::InternalError)
+                                }
+                            },
+                            Err(e) => Err(e.into())
+                        }
+                    } else {
+                        Err(UserError::InternalError)
+                    }
+                },
+                Err(e) => Err(e.into())
+            }            
         },
         Err(e) => Err(e.into())
     }
@@ -129,7 +151,7 @@ pub async fn get_all_developers<T: QueryAllDevelopersFn + Repository>(
 
 #[cfg(test)]
 mod tests {
-    use crate::{common_test::fixtures::{MockDbRepo, get_app_data, get_fake_fullname, get_fake_httprequest_with_bearer_token}, common::repository::{base::EntityId, developers::models::Developer}};
+    use crate::{common_test::fixtures::{MockDbRepo, get_app_data, get_fake_fullname, get_fake_httprequest_with_bearer_token}, common::repository::{base::EntityId, developers::models::Developer, user::models::DeveloperOrEmployer}};
     use async_trait::async_trait;
     use chrono::Utc;
     use fake::{faker::internet::en::{Username, FreeEmail}, Fake};
@@ -216,7 +238,7 @@ mod tests {
         let repo = MockDbRepo::init().await;
         let app_data = get_app_data(repo).await;
 
-        let req = get_fake_httprequest_with_bearer_token(DEV_USERNAME.to_string(), &app_data.auth_keys.encoding_key, "/v1/developer", 1, Some(60*2));
+        let req = get_fake_httprequest_with_bearer_token(DEV_USERNAME.to_string(), DeveloperOrEmployer::Developer, &app_data.auth_keys.encoding_key, "/v1/developer", 1, Some(60*2));
 
         let result = get_developer(app_data, Path::from(1), req).await.unwrap();
 
@@ -228,7 +250,7 @@ mod tests {
         let repo = MockDbRepo::init().await;
         let app_data = get_app_data(repo).await;
 
-        let req = get_fake_httprequest_with_bearer_token(DEV_USERNAME.to_string(), &app_data.auth_keys.encoding_key, "/v1/developer", 1, Some(60*2));
+        let req = get_fake_httprequest_with_bearer_token(DEV_USERNAME.to_string(), DeveloperOrEmployer::Developer, &app_data.auth_keys.encoding_key, "/v1/developer", 1, Some(60*2));
 
         let result = get_developer_by_email(app_data, Path::from("jon@jon.com".to_string()), req).await.unwrap();
 
@@ -240,7 +262,10 @@ mod tests {
         let repo = MockDbRepo::init().await;
         let app_data = get_app_data(repo).await;
 
-        let result = get_all_developers(app_data, Json(PagingModel { page_size: 10, last_offset: 1 })).await.unwrap();
+        let parameters = IdAndPagingModel { id: 1, page_size: 10, last_offset: 1 };
+        let req = get_fake_httprequest_with_bearer_token(DEV_USERNAME.to_string(), DeveloperOrEmployer::Developer, &app_data.auth_keys.encoding_key, "/v1/developers", parameters.clone(), Some(60*2));
+
+        let result = get_all_developers(app_data, Json(parameters), req).await.unwrap();
 
         assert!(result.0.get(0).unwrap().id == 1);
     }

@@ -1,3 +1,5 @@
+use serde::{Serialize, Deserialize};
+
 
 #[derive(PartialEq)]
 pub enum AuthenticateResult {
@@ -5,7 +7,7 @@ pub enum AuthenticateResult {
     Failure
 }
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Clone, Serialize, Deserialize, Debug)]
 pub enum DeveloperOrEmployer {
     Developer = 0,
     Employer = 1

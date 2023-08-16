@@ -24,7 +24,7 @@ impl Responder for OutputId {
     }
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PagingModel {
     pub page_size: i32,
@@ -32,7 +32,7 @@ pub struct PagingModel {
 }
 
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Serialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct IdAndPagingModel {
     pub id: i64,

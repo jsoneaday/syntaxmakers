@@ -33,7 +33,7 @@ pub async fn is_authenticated(user_name: String, headers: &HeaderMap, decoding_k
                 Ok(bearer) => {
                     let bearer_items: Vec<&str> = bearer.split(' ').collect();
                     let claims = decode_token(bearer_items.get(1).unwrap(), decoding_key);
-                    
+                    println!("claims {:?}", claims);
                     if claims.sub == user_name {
                         if claims.exp >= (Utc::now().timestamp() as usize) {
                             result = Ok(true);
@@ -57,7 +57,7 @@ pub async fn login<T: AuthenticateFn + QueryDeveloperFn + Repository>(app_data: 
     } else {
         UserDeveloperOrEmployer::Employer
     };
-    let auth_result = app_data.repo.authenticate(dev_or_emp, json.email.clone(), json.password.clone()).await;
+    let auth_result = app_data.repo.authenticate(dev_or_emp.clone(), json.email.clone(), json.password.clone()).await;
     
     match auth_result {
         Ok(result) => {
@@ -67,8 +67,8 @@ pub async fn login<T: AuthenticateFn + QueryDeveloperFn + Repository>(app_data: 
                     match developer {
                         Ok(opt_dev) => {
                             if let Some(dev) = opt_dev {
-                                let access_token = get_token(dev.user_name.clone(), &app_data.auth_keys.encoding_key, Some(60 * 10)); // todo: drop down to 2 min after testing
-                                let refresh_token = get_token(dev.user_name, &app_data.auth_keys.encoding_key, None);
+                                let access_token = get_token(dev.user_name.clone(), dev_or_emp.clone(), &app_data.auth_keys.encoding_key, Some(60 * 10)); // todo: drop down to 2 min after testing
+                                let refresh_token = get_token(dev.user_name, dev_or_emp, &app_data.auth_keys.encoding_key, None);
                                 let refresh_cookie = Cookie::build("refresh_token", refresh_token.to_owned())
                                     .path("/")
                                     .max_age(ActixWebDuration::new(STANDARD_REFRESH_TOKEN_EXPIRATION, 0))
@@ -157,7 +157,7 @@ mod tests {
         let repo = MockDbRepo::init().await;
         let app_data = get_app_data(repo).await;
 
-        let req = get_fake_httprequest_with_bearer_token(DEV_USERNAME.to_string(), &app_data.auth_keys.encoding_key, "/v1/developer", 1, Some(60*2));
+        let req = get_fake_httprequest_with_bearer_token(DEV_USERNAME.to_string(), UserDeveloperOrEmployer::Developer, &app_data.auth_keys.encoding_key, "/v1/developer", 1, Some(60*2));
 
         let result = is_authenticated(DEV_USERNAME.to_string(), req.headers(), &app_data.auth_keys.decoding_key).await.unwrap();
 

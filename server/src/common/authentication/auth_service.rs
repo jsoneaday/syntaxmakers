@@ -3,6 +3,7 @@ use jsonwebtoken::{DecodingKey, EncodingKey};
 use ring::signature::{Ed25519KeyPair, KeyPair};
 use serde::{Deserialize, Serialize};
 use jsonwebtoken::{ Validation, encode, decode, Algorithm };
+use crate::common::repository::user::models::DeveloperOrEmployer;
 
 pub const STANDARD_REFRESH_TOKEN_EXPIRATION: i64 = 60 * 60 * 24 * 30;
 
@@ -10,6 +11,7 @@ pub const STANDARD_REFRESH_TOKEN_EXPIRATION: i64 = 60 * 60 * 24 * 30;
 pub struct Claims {
     pub sub: String,
     pub exp: usize,
+    pub role: DeveloperOrEmployer
 }
 
 pub struct AuthKeys {
@@ -27,13 +29,13 @@ pub async fn init_auth_keys() -> AuthKeys {
     AuthKeys { encoding_key, decoding_key }
 }
 
-pub fn get_token(user_name: String, encoding_key: &EncodingKey, exp_duration_seconds: Option<i64>) -> String {
+pub fn get_token(user_name: String, dev_or_emp: DeveloperOrEmployer, encoding_key: &EncodingKey, exp_duration_seconds: Option<i64>) -> String {
     let duration = if let None = exp_duration_seconds {
         STANDARD_REFRESH_TOKEN_EXPIRATION
     } else {
         exp_duration_seconds.unwrap()
     };
-    let claims = Claims { sub: user_name, exp: (Utc::now() + Duration::seconds(duration)).timestamp() as usize };
+    let claims = Claims { sub: user_name, exp: (Utc::now() + Duration::seconds(duration)).timestamp() as usize, role: dev_or_emp };
     let token = encode(&jsonwebtoken::Header::new(jsonwebtoken::Algorithm::EdDSA), &claims, encoding_key).unwrap();
 
     token
