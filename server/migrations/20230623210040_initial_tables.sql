@@ -675,13 +675,16 @@ create table prog_language (
     "name" varchar(100) not null
 );
 
-insert into prog_language (name) values ('Rust');
-insert into prog_language (name) values ('Go');
-insert into prog_language (name) values ('Ruby');
-insert into prog_language (name) values ('Swift');
-insert into prog_language (name) values ('Kotlin');
-insert into prog_language (name) values ('Scala');
+insert into prog_language (name) values ('C#');
 insert into prog_language (name) values ('Elixir');
+insert into prog_language (name) values ('Go');
+insert into prog_language (name) values ('Java');
+insert into prog_language (name) values ('Kotlin');
+insert into prog_language (name) values ('Ruby');
+insert into prog_language (name) values ('Rust');
+insert into prog_language (name) values ('Scala');
+insert into prog_language (name) values ('Swift');
+
 
 create table industry (
     "id" bigserial primary key,
@@ -690,9 +693,9 @@ create table industry (
     "name" varchar(100) not null
 );
 
-insert into industry (name) values ('Finance');
-insert into industry (name) values ('Blockchain');
 insert into industry (name) values ('AI/ML');
+insert into industry (name) values ('Blockchain');
+insert into industry (name) values ('Finance');
 insert into industry (name) values ('Games');
 
 create table salary (
