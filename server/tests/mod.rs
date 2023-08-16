@@ -1,5 +1,7 @@
 pub mod common {
-    pub mod authentication{}
+    pub mod authentication{
+        pub mod test_auth_service;
+    }
     pub mod repository {
         pub mod companies {
             pub mod test_companies;

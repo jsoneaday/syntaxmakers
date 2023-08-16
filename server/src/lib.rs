@@ -50,6 +50,7 @@ pub mod app_state;
 pub mod routes {
     pub mod base_model;
     pub mod user_error;
+    pub mod route_utils;
     pub mod authentication {
         pub mod models;
         pub mod routes;
@@ -90,7 +91,7 @@ pub mod routes {
 
 use actix_cors::Cors;
 use actix_web::{HttpServer, http::header, App, middleware::Logger, web};
-use common::authentication::auth_service::init_auth_keys;
+use common::authentication::auth_service::{init_auth_keys, AuthService};
 use common::repository::base::{DbRepo, Repository};
 use routes::authentication::routes::login;
 use routes::developers::routes::get_developer_by_email;
@@ -126,9 +127,10 @@ pub async fn run() -> std::io::Result<()> {
     dotenv().ok();
     let host = env::var("HOST").unwrap();
     let port = env::var("PORT").unwrap().parse::<u16>().unwrap();
-    let repo = DbRepo::init().await;
+    
     let app_data = actix_web::web::Data::new(AppState{
-        repo,
+        repo: DbRepo::init().await,
+        auth_service: AuthService,
         auth_keys: init_auth_keys().await
     });    
 
@@ -151,39 +153,39 @@ pub async fn run() -> std::io::Result<()> {
             .service(
                 web::scope("/v1")
                     .service(web::resource("login")
-                        .route(web::post().to(login::<DbRepo>)))
+                        .route(web::post().to(login::<DbRepo, AuthService>)))
                     .service(web::resource("/salaries")
-                        .route(web::get().to(get_all_salaries::<DbRepo>)))
+                        .route(web::get().to(get_all_salaries::<DbRepo, AuthService>)))
                     .service(web::resource("/languages")
-                        .route(web::get().to(get_all_languages::<DbRepo>)))
+                        .route(web::get().to(get_all_languages::<DbRepo, AuthService>)))
                     .service(web::resource("/job/{id}")
-                        .route(web::get().to(get_job::<DbRepo>)))
+                        .route(web::get().to(get_job::<DbRepo, AuthService>)))
                     .service(web::resource("/job")
-                        .route(web::post().to(create_job::<DbRepo>)))
+                        .route(web::post().to(create_job::<DbRepo, AuthService>)))
                     .service(web::resource("/jobs")
-                        .route(web::post().to(get_jobs_by_dev_profile::<DbRepo>)))
+                        .route(web::post().to(get_jobs_by_dev_profile::<DbRepo, AuthService>)))
                     .service(web::resource("/industries")
-                        .route(web::get().to(get_all_industries::<DbRepo>)))
+                        .route(web::get().to(get_all_industries::<DbRepo, AuthService>)))
                     .service(web::resource("/employer/{id}")
-                        .route(web::get().to(get_employer::<DbRepo>)))
+                        .route(web::get().to(get_employer::<DbRepo, AuthService>)))
                     .service(web::resource("/employer")
-                        .route(web::post().to(create_employer::<DbRepo>)))
+                        .route(web::post().to(create_employer::<DbRepo, AuthService>)))
                     .service(web::resource("/employers")
-                        .route(web::get().to(get_all_employers::<DbRepo>)))
+                        .route(web::get().to(get_all_employers::<DbRepo, AuthService>)))
                     .service(web::resource("/developer_email/{email}")
-                        .route(web::get().to(get_developer_by_email::<DbRepo>)))
+                        .route(web::get().to(get_developer_by_email::<DbRepo, AuthService>)))
                     .service(web::resource("/developer/{id}")
-                        .route(web::get().to(get_developer::<DbRepo>)))
+                        .route(web::get().to(get_developer::<DbRepo, AuthService>)))
                     .service(web::resource("/developer")
-                        .route(web::post().to(create_developer::<DbRepo>)))
+                        .route(web::post().to(create_developer::<DbRepo, AuthService>)))
                     .service(web::resource("/developers")
-                        .route(web::get().to(get_all_developers::<DbRepo>)))
+                        .route(web::get().to(get_all_developers::<DbRepo, AuthService>)))
                     .service(web::resource("/countries")
-                        .route(web::get().to(get_all_countries::<DbRepo>)))
+                        .route(web::get().to(get_all_countries::<DbRepo, AuthService>)))
                     .service(web::resource("/company")
-                        .route(web::post().to(create_company::<DbRepo>)))
+                        .route(web::post().to(create_company::<DbRepo, AuthService>)))
                     .service(web::resource("/companies")
-                        .route(web::get().to(get_all_companies::<DbRepo>)))
+                        .route(web::get().to(get_all_companies::<DbRepo, AuthService>)))
             )            
     })
     .bind((host, port)).expect("")

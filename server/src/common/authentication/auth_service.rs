@@ -4,6 +4,8 @@ use ring::signature::{Ed25519KeyPair, KeyPair};
 use serde::{Deserialize, Serialize};
 use jsonwebtoken::{ Validation, encode, decode, Algorithm };
 use crate::common::repository::user::models::DeveloperOrEmployer;
+use async_trait::async_trait;
+use derive_more::{Error, Display};
 
 pub const STANDARD_REFRESH_TOKEN_EXPIRATION: i64 = 60 * 60 * 24 * 30;
 
@@ -12,6 +14,14 @@ pub struct Claims {
     pub sub: String,
     pub exp: usize,
     pub role: DeveloperOrEmployer
+}
+
+#[derive(Error, Display, Debug)]
+pub enum AuthenticationError {
+    #[display(fmt = "Authentication Failure")]
+    AuthenticationFailure,
+    #[display(fmt = "Authentication Failure from Database")]
+    AuthenticationDbFailure
 }
 
 pub struct AuthKeys {
@@ -46,4 +56,38 @@ pub fn decode_token(token: &str, decoding_key: &DecodingKey) -> Claims {
     let token_data = decode::<Claims>(token, decoding_key, &validation).unwrap();
 
     token_data.claims
+}
+
+pub struct AuthService;
+
+#[async_trait]
+pub trait Authenticator {
+    /// Checks headers for Authorization and Bearer token
+    /// @headers is a tuple: 0 is header name and 1 is header value
+    async fn is_authenticated(&self, user_name: String, headers: Vec<(&str, &str)>, decoding_key: &DecodingKey) -> Result<bool, AuthenticationError>;
+}
+
+#[async_trait]
+impl Authenticator for AuthService {    
+    async fn is_authenticated(&self, user_name: String, headers: Vec<(&str, &str)>, decoding_key: &DecodingKey) -> Result<bool, AuthenticationError> {
+        let mut result: Result<bool, AuthenticationError> = Err(AuthenticationError::AuthenticationFailure);
+
+        _ = headers.iter().for_each(|header| {
+            let header_name = header.0;
+            let header_val = header.1;
+            
+            if header_name == "authorization" {
+                let bearer_items: Vec<&str> = header_val.split(' ').collect();
+                let claims = decode_token(bearer_items.get(1).unwrap(), decoding_key);
+                println!("claims {:?}", claims);
+                if claims.sub == user_name {
+                    if claims.exp >= (Utc::now().timestamp() as usize) {
+                        result = Ok(true);
+                    }
+                }    
+            }
+        });
+
+        result
+    }
 }

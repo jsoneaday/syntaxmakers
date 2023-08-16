@@ -1,54 +1,23 @@
-use actix_http::header::HeaderMap;
 use actix_web::{
     cookie::{time::Duration as ActixWebDuration, Cookie},
     web::{Data, Json}, 
     HttpResponse,
     http::header::ContentType
 };
-use chrono::Utc;
-use jsonwebtoken::DecodingKey;
 use crate::{
     app_state::AppState, 
     common::{
         repository::{
-            base::Repository, user::{repo::AuthenticateFn, models::{AuthenticateResult, DeveloperOrEmployer as UserDeveloperOrEmployer}}, developers::repo::QueryDeveloperFn
+            base::Repository, user::{repo::AuthenticateDbFn, models::{AuthenticateResult, DeveloperOrEmployer as UserDeveloperOrEmployer}}, developers::repo::QueryDeveloperFn
         }, 
-        authentication::auth_service::{get_token, decode_token, STANDARD_REFRESH_TOKEN_EXPIRATION}
+        authentication::auth_service::{get_token, STANDARD_REFRESH_TOKEN_EXPIRATION, Authenticator}
     }, 
-    routes::{authentication::models::DeveloperOrEmployer as AuthDeveloperOrEmployer, user_error::UserError}
+    routes::authentication::models::DeveloperOrEmployer as AuthDeveloperOrEmployer
 };
 use super::models::LoginCredential;
 
-// todo: need to figure out how to mock this
-/// Checks headers for Authorization and Bearer token
-pub async fn is_authenticated(user_name: String, headers: &HeaderMap, decoding_key: &DecodingKey) -> Result<bool, UserError> {
-    let mut result: Result<bool, UserError> = Err(UserError::InternalError);
 
-    _ = headers.iter().for_each(|header| {
-        let header_name = header.0.as_str();
-        let header_val = header.1.to_str();
-        
-        if header_name == "authorization" {
-            match header_val {
-                Ok(bearer) => {
-                    let bearer_items: Vec<&str> = bearer.split(' ').collect();
-                    let claims = decode_token(bearer_items.get(1).unwrap(), decoding_key);
-                    println!("claims {:?}", claims);
-                    if claims.sub == user_name {
-                        if claims.exp >= (Utc::now().timestamp() as usize) {
-                            result = Ok(true);
-                        }
-                    }                    
-                },
-                Err(_) => result = Err(UserError::InternalError)
-            }
-        }
-    });
-
-    result
-}
-
-pub async fn login<T: AuthenticateFn + QueryDeveloperFn + Repository>(app_data: Data<AppState<T>>, json: Json<LoginCredential>) 
+pub async fn login<T: AuthenticateDbFn + QueryDeveloperFn + Repository, U: Authenticator>(app_data: Data<AppState<T, U>>, json: Json<LoginCredential>) 
     -> HttpResponse {
     println!("start login {}, {}", json.email, json.password);
 
@@ -57,7 +26,7 @@ pub async fn login<T: AuthenticateFn + QueryDeveloperFn + Repository>(app_data: 
     } else {
         UserDeveloperOrEmployer::Employer
     };
-    let auth_result = app_data.repo.authenticate(dev_or_emp.clone(), json.email.clone(), json.password.clone()).await;
+    let auth_result = app_data.repo.authenticate_db(dev_or_emp.clone(), json.email.clone(), json.password.clone()).await;
     
     match auth_result {
         Ok(result) => {
@@ -115,12 +84,25 @@ mod tests {
     use super::*;
     use actix_http::StatusCode;
     use async_trait::async_trait;
+    use chrono::Utc;
     use fake::{faker::internet::en::FreeEmail, Fake};
-    use jsonwebtoken::{decode, Validation};
-    use crate::{common::{repository::{user::repo::AuthenticateFn, developers::models::Developer}, authentication::auth_service::{Claims, STANDARD_REFRESH_TOKEN_EXPIRATION}}, common_test::fixtures::{get_app_data, get_fake_httprequest_with_bearer_token}};
+    use jsonwebtoken::{decode, Validation, DecodingKey};
+    use crate::{
+        common::{
+            repository::{user::repo::AuthenticateDbFn, developers::models::Developer}, authentication::auth_service::{Claims, STANDARD_REFRESH_TOKEN_EXPIRATION, AuthenticationError}
+        }, 
+        common_test::fixtures::get_app_data
+    };
 
     const DEV_USERNAME: &str = "tester";
     struct MockDbRepo;
+    struct MockAuthService;
+    #[async_trait]
+    impl Authenticator for MockAuthService {
+        async fn is_authenticated(&self, _: String, _: Vec<(&str, &str)>, _: &DecodingKey) -> Result<bool, AuthenticationError> {
+            Ok(true)
+        }
+    }
 
     #[async_trait]
     impl Repository for MockDbRepo {
@@ -130,8 +112,8 @@ mod tests {
     }
 
     #[async_trait]
-    impl AuthenticateFn for MockDbRepo {
-        async fn authenticate(&self, _: UserDeveloperOrEmployer, _: String, _: String) -> Result<AuthenticateResult, sqlx::Error> {
+    impl AuthenticateDbFn for MockDbRepo {
+        async fn authenticate_db(&self, _: UserDeveloperOrEmployer, _: String, _: String) -> Result<AuthenticateResult, sqlx::Error> {
             Ok(AuthenticateResult::Success{ id: 1 })
         }
     }
@@ -150,24 +132,13 @@ mod tests {
                 secondary_lang_id: None
             }))
         }
-    }
-
-    #[tokio::test]
-    async fn test_is_authenticated() {
-        let repo = MockDbRepo::init().await;
-        let app_data = get_app_data(repo).await;
-
-        let req = get_fake_httprequest_with_bearer_token(DEV_USERNAME.to_string(), UserDeveloperOrEmployer::Developer, &app_data.auth_keys.encoding_key, "/v1/developer", 1, Some(60*2));
-
-        let result = is_authenticated(DEV_USERNAME.to_string(), req.headers(), &app_data.auth_keys.decoding_key).await.unwrap();
-
-        assert!(result == true);
-    }
+    }    
 
     #[tokio::test]
     async fn test_login_route() {
         let repo = MockDbRepo::init().await;
-        let app_data = get_app_data(repo).await;
+        let auth_service = MockAuthService;
+        let app_data = get_app_data(repo, auth_service).await;
 
         let result = login(app_data.clone(), Json(LoginCredential { is_dev_or_emp: AuthDeveloperOrEmployer::Developer, email: FreeEmail().fake::<String>(), password: "test123".to_string() })).await;
 

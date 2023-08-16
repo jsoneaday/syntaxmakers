@@ -8,7 +8,7 @@ use fake::faker::name::en::{FirstName, LastName};
 use jsonwebtoken::EncodingKey;
 use serde::Serialize;
 use crate::app_state::AppState;
-use crate::common::authentication::auth_service::{init_auth_keys, get_token};
+use crate::common::authentication::auth_service::{init_auth_keys, get_token, Authenticator};
 use crate::common::repository::base::Repository;
 use crate::common::repository::user::models::DeveloperOrEmployer;
 use async_trait::async_trait;
@@ -54,8 +54,8 @@ pub fn init_fixtures() {
     });
 }
 
-pub async fn get_app_data<T: Repository>(repo: T) -> actix_web::web::Data<AppState<T>> {
-    actix_web::web::Data::new(AppState { repo, auth_keys: init_auth_keys().await })
+pub async fn get_app_data<T: Repository, U: Authenticator>(repo: T, auth_service: U) -> actix_web::web::Data<AppState<T, U>> {
+    actix_web::web::Data::new(AppState { repo, auth_service, auth_keys: init_auth_keys().await })
 }
 
 pub fn get_fake_fullname() -> String {

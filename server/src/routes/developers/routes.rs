@@ -1,13 +1,13 @@
 use actix_web::{web::{Data, Json, Path}, HttpRequest};
 use crate::{
     app_state::AppState, 
-    common::repository::{developers::{repo::{InsertDeveloperFn, QueryDeveloperFn, QueryAllDevelopersFn, QueryDeveloperByEmailFn}, models::NewDeveloper}, base::Repository}, 
-    routes::{base_model::{OutputId, IdAndPagingModel}, user_error::UserError, authentication::routes::is_authenticated}
+    common::{repository::{developers::{repo::{InsertDeveloperFn, QueryDeveloperFn, QueryAllDevelopersFn, QueryDeveloperByEmailFn}, models::NewDeveloper}, base::Repository}, authentication::auth_service::Authenticator}, 
+    routes::{base_model::{OutputId, IdAndPagingModel}, user_error::UserError, route_utils::get_header_strings}
 };
 use super::models::{NewDeveloperForRoute, DeveloperResponder, DeveloperResponders};
 
-pub async fn create_developer<T: InsertDeveloperFn + Repository>(
-    app_data: Data<AppState<T>>, 
+pub async fn create_developer<T: InsertDeveloperFn + Repository, U: Authenticator>(
+    app_data: Data<AppState<T, U>>, 
     json: Json<NewDeveloperForRoute>
 ) -> Result<OutputId, UserError> {
     let result = app_data.repo.insert_developer(NewDeveloper {
@@ -25,8 +25,8 @@ pub async fn create_developer<T: InsertDeveloperFn + Repository>(
     }
 }
 
-pub async fn get_developer<T: QueryDeveloperFn + Repository>(
-    app_data: Data<AppState<T>>, 
+pub async fn get_developer<T: QueryDeveloperFn + Repository, U: Authenticator>(
+    app_data: Data<AppState<T, U>>, 
     path: Path<i64>,
     req: HttpRequest
 ) -> Result<Option<DeveloperResponder>, UserError> {
@@ -36,8 +36,8 @@ pub async fn get_developer<T: QueryDeveloperFn + Repository>(
     match result {
         Ok(optional_dev) => match optional_dev {
             Some(dev) => {
-                println!("cookies {:?}", req.cookies());
-                let authenticated = is_authenticated(dev.user_name.clone(), req.headers(), &app_data.auth_keys.decoding_key).await;
+                let headers = get_header_strings(req.headers());
+                let authenticated = app_data.auth_service.is_authenticated(dev.user_name.clone(), headers, &app_data.auth_keys.decoding_key).await;
                 match authenticated {
                     Ok(auth) => {
                         if auth {
@@ -54,7 +54,7 @@ pub async fn get_developer<T: QueryDeveloperFn + Repository>(
                             Err(UserError::InternalError)
                         }
                     },
-                    Err(e) => Err(e.into())
+                    Err(_) => Err(UserError::InternalError)
                 }
             },
             None => Ok(None)
@@ -63,19 +63,19 @@ pub async fn get_developer<T: QueryDeveloperFn + Repository>(
     }
 }
 
-pub async fn get_developer_by_email<T: QueryDeveloperByEmailFn + Repository>(
-    app_data: Data<AppState<T>>, 
+pub async fn get_developer_by_email<T: QueryDeveloperByEmailFn + Repository, U: Authenticator>(
+    app_data: Data<AppState<T, U>>, 
     path: Path<String>,
     req: HttpRequest
 ) -> Result<Option<DeveloperResponder>, UserError> {    
     let email = path.into_inner();
-    println!("get_developer_by_email {}", email);
     let result = app_data.repo.query_developer_by_email(email).await;
 
     match result {
         Ok(optional_dev) => match optional_dev {
             Some(dev) => {
-                let authenticated = is_authenticated(dev.user_name.clone(), req.headers(), &app_data.auth_keys.decoding_key).await;
+                let headers = get_header_strings(req.headers());
+                let authenticated = app_data.auth_service.is_authenticated(dev.user_name.clone(), headers, &app_data.auth_keys.decoding_key).await;
                 match authenticated {
                     Ok(auth) => {
                         if auth {
@@ -92,7 +92,7 @@ pub async fn get_developer_by_email<T: QueryDeveloperByEmailFn + Repository>(
                             Err(UserError::InternalError)
                         }
                     },
-                    Err(e) => Err(e.into())
+                    Err(_) => Err(UserError::InternalError)
                 }
             },
             None => Ok(None)
@@ -101,8 +101,8 @@ pub async fn get_developer_by_email<T: QueryDeveloperByEmailFn + Repository>(
     }
 }
 
-pub async fn get_all_developers<T: QueryAllDevelopersFn + QueryDeveloperFn + Repository>(
-    app_data: Data<AppState<T>>, 
+pub async fn get_all_developers<T: QueryAllDevelopersFn + QueryDeveloperFn + Repository, U: Authenticator>(
+    app_data: Data<AppState<T, U>>, 
     json: Json<IdAndPagingModel>,
     req: HttpRequest
 ) -> Result<DeveloperResponders, UserError> {
@@ -114,7 +114,8 @@ pub async fn get_all_developers<T: QueryAllDevelopersFn + QueryDeveloperFn + Rep
             match requestor_dev_result {
                 Ok(opt_requestor_dev) => {
                     if let Some(requestor_dev) = opt_requestor_dev {
-                        let is_auth_result = is_authenticated(requestor_dev.user_name, req.headers(), &app_data.auth_keys.decoding_key).await;
+                        let headers = get_header_strings(req.headers());
+                        let is_auth_result = app_data.auth_service.is_authenticated(requestor_dev.user_name, headers, &app_data.auth_keys.decoding_key).await;
                         
                         match is_auth_result {
                             Ok(is_auth) => {
@@ -136,7 +137,7 @@ pub async fn get_all_developers<T: QueryAllDevelopersFn + QueryDeveloperFn + Rep
                                     Err(UserError::InternalError)
                                 }
                             },
-                            Err(e) => Err(e.into())
+                            Err(_) => Err(UserError::InternalError)
                         }
                     } else {
                         Err(UserError::InternalError)
@@ -151,13 +152,21 @@ pub async fn get_all_developers<T: QueryAllDevelopersFn + QueryDeveloperFn + Rep
 
 #[cfg(test)]
 mod tests {
-    use crate::{common_test::fixtures::{MockDbRepo, get_app_data, get_fake_fullname, get_fake_httprequest_with_bearer_token}, common::repository::{base::EntityId, developers::models::Developer, user::models::DeveloperOrEmployer}};
+    use crate::{common_test::fixtures::{MockDbRepo, get_app_data, get_fake_fullname, get_fake_httprequest_with_bearer_token}, common::{repository::{base::EntityId, developers::models::Developer, user::models::DeveloperOrEmployer}, authentication::auth_service::AuthenticationError}};
     use async_trait::async_trait;
     use chrono::Utc;
     use fake::{faker::internet::en::{Username, FreeEmail}, Fake};
+    use jsonwebtoken::DecodingKey;
     use super::*;
 
     const DEV_USERNAME: &str = "tester";
+    struct MockAuthService;
+    #[async_trait]
+    impl Authenticator for MockAuthService {
+        async fn is_authenticated(&self, _: String, _: Vec<(&str, &str)>, _: &DecodingKey) -> Result<bool, AuthenticationError> {
+            Ok(true)
+        }
+    }
 
     #[async_trait]
     impl InsertDeveloperFn for MockDbRepo {
@@ -219,7 +228,8 @@ mod tests {
     #[tokio::test]
     async fn test_insert_developer_route() {
         let repo = MockDbRepo::init().await;
-        let app_data = get_app_data(repo).await;
+        let auth_service = MockAuthService;
+        let app_data = get_app_data(repo, auth_service).await;
 
         let result = app_data.repo.insert_developer(NewDeveloper { 
             user_name: Username().fake::<String>(), 
@@ -236,7 +246,8 @@ mod tests {
     #[tokio::test]
     async fn test_get_developer_route() {
         let repo = MockDbRepo::init().await;
-        let app_data = get_app_data(repo).await;
+        let auth_service = MockAuthService;
+        let app_data = get_app_data(repo, auth_service).await;
 
         let req = get_fake_httprequest_with_bearer_token(DEV_USERNAME.to_string(), DeveloperOrEmployer::Developer, &app_data.auth_keys.encoding_key, "/v1/developer", 1, Some(60*2));
 
@@ -248,7 +259,8 @@ mod tests {
     #[tokio::test]
     async fn test_get_developer_by_email_route() {
         let repo = MockDbRepo::init().await;
-        let app_data = get_app_data(repo).await;
+        let auth_service = MockAuthService;
+        let app_data = get_app_data(repo, auth_service).await;
 
         let req = get_fake_httprequest_with_bearer_token(DEV_USERNAME.to_string(), DeveloperOrEmployer::Developer, &app_data.auth_keys.encoding_key, "/v1/developer", 1, Some(60*2));
 
@@ -260,10 +272,13 @@ mod tests {
     #[tokio::test]
     async fn test_get_all_developers_route() {
         let repo = MockDbRepo::init().await;
-        let app_data = get_app_data(repo).await;
+        let auth_service = MockAuthService;
+        let app_data = get_app_data(repo, auth_service).await;
 
         let parameters = IdAndPagingModel { id: 1, page_size: 10, last_offset: 1 };
-        let req = get_fake_httprequest_with_bearer_token(DEV_USERNAME.to_string(), DeveloperOrEmployer::Developer, &app_data.auth_keys.encoding_key, "/v1/developers", parameters.clone(), Some(60*2));
+        let req = get_fake_httprequest_with_bearer_token(
+            DEV_USERNAME.to_string(), DeveloperOrEmployer::Developer, &app_data.auth_keys.encoding_key, "/v1/developers", parameters.clone(), Some(60*2)
+        );
 
         let result = get_all_developers(app_data, Json(parameters), req).await.unwrap();
 

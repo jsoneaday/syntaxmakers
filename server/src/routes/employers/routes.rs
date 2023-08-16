@@ -1,13 +1,13 @@
 use actix_web::web::{Data, Json, Path};
 use crate::{
-    common::repository::{employers::{repo::{InsertEmployerFn, QueryEmployerFn, QueryAllEmployersFn}, models::NewEmployer}, base::Repository}, 
+    common::{repository::{employers::{repo::{InsertEmployerFn, QueryEmployerFn, QueryAllEmployersFn}, models::NewEmployer}, base::Repository}, authentication::auth_service::Authenticator}, 
     routes::{base_model::{OutputId, PagingModel}, user_error::UserError}, 
     app_state::AppState
 };
 use super::models::{NewEmployerForRoute, EmployerResponder, EmployerResponders};
 
-pub async fn create_employer<T: InsertEmployerFn + Repository>(
-    app_data: Data<AppState<T>>, 
+pub async fn create_employer<T: InsertEmployerFn + Repository, U: Authenticator>(
+    app_data: Data<AppState<T, U>>, 
     json: Json<NewEmployerForRoute>
 ) -> Result<OutputId, UserError> {
     let result = app_data.repo.insert_employer(NewEmployer {
@@ -24,7 +24,7 @@ pub async fn create_employer<T: InsertEmployerFn + Repository>(
     }
 }
 
-pub async fn get_employer<T: QueryEmployerFn + Repository>(app_data: Data<AppState<T>>, path: Path<i64>) -> Result<Option<EmployerResponder>, UserError> {
+pub async fn get_employer<T: QueryEmployerFn + Repository, U: Authenticator>(app_data: Data<AppState<T, U>>, path: Path<i64>) -> Result<Option<EmployerResponder>, UserError> {
     let result = app_data.repo.query_employer(path.into_inner()).await;
 
     match result {
@@ -43,8 +43,8 @@ pub async fn get_employer<T: QueryEmployerFn + Repository>(app_data: Data<AppSta
     }
 }
 
-pub async fn get_all_employers<T: QueryAllEmployersFn + Repository>(
-    app_data: Data<AppState<T>>, 
+pub async fn get_all_employers<T: QueryAllEmployersFn + Repository, U: Authenticator>(
+    app_data: Data<AppState<T, U>>, 
     json: Json<PagingModel>
 ) -> Result<EmployerResponders, UserError> {
     let result = app_data.repo.query_all_employers(json.page_size, json.last_offset).await;
@@ -71,12 +71,20 @@ pub async fn get_all_employers<T: QueryAllEmployersFn + Repository>(
 #[cfg(test)]
 mod tests {
     use std::vec;
-
-    use crate::{common_test::fixtures::{MockDbRepo, get_app_data, get_fake_fullname}, common::repository::{base::EntityId, employers::{models::Employer, repo::QueryAllEmployersFn}}};
+    use crate::{common_test::fixtures::{MockDbRepo, get_app_data, get_fake_fullname}, common::{repository::{base::EntityId, employers::{models::Employer, repo::QueryAllEmployersFn}}, authentication::auth_service::AuthenticationError}};
     use super::*;
     use async_trait::async_trait;
     use chrono::Utc;
     use fake::{faker::internet::en::{Username, FreeEmail}, Fake};
+    use jsonwebtoken::DecodingKey;
+
+    struct MockAuthService;
+    #[async_trait]
+    impl Authenticator for MockAuthService {
+        async fn is_authenticated(&self, _: String, _: Vec<(&str, &str)>, _: &DecodingKey) -> Result<bool, AuthenticationError> {
+            Ok(true)
+        }
+    }
 
     #[async_trait]
     impl InsertEmployerFn for MockDbRepo {
@@ -120,7 +128,8 @@ mod tests {
     #[tokio::test]
     async fn test_insert_employer_route() {
         let repo = MockDbRepo::init().await;
-        let app_data = get_app_data(repo).await;
+        let auth_service = MockAuthService;
+        let app_data = get_app_data(repo, auth_service).await;
 
         let result = create_employer(app_data, Json(NewEmployerForRoute { 
             user_name: Username().fake::<String>(), 
@@ -136,7 +145,8 @@ mod tests {
     #[tokio::test]
     async fn test_get_employer_route() {
         let repo = MockDbRepo::init().await;
-        let app_data = get_app_data(repo).await;
+        let auth_service = MockAuthService;
+        let app_data = get_app_data(repo, auth_service).await;
 
         let result = get_employer(app_data, Path::from(1)).await.unwrap().unwrap();
 
@@ -146,7 +156,8 @@ mod tests {
     #[tokio::test]
     async fn test_get_all_employers_route() {
         let repo = MockDbRepo::init().await;
-        let app_data = get_app_data(repo).await;
+        let auth_service = MockAuthService;
+        let app_data = get_app_data(repo, auth_service).await;
 
         let result = get_all_employers(app_data, Json(PagingModel { page_size: 10, last_offset: 1 })).await.unwrap();
 

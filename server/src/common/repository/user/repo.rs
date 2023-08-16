@@ -6,7 +6,7 @@ use crate::common::repository::user::models::DeveloperOrEmployer;
 mod internal {  
     use super::*;    
 
-    pub async fn authenticate(conn: &Pool<Postgres>, is_dev_or_emp: DeveloperOrEmployer, email: String, password: String) -> Result<AuthenticateResult, sqlx::Error> {
+    pub async fn authenticate_db(conn: &Pool<Postgres>, is_dev_or_emp: DeveloperOrEmployer, email: String, password: String) -> Result<AuthenticateResult, sqlx::Error> {
         let query = if is_dev_or_emp == DeveloperOrEmployer::Developer {
             "select id from developer where email = $1 and password = $2"
         } else {
@@ -30,13 +30,13 @@ mod internal {
 }
 
 #[async_trait]
-pub trait AuthenticateFn {
-    async fn authenticate(&self, is_dev_or_emp: DeveloperOrEmployer, email: String, password: String) -> Result<AuthenticateResult, sqlx::Error>;
+pub trait AuthenticateDbFn {
+    async fn authenticate_db(&self, is_dev_or_emp: DeveloperOrEmployer, email: String, password: String) -> Result<AuthenticateResult, sqlx::Error>;
 }
 
 #[async_trait]
-impl AuthenticateFn for DbRepo {
-    async fn authenticate(&self, is_dev_or_emp: DeveloperOrEmployer, email: String, password: String) -> Result<AuthenticateResult, sqlx::Error> {
-        internal::authenticate(self.get_conn(), is_dev_or_emp, email, password).await
+impl AuthenticateDbFn for DbRepo {
+    async fn authenticate_db(&self, is_dev_or_emp: DeveloperOrEmployer, email: String, password: String) -> Result<AuthenticateResult, sqlx::Error> {
+        internal::authenticate_db(self.get_conn(), is_dev_or_emp, email, password).await
     }
 }

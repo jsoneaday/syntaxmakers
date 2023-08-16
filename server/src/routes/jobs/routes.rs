@@ -1,9 +1,9 @@
 use actix_web::web::{Data, Json, Path};
-use crate::{common::repository::{jobs::{repo::{InsertJobFn, QueryJobFn, QueryAllJobsFn, QueryJobsByDevProfile}, models::{NewJob, Job}}, base::Repository}, app_state::AppState, routes::{base_model::{OutputId, PagingModel, IdAndPagingModel}, user_error::UserError}};
+use crate::{common::{repository::{jobs::{repo::{InsertJobFn, QueryJobFn, QueryAllJobsFn, QueryJobsByDevProfile}, models::{NewJob, Job}}, base::Repository}, authentication::auth_service::Authenticator}, app_state::AppState, routes::{base_model::{OutputId, PagingModel, IdAndPagingModel}, user_error::UserError}};
 use super::models::{NewJobForRoute, JobResponders, JobResponder};
 
 #[allow(unused)]
-pub async fn create_job<T: InsertJobFn + Repository>(app_data: Data<AppState<T>>, json: Json<NewJobForRoute>)
+pub async fn create_job<T: InsertJobFn + Repository, U: Authenticator>(app_data: Data<AppState<T, U>>, json: Json<NewJobForRoute>)
  -> Result<OutputId, UserError> {
     let result = app_data.repo.insert_job(NewJob {
         employer_id: json.employer_id,
@@ -24,7 +24,7 @@ pub async fn create_job<T: InsertJobFn + Repository>(app_data: Data<AppState<T>>
 }
 
 #[allow(unused)]
-pub async fn get_job<T: QueryJobFn + Repository>(app_data: Data<AppState<T>>, path: Path<i64>) -> Result<Option<JobResponder>, UserError> {
+pub async fn get_job<T: QueryJobFn + Repository, U: Authenticator>(app_data: Data<AppState<T, U>>, path: Path<i64>) -> Result<Option<JobResponder>, UserError> {
     let result = app_data.repo.query_job(path.into_inner()).await;
     
     match result {
@@ -37,7 +37,7 @@ pub async fn get_job<T: QueryJobFn + Repository>(app_data: Data<AppState<T>>, pa
 }
 
 #[allow(unused)]
-pub async fn get_all_jobs<T: QueryAllJobsFn + Repository>(app_data: Data<AppState<T>>, json: Json<PagingModel>) -> Result<JobResponders, UserError> {
+pub async fn get_all_jobs<T: QueryAllJobsFn + Repository, U: Authenticator>(app_data: Data<AppState<T, U>>, json: Json<PagingModel>) -> Result<JobResponders, UserError> {
     let result = app_data.repo.query_all_jobs(json.page_size, json.last_offset).await;
     
     match result {
@@ -53,7 +53,7 @@ pub async fn get_all_jobs<T: QueryAllJobsFn + Repository>(app_data: Data<AppStat
 }
 
 #[allow(unused)]
-pub async fn get_jobs_by_dev_profile<T: QueryJobsByDevProfile + Repository>(app_data: Data<AppState<T>>, json: Json<IdAndPagingModel>) -> Result<JobResponders, UserError> {
+pub async fn get_jobs_by_dev_profile<T: QueryJobsByDevProfile + Repository, U: Authenticator>(app_data: Data<AppState<T, U>>, json: Json<IdAndPagingModel>) -> Result<JobResponders, UserError> {
     let result = app_data.repo.query_jobs_by_dev_profile(json.id, json.page_size, json.last_offset).await;
     
     match result {
@@ -99,12 +99,21 @@ fn convert(job: &Job) -> JobResponder {
 
 #[cfg(test)]
 mod tests {
-    use crate::{common::repository::jobs::models::Job, common_test::fixtures::{get_fake_fullname, init_fixtures, COUNTRY_NAMES, LANGUAGE_NAMES, INDUSTRY_NAMES, SALARY_BASE}};
+    use crate::{common::{repository::jobs::models::Job, authentication::auth_service::AuthenticationError}, common_test::fixtures::{get_fake_fullname, init_fixtures, COUNTRY_NAMES, LANGUAGE_NAMES, INDUSTRY_NAMES, SALARY_BASE}};
     use super::*;
     use async_trait::async_trait;
     use chrono::Utc;
     use fake::{faker::company::en::CompanyName, Fake};
+    use jsonwebtoken::DecodingKey;
     use crate::{common::repository::{jobs::repo::InsertJobFn, base::EntityId}, common_test::fixtures::{MockDbRepo, get_app_data, get_fake_title, get_fake_desc}};
+
+    struct MockAuthService;
+    #[async_trait]
+    impl Authenticator for MockAuthService {
+        async fn is_authenticated(&self, _: String, _: Vec<(&str, &str)>, _: &DecodingKey) -> Result<bool, AuthenticationError> {
+            Ok(true)
+        }
+    }
 
     fn get_test_job(id: i64) -> Job {
         init_fixtures();
@@ -170,7 +179,8 @@ mod tests {
     #[tokio::test]
     async fn test_create_job_route() {
         let repo = MockDbRepo::init().await;
-        let app_data = get_app_data(repo).await;
+        let auth_service = MockAuthService;
+        let app_data = get_app_data(repo, auth_service).await;
 
         let result = create_job(app_data, Json(NewJobForRoute {
             employer_id: 1,
@@ -190,7 +200,8 @@ mod tests {
     #[tokio::test]
     async fn test_get_job_route() {
         let repo = MockDbRepo::init().await;
-        let app_data = get_app_data(repo).await;
+        let auth_service = MockAuthService;
+        let app_data = get_app_data(repo, auth_service).await;
 
         let result = get_job(app_data, Path::from(1)).await.unwrap();
 
@@ -200,7 +211,8 @@ mod tests {
     #[tokio::test]
     async fn test_get_all_jobs_route() {
         let repo = MockDbRepo::init().await;
-        let app_data = get_app_data(repo).await;
+        let auth_service = MockAuthService;
+        let app_data = get_app_data(repo, auth_service).await;
 
         let result = get_all_jobs(app_data, Json(PagingModel { page_size: 10, last_offset: 1 })).await.unwrap();
 
@@ -210,7 +222,8 @@ mod tests {
     #[tokio::test]
     async fn test_get_jobs_by_dev_profile() {
         let repo = MockDbRepo::init().await;
-        let app_data = get_app_data(repo).await;
+        let auth_service = MockAuthService;
+        let app_data = get_app_data(repo, auth_service).await;
 
         let result = get_jobs_by_dev_profile(app_data, Json(IdAndPagingModel { id: 1, page_size: 10, last_offset: 1 })).await.unwrap();
 
