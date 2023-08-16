@@ -31,4 +31,9 @@ pub mod common {
             pub mod test_user;
         }
     }
+    pub mod routes {
+        pub mod authentication {
+            pub mod test_route_authentication;
+        }
+    }
 }

@@ -1,14 +1,16 @@
 use std::sync::OnceLock;
 use actix_http::header::HeaderValue;
+use actix_web::cookie::Cookie;
 use actix_web::http::header;
+use actix_web::web::Bytes;
 use actix_web::{HttpRequest, test};
 use fake::Fake;
 use fake::faker::lorem::en::Sentence;
 use fake::faker::name::en::{FirstName, LastName};
-use jsonwebtoken::EncodingKey;
+use jsonwebtoken::{EncodingKey, DecodingKey};
 use serde::Serialize;
 use crate::app_state::AppState;
-use crate::common::authentication::auth_service::{init_auth_keys, get_token, Authenticator};
+use crate::common::authentication::auth_service::{init_auth_keys, get_token, Authenticator, AuthenticationError};
 use crate::common::repository::base::Repository;
 use crate::common::repository::user::models::DeveloperOrEmployer;
 use async_trait::async_trait;
@@ -16,6 +18,7 @@ pub static COUNTRY_NAMES: OnceLock<Vec<&'static str>> = OnceLock::new();
 pub static INDUSTRY_NAMES: OnceLock<Vec<&'static str>> = OnceLock::new();
 pub static LANGUAGE_NAMES: OnceLock<Vec<&'static str>> = OnceLock::new();
 pub static SALARY_BASE: OnceLock<Vec<i32>> = OnceLock::new();
+use actix_http::body::BoxBody;
 
 pub fn init_fixtures() {
     COUNTRY_NAMES.get_or_init(|| {
@@ -35,6 +38,8 @@ pub fn init_fixtures() {
 
     LANGUAGE_NAMES.get_or_init(|| {
         vec![
+            "C#",
+            "Java",
             "Rust",
             "Go" ,
             "Ruby",
@@ -70,6 +75,14 @@ pub fn get_fake_desc() -> String {
     Sentence(9..10).fake::<String>()
 }
 
+pub struct MockAuthService;
+#[async_trait]
+impl Authenticator for MockAuthService {
+    async fn is_authenticated(&self, _: String, _: Vec<(&str, &str)>, _: &DecodingKey) -> Result<bool, AuthenticationError> {
+        Ok(true)
+    }
+}
+
 pub struct MockDbRepo;
 
 #[async_trait]
@@ -79,13 +92,45 @@ impl Repository for MockDbRepo {
     }
 }
 
-pub fn get_fake_httprequest_with_bearer_token(user_name: String, dev_or_emp: DeveloperOrEmployer, encoding_key: &EncodingKey, url: &str, parameter_data: impl Serialize, token_expiration_duration: Option<i64>) -> HttpRequest {
+pub fn get_fake_httprequest_with_bearer_token(
+    user_name: String, 
+    dev_or_emp: DeveloperOrEmployer, 
+    encoding_key: &EncodingKey, 
+    url: &str, 
+    parameter_data: impl Serialize, 
+    token_expiration_duration: Option<i64>,
+    cookie: Option<Cookie>
+) -> HttpRequest {
     let header_value_string = format!("Bearer {}", get_token(user_name, dev_or_emp, encoding_key, token_expiration_duration));
     let header_value = HeaderValue::from_str(&header_value_string).unwrap();
-    test::TestRequest
+    let req = test::TestRequest
         ::post()
         .append_header((header::AUTHORIZATION, header_value.clone()))
         .uri(url)
-        .set_json(parameter_data)
-        .to_http_request()
+        .set_json(parameter_data);     
+        
+    if let Some(cookie) = cookie {
+        let req = req.cookie(cookie)
+            .to_http_request();
+        req
+    } else {
+        let req = req.to_http_request();
+        req
+    }
+}
+
+pub fn get_httpresponse_body_as_string(body_bytes_result: Result<Bytes, BoxBody>) -> String {    
+    match body_bytes_result {
+        Ok(body_bytes) => {
+            let body_str = String::from_utf8(body_bytes.to_vec());
+            match body_str {
+                Ok(token) => {
+                    println!("token {}", token);
+                    token
+                },
+                Err(_) => "".to_string()
+            } 
+        },
+        Err(_) => "".to_string()
+    }
 }

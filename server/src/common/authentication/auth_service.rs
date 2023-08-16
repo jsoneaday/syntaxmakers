@@ -8,6 +8,8 @@ use async_trait::async_trait;
 use derive_more::{Error, Display};
 
 pub const STANDARD_REFRESH_TOKEN_EXPIRATION: i64 = 60 * 60 * 24 * 30;
+pub const STANDARD_ACCESS_TOKEN_EXPIRATION: i64 = 60 * 10; // todo: switch to 2 min once testing complete
+pub const REFRESH_TOKEN_LABEL: &str = "refresh_token";
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Claims {
@@ -67,6 +69,7 @@ pub trait Authenticator {
     async fn is_authenticated(&self, user_name: String, headers: Vec<(&str, &str)>, decoding_key: &DecodingKey) -> Result<bool, AuthenticationError>;
 }
 
+/// Check that user has already logged in and received their access token
 #[async_trait]
 impl Authenticator for AuthService {    
     async fn is_authenticated(&self, user_name: String, headers: Vec<(&str, &str)>, decoding_key: &DecodingKey) -> Result<bool, AuthenticationError> {

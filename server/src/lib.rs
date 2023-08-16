@@ -1,4 +1,5 @@
 pub mod common {
+    pub mod datetime_utils;
     pub mod repository {
         pub mod base;
         pub mod error;
@@ -93,7 +94,7 @@ use actix_cors::Cors;
 use actix_web::{HttpServer, http::header, App, middleware::Logger, web};
 use common::authentication::auth_service::{init_auth_keys, AuthService};
 use common::repository::base::{DbRepo, Repository};
-use routes::authentication::routes::login;
+use routes::authentication::routes::{login, refresh_access_token};
 use routes::developers::routes::get_developer_by_email;
 use routes::{
     salaries::routes::get_all_salaries, 
@@ -152,8 +153,10 @@ pub async fn run() -> std::io::Result<()> {
             )                              
             .service(
                 web::scope("/v1")
-                    .service(web::resource("login")
+                    .service(web::resource("/login")
                         .route(web::post().to(login::<DbRepo, AuthService>)))
+                    .service(web::resource("/refreshtoken")
+                        .route(web::post().to(refresh_access_token::<DbRepo, AuthService>)))
                     .service(web::resource("/salaries")
                         .route(web::get().to(get_all_salaries::<DbRepo, AuthService>)))
                     .service(web::resource("/languages")

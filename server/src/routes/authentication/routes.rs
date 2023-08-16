@@ -2,26 +2,65 @@ use actix_web::{
     cookie::{time::Duration as ActixWebDuration, Cookie},
     web::{Data, Json}, 
     HttpResponse,
-    http::header::ContentType
+    http::header::ContentType, HttpRequest
 };
+use chrono::Utc;
 use crate::{
     app_state::AppState, 
     common::{
         repository::{
-            base::Repository, user::{repo::AuthenticateDbFn, models::{AuthenticateResult, DeveloperOrEmployer as UserDeveloperOrEmployer}}, developers::repo::QueryDeveloperFn
+            base::Repository, 
+            user::{repo::AuthenticateDbFn, models::{AuthenticateResult, DeveloperOrEmployer as UserDeveloperOrEmployer}}, 
+            developers::repo::QueryDeveloperFn
         }, 
-        authentication::auth_service::{get_token, STANDARD_REFRESH_TOKEN_EXPIRATION, Authenticator}
+        authentication::auth_service::{get_token, STANDARD_REFRESH_TOKEN_EXPIRATION, Authenticator, STANDARD_ACCESS_TOKEN_EXPIRATION, REFRESH_TOKEN_LABEL, decode_token}
     }, 
     routes::authentication::models::DeveloperOrEmployer as AuthDeveloperOrEmployer
 };
-use super::models::LoginCredential;
+use super::models::{LoginCredential, RefreshToken};
+
+pub async fn refresh_access_token<T: Repository, U: Authenticator>(app_data: Data<AppState<T, U>>, json: Json<RefreshToken>, req: HttpRequest) -> HttpResponse {
+    let dev_or_emp = if json.dev_or_emp == AuthDeveloperOrEmployer::Developer {
+        UserDeveloperOrEmployer::Developer
+    } else {
+        UserDeveloperOrEmployer::Employer
+    };
+
+    let refresh_cookie = req.cookie(REFRESH_TOKEN_LABEL);
+
+    match refresh_cookie {
+        Some(cookie) => {
+            let cookie_val = cookie.value();            
+            let refresh_token = decode_token(cookie_val, &app_data.auth_keys.decoding_key);
+            let refresh_user_name = refresh_token.sub;
+            let current_access_token = decode_token(&json.old_token, &app_data.auth_keys.decoding_key);
+            if refresh_user_name == current_access_token.sub && refresh_token.exp >= (Utc::now().timestamp() as usize) {
+                let new_access_token = get_token(refresh_user_name, dev_or_emp, &app_data.auth_keys.encoding_key, Some(STANDARD_ACCESS_TOKEN_EXPIRATION));
+
+                return HttpResponse::Ok()
+                    .content_type(ContentType::json())
+                    .body(new_access_token);
+            } else {
+                return HttpResponse::BadRequest()
+                    .content_type(ContentType::json())
+                    .body("Authentication failed. Your request token is expired");
+            }            
+        },
+        None => {
+            println!("No refresh cookie found");
+            return HttpResponse::BadRequest()
+                .content_type(ContentType::json())
+                .body("Authentication failed. Your request is missing the refresh token")
+        }
+    };
+}
 
 
 pub async fn login<T: AuthenticateDbFn + QueryDeveloperFn + Repository, U: Authenticator>(app_data: Data<AppState<T, U>>, json: Json<LoginCredential>) 
     -> HttpResponse {
     println!("start login {}, {}", json.email, json.password);
 
-    let dev_or_emp = if json.is_dev_or_emp == AuthDeveloperOrEmployer::Developer {
+    let dev_or_emp = if json.dev_or_emp == AuthDeveloperOrEmployer::Developer {
         UserDeveloperOrEmployer::Developer
     } else {
         UserDeveloperOrEmployer::Employer
@@ -36,19 +75,19 @@ pub async fn login<T: AuthenticateDbFn + QueryDeveloperFn + Repository, U: Authe
                     match developer {
                         Ok(opt_dev) => {
                             if let Some(dev) = opt_dev {
-                                let access_token = get_token(dev.user_name.clone(), dev_or_emp.clone(), &app_data.auth_keys.encoding_key, Some(60 * 10)); // todo: drop down to 2 min after testing
+                                let access_token = get_token(dev.user_name.clone(), dev_or_emp.clone(), &app_data.auth_keys.encoding_key, Some(STANDARD_ACCESS_TOKEN_EXPIRATION));
                                 let refresh_token = get_token(dev.user_name, dev_or_emp, &app_data.auth_keys.encoding_key, None);
-                                let refresh_cookie = Cookie::build("refresh_token", refresh_token.to_owned())
+                                let refresh_cookie = Cookie::build(REFRESH_TOKEN_LABEL, refresh_token.to_owned())
                                     .path("/")
                                     .max_age(ActixWebDuration::new(STANDARD_REFRESH_TOKEN_EXPIRATION, 0))
                                     .http_only(true)
-                                    .secure(false) // todo: enable when https is ready
-                                    //.same_site(SameSite::Lax) // todo: activate once deployed
+                                    .secure(false)
+                                    //.same_site(SameSite::Lax)
                                     .finish();
                                 
                                 HttpResponse::Ok()
                                     .cookie(refresh_cookie)
-                                    .body(format!("{}", access_token))
+                                    .body(access_token)
                             } else {
                                 HttpResponse::Unauthorized()
                                     .content_type(ContentType::json())
@@ -140,7 +179,7 @@ mod tests {
         let auth_service = MockAuthService;
         let app_data = get_app_data(repo, auth_service).await;
 
-        let result = login(app_data.clone(), Json(LoginCredential { is_dev_or_emp: AuthDeveloperOrEmployer::Developer, email: FreeEmail().fake::<String>(), password: "test123".to_string() })).await;
+        let result = login(app_data.clone(), Json(LoginCredential { dev_or_emp: AuthDeveloperOrEmployer::Developer, email: FreeEmail().fake::<String>(), password: "test123".to_string() })).await;
 
         assert!(result.status() == StatusCode::OK);
         let cookie = result.cookies().last().unwrap();
@@ -150,4 +189,5 @@ mod tests {
         assert!(claims.exp >= STANDARD_REFRESH_TOKEN_EXPIRATION as usize);
         assert!(claims.sub == DEV_USERNAME.to_string());        
     }
+   
 }

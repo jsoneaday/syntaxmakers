@@ -249,7 +249,9 @@ mod tests {
         let auth_service = MockAuthService;
         let app_data = get_app_data(repo, auth_service).await;
 
-        let req = get_fake_httprequest_with_bearer_token(DEV_USERNAME.to_string(), DeveloperOrEmployer::Developer, &app_data.auth_keys.encoding_key, "/v1/developer", 1, Some(60*2));
+        let req = get_fake_httprequest_with_bearer_token(
+            DEV_USERNAME.to_string(), DeveloperOrEmployer::Developer, &app_data.auth_keys.encoding_key, "/v1/developer", 1, Some(60*2), None
+        );
 
         let result = get_developer(app_data, Path::from(1), req).await.unwrap();
 
@@ -262,7 +264,9 @@ mod tests {
         let auth_service = MockAuthService;
         let app_data = get_app_data(repo, auth_service).await;
 
-        let req = get_fake_httprequest_with_bearer_token(DEV_USERNAME.to_string(), DeveloperOrEmployer::Developer, &app_data.auth_keys.encoding_key, "/v1/developer", 1, Some(60*2));
+        let req = get_fake_httprequest_with_bearer_token(
+            DEV_USERNAME.to_string(), DeveloperOrEmployer::Developer, &app_data.auth_keys.encoding_key, "/v1/developer", 1, Some(60*2), None
+        );
 
         let result = get_developer_by_email(app_data, Path::from("jon@jon.com".to_string()), req).await.unwrap();
 
@@ -277,7 +281,13 @@ mod tests {
 
         let parameters = IdAndPagingModel { id: 1, page_size: 10, last_offset: 1 };
         let req = get_fake_httprequest_with_bearer_token(
-            DEV_USERNAME.to_string(), DeveloperOrEmployer::Developer, &app_data.auth_keys.encoding_key, "/v1/developers", parameters.clone(), Some(60*2)
+            DEV_USERNAME.to_string(), 
+            DeveloperOrEmployer::Developer, 
+            &app_data.auth_keys.encoding_key, 
+            "/v1/developers", 
+            parameters.clone(), 
+            Some(60*2),
+            None
         );
 
         let result = get_all_developers(app_data, Json(parameters), req).await.unwrap();
