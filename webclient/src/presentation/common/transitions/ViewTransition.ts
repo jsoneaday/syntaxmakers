@@ -5,5 +5,7 @@ export function startViewTransition(callback: () => void) {
     document.startViewTransition(() => {
       flushSync(() => callback());
     });
+  } else {
+    callback();
   }
 }

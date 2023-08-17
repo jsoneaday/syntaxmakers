@@ -14,7 +14,6 @@ export default function Modal({ isOpen, toggleOpen, children }: ModalProps) {
       className="modal-container"
       isOpen={isOpen}
       onRequestClose={toggleOpen}
-      shouldCloseOnOverlayClick={true}
     >
       {children}
     </ReactModal>
