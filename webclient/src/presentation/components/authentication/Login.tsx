@@ -8,7 +8,6 @@ import Modal from "../Modal";
 import { convert as convertDev } from "../../models/DevProfile";
 import Checkbox from "../controls/Checkbox";
 import { useState, useTransition } from "react";
-import { useAuthToken } from "../../common/redux/authToken/AuthTokenHooks";
 
 interface LoginProps {
   devOrEmployer: DevOrEmployer;
@@ -24,7 +23,6 @@ export default function Login({
   const [_profile, setProfile] = useProfile();
   const [email, setEmail] = useState("jon@jon.com");
   const [password, setPassword] = useState("test123");
-  const [_authToken, setAuthToken] = useAuthToken();
   const [_isPending, startTransition] = useTransition();
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -38,14 +36,12 @@ export default function Login({
             .then((dev) => {
               if (dev) {
                 startTransition(() => {
-                  setProfile(convertDev(dev));
-                  setAuthToken({ id: dev.id, token: message });
+                  setProfile(convertDev(dev, message));
                   toggleOpen();
                 });
               } else {
                 startTransition(() => {
                   setProfile(null);
-                  setAuthToken(null);
                   setErrorMessage(`Failed to find user with email ${email}`);
                 });
               }

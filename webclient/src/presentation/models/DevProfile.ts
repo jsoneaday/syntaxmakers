@@ -12,10 +12,11 @@ type DevProfile = {
   email: string;
   primaryLangId: string;
   secondaryLangId?: string | null;
+  accessToken?: string | null;
 };
 export default DevProfile;
 
-export function convert(dev: Developer): DevProfile {
+export function convert(dev: Developer, accessToken?: string): DevProfile {
   return {
     key: uuidv4(),
     id: dev.id, // bigint is not serializable by Redux
@@ -25,5 +26,6 @@ export function convert(dev: Developer): DevProfile {
     email: dev.email,
     primaryLangId: dev.primaryLangId,
     secondaryLangId: dev.secondaryLangId,
+    accessToken,
   };
 }
