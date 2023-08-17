@@ -14,7 +14,7 @@ use syntaxmakers_server::common::repository::industries::repo::QueryAllIndustrie
 use syntaxmakers_server::common::repository::languages::repo::QueryAllLanguagesFn;
 use syntaxmakers_server::common::repository::salaries::repo::QueryAllSalariesFn;
 use syntaxmakers_server::common::repository::companies::repo::InsertCompanyFn;
-use syntaxmakers_server::common_test::fixtures::{ init_fixtures, get_fake_fullname};
+use syntaxmakers_server::common_test::fixtures::{ init_fixtures, get_fake_fullname, get_company_log_randomly};
 
 #[tokio::test]
 async fn test_create_job_and_get_back() {
@@ -23,8 +23,9 @@ async fn test_create_job_and_get_back() {
     let user_name = Username().fake::<String>();
     let full_name = get_fake_fullname();
     let email = SafeEmail().fake::<String>();
+    let logo = get_company_log_randomly();
     
-    let company_create_result = repo.insert_company(NewCompany{ name: CompanyName().fake::<String>(), logo: None, headquarters_country_id: 1 }).await.unwrap();
+    let company_create_result = repo.insert_company(NewCompany{ name: CompanyName().fake::<String>(), logo: Some(logo), headquarters_country_id: 1 }).await.unwrap();
     let company_id = company_create_result.id;
     let create_employer_result = repo.insert_employer(NewEmployer {
         user_name: user_name.clone(),
@@ -61,9 +62,10 @@ async fn test_create_two_jobs_and_get_back_both() {
     let user_name = Username().fake::<String>();
     let full_name = get_fake_fullname();
     let email = SafeEmail().fake::<String>();
+    let logo = get_company_log_randomly();
     
     // setup needed data
-    let company_create_result = repo.insert_company(NewCompany{ name: CompanyName().fake::<String>(), logo: None, headquarters_country_id: 1 }).await.unwrap();
+    let company_create_result = repo.insert_company(NewCompany{ name: CompanyName().fake::<String>(), logo: Some(logo), headquarters_country_id: 1 }).await.unwrap();
     let company_id = company_create_result.id;
     let create_employer_result = repo.insert_employer(NewEmployer {
         user_name: user_name.clone(),
@@ -114,9 +116,10 @@ async fn test_create_two_jobs_and_get_back_only_one_that_matches_dev_profile() {
     let user_name = Username().fake::<String>();
     let full_name = get_fake_fullname();
     let email = SafeEmail().fake::<String>();
+    let logo = get_company_log_randomly();
     
     // setup needed data    
-    let company_create_result = repo.insert_company(NewCompany{ name: CompanyName().fake::<String>(), logo: None, headquarters_country_id: 1 }).await.unwrap();
+    let company_create_result = repo.insert_company(NewCompany{ name: CompanyName().fake::<String>(), logo: Some(logo), headquarters_country_id: 1 }).await.unwrap();
     let company_id = company_create_result.id;
     let create_employer_result = repo.insert_employer(NewEmployer {
         user_name: user_name.clone(),

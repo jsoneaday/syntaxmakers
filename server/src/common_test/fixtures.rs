@@ -11,6 +11,7 @@ use jsonwebtoken::{EncodingKey, DecodingKey};
 use serde::Serialize;
 use crate::app_state::AppState;
 use crate::common::authentication::auth_service::{init_auth_keys, get_token, Authenticator, AuthenticationError};
+use crate::common::fs_utils::get_file_buffer;
 use crate::common::repository::base::Repository;
 use crate::common::repository::user::models::DeveloperOrEmployer;
 use async_trait::async_trait;
@@ -133,4 +134,13 @@ pub fn get_httpresponse_body_as_string(body_bytes_result: Result<Bytes, BoxBody>
         },
         Err(_) => "".to_string()
     }
+}
+
+pub fn get_company_log_randomly() -> Vec<u8> {
+    use rand::Rng;
+    
+    let file_no = rand::thread_rng().gen_range(1..7);
+    let file_path = format!("src/common_test/files/office-cl-{}.png", file_no);
+    println!("file_path for logo {}", file_path);
+    get_file_buffer(&file_path)
 }

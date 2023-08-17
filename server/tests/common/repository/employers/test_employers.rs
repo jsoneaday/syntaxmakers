@@ -6,7 +6,7 @@ use syntaxmakers_server::common::repository::companies::models::NewCompany;
 use syntaxmakers_server::common::repository::employers::models::NewEmployer;
 use syntaxmakers_server::common::repository::employers::repo::{QueryEmployerFn, QueryAllEmployersFn, InsertEmployerFn};
 use syntaxmakers_server::common::repository::companies::repo::InsertCompanyFn;
-use syntaxmakers_server::common_test::fixtures::{ init_fixtures, get_fake_fullname};
+use syntaxmakers_server::common_test::fixtures::{ init_fixtures, get_fake_fullname, get_company_log_randomly};
 
 #[tokio::test]
 async fn test_create_employer_and_get_back() {
@@ -15,8 +15,9 @@ async fn test_create_employer_and_get_back() {
     let user_name = Username().fake::<String>();
     let full_name = get_fake_fullname();
     let email = SafeEmail().fake::<String>();
+    let logo = get_company_log_randomly();
     
-    let company_create_result = repo.insert_company(NewCompany{ name: CompanyName().fake::<String>(), logo: None, headquarters_country_id: 1 }).await.unwrap();
+    let company_create_result = repo.insert_company(NewCompany{ name: CompanyName().fake::<String>(), logo: Some(logo), headquarters_country_id: 1 }).await.unwrap();
     let company_id = company_create_result.id;
 
     let create_result = repo.insert_employer(NewEmployer {
@@ -40,8 +41,9 @@ async fn test_create_employer_and_get_back() {
 async fn test_create_two_employers_and_get_back_both() {
     init_fixtures();
     let repo = DbRepo::init().await;
+    let logo = get_company_log_randomly();
 
-    let company_create_result = repo.insert_company(NewCompany{ name: CompanyName().fake::<String>(), logo: None, headquarters_country_id: 1 }).await.unwrap();
+    let company_create_result = repo.insert_company(NewCompany{ name: CompanyName().fake::<String>(), logo: Some(logo), headquarters_country_id: 1 }).await.unwrap();
     let company_id = company_create_result.id;
 
     let create_result1 = repo.insert_employer(NewEmployer {

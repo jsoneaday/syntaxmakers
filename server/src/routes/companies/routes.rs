@@ -36,14 +36,14 @@ pub async fn get_all_companies<T: QueryAllCompaniesFn + Repository, U: Authentic
 }
 
 #[cfg(test)]
-mod tests {
+mod tests {    
     use jsonwebtoken::DecodingKey;
     use sqlx::Error as SqlxError;
     use chrono::Utc;
     use super::*;
     use crate::{
         common::{repository::{companies::{repo::{InsertCompanyFn, QueryAllCompaniesFn}, models::Company}, base::EntityId}, authentication::auth_service::AuthenticationError}, 
-        common_test::fixtures::{get_app_data, MockDbRepo}
+        common_test::fixtures::{get_app_data, MockDbRepo, get_company_log_randomly}
     };
     use async_trait::async_trait;
     use fake::{faker::company::en::CompanyName, Fake};
@@ -79,7 +79,9 @@ mod tests {
         let auth_service = MockAuthService;
         let app_data = get_app_data(repo, auth_service).await;
 
-        let output = create_company(app_data, Json(NewCompanyForRoute{ name: CompanyName().fake::<String>(), logo: None, headquarters_country_id: 1 })).await.unwrap();
+        let logo = get_company_log_randomly();
+
+        let output = create_company(app_data, Json(NewCompanyForRoute{ name: CompanyName().fake::<String>(), logo: Some(logo), headquarters_country_id: 1 })).await.unwrap();
         
         assert!(output.id == ID);
     }
