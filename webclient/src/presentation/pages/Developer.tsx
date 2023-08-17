@@ -96,7 +96,6 @@ export default function Developer() {
             </ul>
           </div>
         </div>
-        <PromotedJobs posts={[]} />
       </div>
     </>
   );

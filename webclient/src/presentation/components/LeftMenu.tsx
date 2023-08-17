@@ -2,9 +2,18 @@ import "../../presentation/theme/left_menu.css";
 import safebox from "../../presentation/theme/assets/safe-box.png";
 import notification from "../../presentation/theme/assets/notification.png";
 import { useProfile } from "../common/redux/profile/ProfileHooks";
+import { useAuthToken } from "../common/redux/authToken/AuthTokenHooks";
 
 export default function LeftMenu() {
-  const [profile, _setProfile] = useProfile();
+  const [profile, setProfile] = useProfile();
+  const [_, setAccessToken] = useAuthToken();
+
+  const onClickLogout = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+
+    setProfile(null);
+    setAccessToken(null);
+  };
 
   if (profile) {
     return (
@@ -20,7 +29,9 @@ export default function LeftMenu() {
             <span>Job alerts</span>
           </a>
         </div>
-        <button className="secondary-btn">logout</button>
+        <button className="secondary-btn" onClick={onClickLogout}>
+          logout
+        </button>
       </nav>
     );
   } else {
