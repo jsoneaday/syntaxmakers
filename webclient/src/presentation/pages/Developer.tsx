@@ -12,6 +12,7 @@ import { getJobsByDevProfile } from "../../domain/repository/JobRepo";
 import { v4 as uuidv4 } from "uuid";
 import Login from "../components/authentication/Login";
 import { DevOrEmployer } from "../models/DevOrEmployer";
+import { startViewTransition } from "../common/transitions/ViewTransition";
 
 export default function Developer() {
   const [jobData, setJobsData] = useState<JobPost[]>([]);
@@ -44,7 +45,7 @@ export default function Developer() {
   };
 
   const toggleOpen = () => {
-    setLoginIsOpen(!loginIsOpen);
+    startViewTransition(() => setLoginIsOpen(!loginIsOpen));
   };
 
   return (

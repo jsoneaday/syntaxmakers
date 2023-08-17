@@ -2,6 +2,7 @@ import "../../presentation/theme/left_menu.css";
 import safebox from "../../presentation/theme/assets/safe-box.png";
 import notification from "../../presentation/theme/assets/notification.png";
 import { useProfile } from "../common/redux/profile/ProfileHooks";
+import { startViewTransition } from "../common/transitions/ViewTransition";
 
 export default function LeftMenu() {
   const [profile, setProfile] = useProfile();
@@ -9,7 +10,7 @@ export default function LeftMenu() {
   const onClickLogout = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
 
-    setProfile(null);
+    startViewTransition(() => setProfile(null));
   };
 
   if (profile) {
