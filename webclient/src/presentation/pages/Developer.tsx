@@ -1,6 +1,5 @@
 import "../../presentation/theme/developer.css";
 import LeftMenu from "../components/LeftMenu";
-import PromotedJobs from "../components/PromotedJobs";
 import JobPost, { convert as convertJob } from "../models/JobPost";
 import Lister from "../components/Lister";
 import { ChangeEvent, useEffect, useState } from "react";
