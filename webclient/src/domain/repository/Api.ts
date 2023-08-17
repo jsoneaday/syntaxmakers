@@ -13,3 +13,4 @@ export const COUNTRIES_URL = `${API_ROOT_URL}countries`;
 export const COMPANY_URL = `${API_ROOT_URL}company`;
 export const COMPANIES_URL = `${API_ROOT_URL}companies`;
 export const LOGIN_URL = `${API_ROOT_URL}login`;
+export const REFRESH_TOKEN_URL = `${API_ROOT_URL}refreshtoken`;

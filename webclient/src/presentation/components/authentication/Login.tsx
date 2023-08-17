@@ -1,4 +1,4 @@
-import { login } from "../../../domain/repository/AuthRepo";
+import { LoginResult, login } from "../../../domain/repository/AuthRepo";
 import { getDeveloperByEmail } from "../../../domain/repository/DeveloperRepo";
 import { useProfile } from "../../common/redux/profile/ProfileHooks";
 import { DevOrEmployer } from "../../models/DevOrEmployer";
@@ -11,13 +11,13 @@ import { useState, useTransition } from "react";
 import { useAuthToken } from "../../common/redux/authToken/AuthTokenHooks";
 
 interface LoginProps {
-  isDevOrEmployer: DevOrEmployer;
+  devOrEmployer: DevOrEmployer;
   isOpen: boolean;
   toggleOpen: () => void;
 }
 
 export default function Login({
-  isDevOrEmployer,
+  devOrEmployer,
   isOpen,
   toggleOpen,
 }: LoginProps) {
@@ -26,32 +26,44 @@ export default function Login({
   const [password, setPassword] = useState("test123");
   const [_authToken, setAuthToken] = useAuthToken();
   const [_isPending, startTransition] = useTransition();
+  const [errorMessage, setErrorMessage] = useState("");
 
   const onClickLogin = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
 
-    login(isDevOrEmployer, email, password)
-      .then((access_token: string) => {
-        getDeveloperByEmail(email, access_token)
-          .then((dev) => {
-            if (dev) {
-              startTransition(() => {
-                setProfile(convertDev(dev));
-                setAuthToken({ id: dev.id, token: access_token });
-              });
-            } else {
-              startTransition(() => {
-                setProfile(null);
-                setAuthToken(null);
-              });
-            }
-          })
-          .catch((error) => {
-            console.log("Developer: failed to get developer", error);
-          });
+    login(devOrEmployer, email, password)
+      .then(({ message, status }: LoginResult) => {
+        if (status === 200) {
+          getDeveloperByEmail(email, message)
+            .then((dev) => {
+              if (dev) {
+                startTransition(() => {
+                  setProfile(convertDev(dev));
+                  setAuthToken({ id: dev.id, token: message });
+                  toggleOpen();
+                });
+              } else {
+                startTransition(() => {
+                  setProfile(null);
+                  setAuthToken(null);
+                  setErrorMessage(`Failed to find user with email ${email}`);
+                });
+              }
+            })
+            .catch((error) => {
+              console.log("Developer: failed to get developer", error);
+            });
+        } else {
+          setErrorMessage(
+            status === 401
+              ? "Login failed. Invalid email or password"
+              : "Login has failed. Please try again"
+          );
+        }
       })
       .catch((err) => {
         console.log("login", err);
+        setErrorMessage(err);
       });
   };
 
@@ -101,6 +113,9 @@ export default function Login({
         </div>
         <div className="login-item">
           <PrimaryButton onClick={onClickLogin}>Login</PrimaryButton>
+        </div>
+        <div className="login-item">
+          <span>{errorMessage}</span>
         </div>
       </form>
     </Modal>

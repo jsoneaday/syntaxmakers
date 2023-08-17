@@ -3,7 +3,16 @@
   background-color: var(--secondary-cl);
   color: var(--bg-cl);
   border-radius: 5px;
-  padding-top: 15px;
-  padding-bottom: 15px;
+  padding-top: 12px;
+  padding-bottom: 12px;
+  width: 100%;
+}
+
+.secondary-btn {
+  justify-content: center;
+  border: solid 1px var(--tertiary-font-cl);
+  border-radius: 5px;
+  padding-top: 12px;
+  padding-bottom: 12px;
   width: 100%;
 }

@@ -1,5 +1,20 @@
 .dev-menu-container {
+  background-color: var(--panel-bg-cl);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 2em;
+  border: 1px solid var(--border-cl);
+  border-radius: var(--border-rad);
   height: 245px;
+}
+
+.dev-menu-body {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
 }
 
 .dev-menu-item {

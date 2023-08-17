@@ -51,7 +51,7 @@ export default function Developer() {
   return (
     <>
       <Login
-        isDevOrEmployer={DevOrEmployer.Developer}
+        devOrEmployer={DevOrEmployer.Developer}
         isOpen={loginIsOpen}
         toggleOpen={toggleOpen}
       />

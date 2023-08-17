@@ -1,5 +1,4 @@
 export default {
-  setupFiles: ["./jest.setup.js"],
   roots: ["<rootDir>/src"],
   testMatch: [
     "**/__tests__/**/*.+(ts|tsx|js)",
