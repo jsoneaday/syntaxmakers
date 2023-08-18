@@ -40,7 +40,7 @@ export default function JobPreview({ jobPost, isSmall }: JobPreviewProps) {
           {jobPost.isRemote ? "Remote" : jobPost.countryName}
         </div>
         <div className={"normal-font preview-salary"}>
-          Base Salary: <i>{`$${jobPost.salary}`}</i>
+          Base Salary: <i>{`${jobPost.salary}`}</i>
         </div>
         {timestamp}
       </div>

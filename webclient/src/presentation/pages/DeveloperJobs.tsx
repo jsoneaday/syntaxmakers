@@ -7,25 +7,12 @@ import { DevOrEmployer } from "../models/DevOrEmployer";
 import { startViewTransition } from "../common/transitions/ViewTransition";
 import { useState } from "react";
 import JobPreviewList from "../components/jobs/JobPreviewList";
-import JobFullView from "../components/jobs/JobFullView";
 
-export enum DeveloperViewType {
-  JobPreviewList,
-  JobFullView,
-}
-
-export default function Developer() {
+export default function DeveloperJobs() {
   const [loginIsOpen, setLoginIsOpen] = useState(false);
-  const [developerViewType, setDeveloperViewType] = useState<DeveloperViewType>(
-    DeveloperViewType.JobPreviewList
-  );
 
   const toggleOpen = () => {
     startViewTransition(() => setLoginIsOpen(!loginIsOpen));
-  };
-
-  const onClickSwitchView = (developerViewType: DeveloperViewType) => {
-    setDeveloperViewType(developerViewType);
   };
 
   return (
@@ -37,15 +24,7 @@ export default function Developer() {
       />
       <div className="dev-container" data-testid="developer-page">
         <LeftMenu />
-        {developerViewType === DeveloperViewType.JobPreviewList ? (
-          <JobPreviewList
-            setLoginIsOpen={setLoginIsOpen}
-            onClickSwitchView={onClickSwitchView}
-            currentDevViewType={developerViewType}
-          />
-        ) : (
-          <JobFullView />
-        )}
+        <JobPreviewList setLoginIsOpen={setLoginIsOpen} />
       </div>
     </>
   );

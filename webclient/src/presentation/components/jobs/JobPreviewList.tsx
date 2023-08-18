@@ -1,4 +1,4 @@
-import { ChangeEvent, MouseEvent, useEffect, useState } from "react";
+import { ChangeEvent, useEffect, useState } from "react";
 import JobPost from "../../models/JobPost";
 import Lister from "../Lister";
 import { useProfile } from "../../common/redux/profile/ProfileHooks";
@@ -7,19 +7,15 @@ import { convert as convertJob } from "../../models/JobPost";
 import clipboard from "../../theme/assets/clipboard.png";
 import clock from "../../theme/assets/wall-clock.png";
 import JobPreview from "./JobPreview";
-import { DeveloperViewType } from "../../pages/Developer";
+import { Link } from "react-router-dom";
 
-interface JobSearchProps {
+interface JobPreviewListProps {
   setLoginIsOpen: (isOpen: boolean) => void;
-  onClickSwitchView: (developerViewType: DeveloperViewType) => void;
-  currentDevViewType: DeveloperViewType;
 }
 
 export default function JobPreviewList({
   setLoginIsOpen,
-  onClickSwitchView,
-  currentDevViewType,
-}: JobSearchProps) {
+}: JobPreviewListProps) {
   const [jobData, setJobsData] = useState<JobPost[]>([]);
   const [searchInput, setSearchInput] = useState("");
   const [profile, _setProfile] = useProfile();
@@ -46,14 +42,6 @@ export default function JobPreviewList({
   const onSearchTxtChanged = (e: ChangeEvent<HTMLInputElement>) => {
     e.preventDefault();
     setSearchInput(e.target.value);
-  };
-
-  const onClickSelectJobItem = (_: MouseEvent<HTMLLIElement>) => {
-    onClickSwitchView(
-      currentDevViewType === DeveloperViewType.JobPreviewList
-        ? DeveloperViewType.JobFullView
-        : DeveloperViewType.JobPreviewList
-    );
   };
 
   return (
@@ -88,12 +76,10 @@ export default function JobPreviewList({
           <Lister
             dataItems={jobData}
             elementCreator={(dataItem) => (
-              <li
-                key={dataItem.key}
-                className="dev-preview-item"
-                onClick={onClickSelectJobItem}
-              >
-                <JobPreview jobPost={dataItem} isSmall={false} />
+              <li key={dataItem.key} className="dev-preview-item">
+                <Link to="/jobfullview" state={dataItem}>
+                  <JobPreview jobPost={dataItem} isSmall={false} />
+                </Link>
               </li>
             )}
           />

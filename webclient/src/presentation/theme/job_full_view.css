@@ -1,0 +1,16 @@
+.job-full-view-subtitle {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  margin-top: 1em;
+  margin-bottom: 2em;
+}
+
+.job-full-view-subtitle-item-primary {
+  margin-right: 1em;
+}
+
+.job-full-view-subtitle-item-secondary {
+  margin-top: 1em;
+}

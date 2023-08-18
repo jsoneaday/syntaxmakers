@@ -1,6 +1,7 @@
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import Home from "./presentation/pages/Home";
-import Developer from "./presentation/pages/Developer";
+import DeveloperJobs from "./presentation/pages/DeveloperJobs";
+import JobFullView from "./presentation/pages/JobFullView";
 
 const router = createBrowserRouter([
   {
@@ -8,8 +9,12 @@ const router = createBrowserRouter([
     element: <Home />,
   },
   {
-    path: "/developer",
-    element: <Developer />,
+    path: "/developerjobs",
+    element: <DeveloperJobs />,
+  },
+  {
+    path: "/jobfullview",
+    element: <JobFullView />,
   },
 ]);
 

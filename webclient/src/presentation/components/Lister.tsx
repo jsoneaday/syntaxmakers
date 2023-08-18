@@ -1,5 +1,5 @@
 import { ReactNode, useEffect, useState } from "react";
-import { KeyItem } from "../common/utils";
+import { KeyItem } from "../models/ModelUtils";
 import "../theme/lister.css";
 
 interface ListerProps<T extends KeyItem> {

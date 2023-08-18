@@ -7,7 +7,11 @@ export default function Home() {
   return (
     <div className="home" data-testid="home-page">
       <div className="panel-col home-item-dev">
-        <Link to="developer" className="home-item-link" data-testid="dev-link">
+        <Link
+          to="developerjobs"
+          className="home-item-link"
+          data-testid="dev-link"
+        >
           <img className="home-icon" src={developer} />
           <div className="title-font home-item-content">I'm a Developer</div>
         </Link>

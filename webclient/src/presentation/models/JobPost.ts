@@ -1,9 +1,10 @@
 import { Key } from "react";
-import { KeyItem } from "../common/utils";
+import { KeyItem } from "./ModelUtils";
 import { Job } from "../../domain/repository/JobRepo";
 /// @ts-ignore
 import { v4 as uuidv4 } from "uuid";
 import { formatDistanceToNow, parseISO } from "date-fns";
+import { currencyFormatter } from "../../domain/CurrencyFormatter";
 
 export default class JobPost implements KeyItem {
   constructor(
@@ -31,7 +32,7 @@ export function convert(job: Job) {
   const companyLogoUInt8Array = job.companyLogo
     ? new Uint8Array(job.companyLogo)
     : undefined;
-
+  console.log("salary", Number(job.salary));
   return new JobPost(
     uuidv4(),
     job.id,
@@ -44,7 +45,7 @@ export function convert(job: Job) {
     job.primaryLangName,
     job.secondaryLangName,
     job.industryName,
-    job.salary,
+    currencyFormatter.format(Number(job.salary)),
     companyLogoUInt8Array ? new Blob([companyLogoUInt8Array]) : undefined,
     job.countryName
   );
