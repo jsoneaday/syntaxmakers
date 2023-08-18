@@ -130,13 +130,13 @@ mod tests {
             description: get_fake_desc().to_string(), 
             is_remote: true, 
             country_id: None, 
-            country_name: Some(COUNTRY_NAMES.get().unwrap().get(0).unwrap().to_string()),
+            country_name: Some(COUNTRY_NAMES.get().await.get(0).unwrap().to_string()),
             primary_lang_id: id, 
-            primary_lang_name: LANGUAGE_NAMES.get().unwrap().get(0).unwrap().to_string(),
+            primary_lang_name: LANGUAGE_NAMES.get().await.get(0).unwrap().to_string(),
             secondary_lang_id: id + 1, 
-            secondary_lang_name: LANGUAGE_NAMES.get().unwrap().get(1).unwrap().to_string(),
+            secondary_lang_name: LANGUAGE_NAMES.get().await.get(1).unwrap().to_string(),
             industry_id: id, 
-            industry_name: INDUSTRY_NAMES.get().unwrap().get(0).unwrap().to_string(),
+            industry_name: INDUSTRY_NAMES.get().await.get(0).unwrap().to_string(),
             salary_id: id,
             salary: SALARY_BASE.get().await.get(0).unwrap().base
         }

@@ -43,7 +43,7 @@ mod tests {
     use super::*;
     use crate::{
         common::{repository::{companies::{repo::{InsertCompanyFn, QueryAllCompaniesFn}, models::Company}, base::EntityId}, authentication::auth_service::AuthenticationError}, 
-        common_test::fixtures::{get_app_data, MockDbRepo, get_company_log_randomly}
+        common_test::fixtures::{get_app_data, MockDbRepo, get_company_logo_randomly}
     };
     use async_trait::async_trait;
     use fake::{faker::company::en::CompanyName, Fake};
@@ -79,7 +79,7 @@ mod tests {
         let auth_service = MockAuthService;
         let app_data = get_app_data(repo, auth_service).await;
 
-        let logo = get_company_log_randomly();
+        let logo = get_company_logo_randomly();
 
         let output = create_company(app_data, Json(NewCompanyForRoute{ name: CompanyName().fake::<String>(), logo: Some(logo), headquarters_country_id: 1 })).await.unwrap();
         

@@ -13,6 +13,9 @@ use crate::common::authentication::auth_service::{init_auth_keys, get_token, Aut
 use crate::common::fs_utils::get_file_buffer;
 use crate::common::rand_utils::get_random_no_from_range;
 use crate::common::repository::base::{Repository, DbRepo};
+use crate::common::repository::countries::repo::QueryAllCountriesFn;
+use crate::common::repository::industries::repo::QueryAllIndustriesFn;
+use crate::common::repository::languages::repo::QueryAllLanguagesFn;
 use crate::common::repository::salaries::repo::QueryAllSalariesFn;
 use crate::common::repository::salaries::models::Salary;
 use crate::common::repository::user::models::DeveloperOrEmployer;
@@ -25,9 +28,30 @@ lazy_static! {
         DbRepo::init().await
     });    
 }
-pub static COUNTRY_NAMES: OnceLock<Vec<&'static str>> = OnceLock::new();
-pub static INDUSTRY_NAMES: OnceLock<Vec<&'static str>> = OnceLock::new();
-pub static LANGUAGE_NAMES: OnceLock<Vec<&'static str>> = OnceLock::new();
+lazy_static! {
+    pub static ref COUNTRY_NAMES: AsyncOnce<Vec<String>> = AsyncOnce::new(async {
+        let repo = DBREPO.get().await;
+        repo.query_all_countries().await.unwrap().into_iter().map(|country| {
+            country.name
+        }).collect::<Vec<String>>()
+    });
+}
+lazy_static! {
+    pub static ref INDUSTRY_NAMES: AsyncOnce<Vec<String>> = AsyncOnce::new(async {
+        let repo = DBREPO.get().await;
+        repo.query_all_industries().await.unwrap().into_iter().map(|industry| {
+            industry.name
+        }).collect::<Vec<String>>()
+    });
+}
+lazy_static! {
+    pub static ref LANGUAGE_NAMES: AsyncOnce<Vec<String>> = AsyncOnce::new(async {
+        let repo = DBREPO.get().await;
+        repo.query_all_languages().await.unwrap().into_iter().map(|language| {
+            language.name
+        }).collect::<Vec<String>>()
+    });
+}
 lazy_static! {
     pub static ref SALARY_BASE: AsyncOnce<Vec<Salary>> = AsyncOnce::new(async {
         let repo = DBREPO.get().await;
@@ -39,32 +63,6 @@ pub static FAKE_JOB_DESC: OnceLock<Vec<&str>> = OnceLock::new();
 use actix_http::body::BoxBody;
 
 pub fn init_fixtures() {
-    COUNTRY_NAMES.get_or_init(|| {
-        vec![
-            "United States" 
-        ]
-    });
-    INDUSTRY_NAMES.get_or_init(|| {
-        vec![
-            "Finance",
-            "Blockchain" ,
-            "AI/ML",
-            "Games"
-        ]
-    });
-    LANGUAGE_NAMES.get_or_init(|| {
-        vec![
-            "C#",
-            "Java",
-            "Rust",
-            "Go" ,
-            "Ruby",
-            "Swift",
-            "Kotlin",
-            "Scala",
-            "Elixir"
-        ]
-    });
     FAKE_JOB_TITLES.get_or_init(|| {
         vec![
             "Senior Web Developer",
@@ -223,7 +221,7 @@ pub fn get_httpresponse_body_as_string(body_bytes_result: Result<Bytes, BoxBody>
     }
 }
 
-pub fn get_company_log_randomly() -> Vec<u8> {
+pub fn get_company_logo_randomly() -> Vec<u8> {
     let file_no = get_random_no_from_range(1, 7);
     let file_path = format!("src/common_test/files/office-cl-{}.png", file_no);
     println!("file_path for logo {}", file_path);
