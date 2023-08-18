@@ -99,8 +99,7 @@ pub async fn login<T: AuthenticateDbFn + QueryDeveloperFn + Repository, U: Authe
                                 .content_type(ContentType::json())
                                 .body("Authentication failed. Error occurred while trying to get user")
                         }
-                    }
-                    
+                    }                    
                 },
                 _ => {
                     HttpResponse::Unauthorized()

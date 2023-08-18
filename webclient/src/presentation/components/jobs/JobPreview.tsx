@@ -1,5 +1,5 @@
-import JobPost from "../models/JobPost";
-import "../theme//post_preview.css";
+import JobPost from "../../models/JobPost";
+import "../../theme/post_preview.css";
 
 interface JobPreviewProps {
   jobPost: JobPost;

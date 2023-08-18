@@ -44,7 +44,6 @@ export async function getJobsByDevProfile(
 
   if (result.ok) {
     const jobs: Job[] = await result.json();
-    console.log("jobs", jobs);
     return jobs;
   }
   return [];
