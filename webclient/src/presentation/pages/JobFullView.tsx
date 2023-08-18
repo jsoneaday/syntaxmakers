@@ -2,7 +2,7 @@ import { useLocation } from "react-router-dom";
 import JobPost from "../models/JobPost";
 import { useEffect, useState } from "react";
 import "../theme/job_full_view.css";
-import { appendPlusLargeCurrency } from "../../domain/CurrencyFormatter";
+import { appendPlusLargeCurrency } from "../common/CurrencyFormatter";
 
 export default function JobFullView() {
   const { state } = useLocation();
@@ -15,7 +15,7 @@ export default function JobFullView() {
   }, [state]);
 
   return (
-    <div className="dev-main">
+    <div className="dev-main" style={{ width: "600px", margin: "auto" }}>
       <div className="dev-top">
         <div className="title-font">{jobPost?.title}</div>
         <div className="job-full-view-subtitle">

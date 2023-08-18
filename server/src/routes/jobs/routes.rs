@@ -115,7 +115,7 @@ mod tests {
         }
     }
 
-    fn get_test_job(id: i64) -> Job {
+    async fn get_test_job(id: i64) -> Job {
         init_fixtures();
         Job { 
             id, 
@@ -126,8 +126,8 @@ mod tests {
             company_id: id,
             company_name: CompanyName().fake::<String>(),
             company_logo: None,
-            title: get_fake_title(), 
-            description: get_fake_desc(), 
+            title: get_fake_title().to_string(), 
+            description: get_fake_desc().to_string(), 
             is_remote: true, 
             country_id: None, 
             country_name: Some(COUNTRY_NAMES.get().unwrap().get(0).unwrap().to_string()),
@@ -138,7 +138,7 @@ mod tests {
             industry_id: id, 
             industry_name: INDUSTRY_NAMES.get().unwrap().get(0).unwrap().to_string(),
             salary_id: id,
-            salary: SALARY_BASE.get().unwrap().get(0).unwrap().to_string().parse::<i32>().unwrap()
+            salary: SALARY_BASE.get().await.get(0).unwrap().base
         }
     }
 
@@ -153,7 +153,7 @@ mod tests {
     impl QueryJobFn for MockDbRepo {
         async fn query_job(&self, _: i64) -> Result<Option<Job>, sqlx::Error> {
             Ok(Some(
-                get_test_job(1)
+                get_test_job(1).await
             ))
         }
     }
@@ -162,7 +162,7 @@ mod tests {
     impl QueryAllJobsFn for MockDbRepo {
         async fn query_all_jobs(&self, _: i32, _: i64) -> Result<Vec<Job>, sqlx::Error> {
             Ok(vec![
-                get_test_job(1)
+                get_test_job(1).await
             ])
         }
     }
@@ -171,21 +171,22 @@ mod tests {
     impl QueryJobsByDevProfile for MockDbRepo {
         async fn query_jobs_by_dev_profile(&self, _: i64, _: i32, _: i64) -> Result<Vec<Job>, sqlx::Error> {
             Ok(vec![
-                get_test_job(1)
+                get_test_job(1).await
             ])
         }
     }
 
     #[tokio::test]
     async fn test_create_job_route() {
+        init_fixtures();
         let repo = MockDbRepo::init().await;
         let auth_service = MockAuthService;
         let app_data = get_app_data(repo, auth_service).await;
 
         let result = create_job(app_data, Json(NewJobForRoute {
             employer_id: 1,
-            title: get_fake_title(),
-            description: get_fake_desc(),
+            title: get_fake_title().to_string(),
+            description: get_fake_desc().to_string(),
             is_remote: false,
             country_id: Some(1),
             primary_lang_id: 1,

@@ -1,6 +1,7 @@
 pub mod common {
     pub mod datetime_utils;
     pub mod fs_utils;
+    pub mod rand_utils;
     pub mod repository {
         pub mod base;
         pub mod error;

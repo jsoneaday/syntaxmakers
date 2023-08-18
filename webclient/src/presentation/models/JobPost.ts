@@ -4,7 +4,7 @@ import { Job } from "../../domain/repository/JobRepo";
 /// @ts-ignore
 import { v4 as uuidv4 } from "uuid";
 import { formatDistanceToNow, parseISO } from "date-fns";
-import { currencyFormatter } from "../../domain/CurrencyFormatter";
+import { currencyFormatter } from "../common/CurrencyFormatter";
 
 export default class JobPost implements KeyItem {
   constructor(

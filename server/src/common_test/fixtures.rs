@@ -5,20 +5,37 @@ use actix_web::http::header;
 use actix_web::web::Bytes;
 use actix_web::{HttpRequest, test};
 use fake::Fake;
-use fake::faker::lorem::en::Sentence;
 use fake::faker::name::en::{FirstName, LastName};
 use jsonwebtoken::{EncodingKey, DecodingKey};
 use serde::Serialize;
 use crate::app_state::AppState;
 use crate::common::authentication::auth_service::{init_auth_keys, get_token, Authenticator, AuthenticationError};
 use crate::common::fs_utils::get_file_buffer;
-use crate::common::repository::base::Repository;
+use crate::common::rand_utils::get_random_no_from_range;
+use crate::common::repository::base::{Repository, DbRepo};
+use crate::common::repository::salaries::repo::QueryAllSalariesFn;
+use crate::common::repository::salaries::models::Salary;
 use crate::common::repository::user::models::DeveloperOrEmployer;
 use async_trait::async_trait;
+use async_once::AsyncOnce;
+use lazy_static::lazy_static;
+
+lazy_static! {
+    static ref DBREPO: AsyncOnce<DbRepo> = AsyncOnce::new(async {
+        DbRepo::init().await
+    });    
+}
 pub static COUNTRY_NAMES: OnceLock<Vec<&'static str>> = OnceLock::new();
 pub static INDUSTRY_NAMES: OnceLock<Vec<&'static str>> = OnceLock::new();
 pub static LANGUAGE_NAMES: OnceLock<Vec<&'static str>> = OnceLock::new();
-pub static SALARY_BASE: OnceLock<Vec<i32>> = OnceLock::new();
+lazy_static! {
+    pub static ref SALARY_BASE: AsyncOnce<Vec<Salary>> = AsyncOnce::new(async {
+        let repo = DBREPO.get().await;
+        repo.query_all_salaries().await.unwrap()
+    });
+}
+pub static FAKE_JOB_TITLES: OnceLock<Vec<&str>> = OnceLock::new();
+pub static FAKE_JOB_DESC: OnceLock<Vec<&str>> = OnceLock::new(); 
 use actix_http::body::BoxBody;
 
 pub fn init_fixtures() {
@@ -27,7 +44,6 @@ pub fn init_fixtures() {
             "United States" 
         ]
     });
-
     INDUSTRY_NAMES.get_or_init(|| {
         vec![
             "Finance",
@@ -36,7 +52,6 @@ pub fn init_fixtures() {
             "Games"
         ]
     });
-
     LANGUAGE_NAMES.get_or_init(|| {
         vec![
             "C#",
@@ -50,12 +65,82 @@ pub fn init_fixtures() {
             "Elixir"
         ]
     });
-    SALARY_BASE.get_or_init(|| {
+    FAKE_JOB_TITLES.get_or_init(|| {
         vec![
-            200_000,
-            300_000,
-            400_000,
-            500_000
+            "Senior Web Developer",
+            "Senior Full-Stack Developer",
+            "Senior Java Developer",
+            "Senior TypeScript Engineer",
+            "Senior NodeJS Developer",
+            "Full-Stack Python Developer",
+            "Senior C# Developer"
+        ]
+    });
+    FAKE_JOB_DESC.get_or_init(|| {
+        vec![
+            r"
+            About the job
+            As a Senior Mobile Engineer, you will be one of the first 5 engineers at our client, responsible for building ambitious new features end-to-end while ensuring the client's app remains performant and bug-free. Your contributions will have an enormous and long-lasting impact. Users love our client's mobile app (4.9 stars from 350+ App Store reviews), and you will be relentless to continue raising the bar for field sales software.
+        
+        
+            Location (Hybrid)
+        
+            New York, NY
+        
+        
+            Qualifications (Must):
+        
+            4-10 years of professional engineering experience
+            Fluent in React and Typescript
+            Proven track record of high-performance
+            Able to work 3 days in person in NYC
+        
+        
+            Qualifications (Preferred):
+        
+            Worked at a company with < 300 employees
+            Founding Engineer Experience
+            Mobile Engineering experience
+        
+        
+            Responsibilities
+        
+            Architect and assemble core features, including novel interfaces powered by LLMs on the way to building a world-class AI coach and sales co-pilot
+            Write great code quickly and be counted on to deploy with minimal code review
+            Monitor analytics and communicate directly with customer-facing teams to Identify, communicate, and resolve bugs and performance issues
+            Iterate and improve DevOps in preparation for the rapid scaling of both our engineering team and our user base
+            Work directly with the founders, Joe and Jake, daily and be counted on to tell them when they’re wrong
+        
+        
+            Keywords
+        
+            Frontend, ReactJS, TypeScript, AI, Artificial Intelligence, Mobile Engineering, DevOps, Front-End.
+            ",
+            r"
+            About the job
+            How is this unique data platform about to scale to the next Billion Dollars Unicorn out of SF?
+        
+        
+        
+            Could you be the Frontend Tech Lead to dictate the success of the frontend strategy of this data privacy and governance platform?
+        
+        
+        
+            If so, this is the perfect Frontend Tech Lead role for you.
+        
+        
+            This company is at the helm of an emerging market in data privacy and governance for businesses. The platform covers all regulations in this ever-growingly data sensitive environment where fundamentally, privacy matters.
+        
+        
+            You will be joining an emerging market at a company that has achieved 0-1 and now has huge growth ambitions for the future. The CEO & CTO have huge success in scaling companies, with their last ventures being acquired by FAANG for $100 M's.
+        
+        
+            You will be in charge of the Frontend Strategy of this platform as it massively upscales. Your role will consist of a mix of team leadership, Frontend strategy and architecture and diving in hands on too. 
+        
+        
+        
+            Get ready to role your sleeves up.
+            "
         ]
     });
 }
@@ -68,12 +153,14 @@ pub fn get_fake_fullname() -> String {
     format!("{} {}", FirstName().fake::<String>(), LastName().fake::<String>())
 }
 
-pub fn get_fake_title() -> String {
-    Sentence(5..6).fake::<String>()
+pub fn get_fake_title() -> &'static str {
+    let index = get_random_no_from_range(0, 6);
+    FAKE_JOB_TITLES.get().unwrap()[index]
 }
 
-pub fn get_fake_desc() -> String {
-    Sentence(9..10).fake::<String>()
+pub fn get_fake_desc() -> &'static str {
+    let index = get_random_no_from_range(0, 1);
+    FAKE_JOB_DESC.get().unwrap()[index]
 }
 
 pub struct MockAuthService;
@@ -137,10 +224,13 @@ pub fn get_httpresponse_body_as_string(body_bytes_result: Result<Bytes, BoxBody>
 }
 
 pub fn get_company_log_randomly() -> Vec<u8> {
-    use rand::Rng;
-    
-    let file_no = rand::thread_rng().gen_range(1..7);
+    let file_no = get_random_no_from_range(1, 7);
     let file_path = format!("src/common_test/files/office-cl-{}.png", file_no);
     println!("file_path for logo {}", file_path);
     get_file_buffer(&file_path)
+}
+
+pub async fn get_random_salary() -> Salary {    
+    let index = get_random_no_from_range(0, 3);
+    SALARY_BASE.get().await.get(index).unwrap().clone()
 }

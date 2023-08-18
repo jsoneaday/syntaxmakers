@@ -1,7 +1,7 @@
 use chrono::{DateTime, Utc};
 use sqlx::FromRow;
 
-#[derive(FromRow, Debug)]
+#[derive(FromRow, Debug, Clone)]
 pub struct Salary {
     pub id: i64,
     pub created_at: DateTime<Utc>,

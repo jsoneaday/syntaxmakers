@@ -2,6 +2,7 @@
   display: grid;
   grid-template-columns: 250px 600px 300px;
   column-gap: 1rem;
+  margin: auto;
 }
 
 .dev-main {
