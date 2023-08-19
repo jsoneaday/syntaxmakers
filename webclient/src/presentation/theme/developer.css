@@ -26,7 +26,6 @@
   align-items: flex-start;
   justify-content: flex-start;
   width: 100%;
-  padding: 2em;
 }
 
 .dev-header {
@@ -77,7 +76,7 @@
   flex-direction: column;
   align-items: flex-start;
   justify-content: flex-start;
-  padding: 2em;
+  text-align: left;
 }
 
 .dev-preview-item {
