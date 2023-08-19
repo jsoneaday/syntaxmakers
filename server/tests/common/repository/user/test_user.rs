@@ -3,8 +3,8 @@ use syntaxmakers_server::{common::{repository::{base::{Repository, DbRepo}, user
 
 #[tokio::test]
 async fn test_authenticate_returns_authenticateresult() {
-    init_fixtures();
     let repo = DbRepo::init().await;
+    init_fixtures().await;
     let auth_service = AuthService;
     let app_data = get_app_data(repo, auth_service).await;
 

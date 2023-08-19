@@ -1,7 +1,7 @@
 use actix_web::web::Json;
 use chrono::Utc;
 use syntaxmakers_server::{
-    common_test::fixtures::{get_app_data, get_fake_httprequest_with_bearer_token, get_httpresponse_body_as_string}, 
+    common_test::fixtures::{get_app_data, get_fake_httprequest_with_bearer_token, get_httpresponse_body_as_string, init_fixtures}, 
     common::{
         repository::base::{Repository, DbRepo}, 
         repository::user::models::DeveloperOrEmployer as UserDeveloperOrEmployer,
@@ -19,6 +19,7 @@ const EXP_SEC_BUFFER: i64 = 5;
 #[tokio::test]
 async fn test_refresh_access_token_route() {
     let repo = DbRepo::init().await;
+    init_fixtures().await;
     let auth_service = AuthService;
     let app_data = get_app_data(repo, auth_service).await;
     let user_name = "jon".to_string();

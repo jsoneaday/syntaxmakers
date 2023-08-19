@@ -7,9 +7,9 @@ use syntaxmakers_server::{
 };
 
 #[tokio::test]
-async fn test_is_authenticated() {
-    init_fixtures();
+async fn test_is_authenticated() {    
     let repo = DbRepo::init().await;
+    init_fixtures().await;
     let auth_service = AuthService;
     let app_data = get_app_data(repo, auth_service).await;
     let user_name = "jon@jon.com".to_string();

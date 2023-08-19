@@ -99,13 +99,18 @@ fn convert(job: &Job) -> JobResponder {
 
 #[cfg(test)]
 mod tests {
-    use crate::{common::{repository::jobs::models::Job, authentication::auth_service::AuthenticationError}, common_test::fixtures::{get_fake_fullname, init_fixtures, COUNTRY_NAMES, LANGUAGE_NAMES, INDUSTRY_NAMES, SALARY_BASE}};
+    use crate::{
+        common::{repository::jobs::models::Job, authentication::auth_service::AuthenticationError}, 
+        common_test::fixtures::{get_fake_fullname, init_fixtures, COUNTRIES, LANGUAGES, INDUSTRIES, SALARY_BASE}
+    };
     use super::*;
     use async_trait::async_trait;
     use chrono::Utc;
     use fake::{faker::company::en::CompanyName, Fake};
     use jsonwebtoken::DecodingKey;
-    use crate::{common::repository::{jobs::repo::InsertJobFn, base::EntityId}, common_test::fixtures::{MockDbRepo, get_app_data, get_fake_title, get_fake_desc}};
+    use crate::{
+        common::repository::{jobs::repo::InsertJobFn, base::EntityId}, common_test::fixtures::{MockDbRepo, get_app_data, get_fake_title, get_fake_desc}
+    };
 
     struct MockAuthService;
     #[async_trait]
@@ -116,7 +121,7 @@ mod tests {
     }
 
     async fn get_test_job(id: i64) -> Job {
-        init_fixtures();
+        init_fixtures().await;
         Job { 
             id, 
             created_at: Utc::now(), 
@@ -130,15 +135,15 @@ mod tests {
             description: get_fake_desc().to_string(), 
             is_remote: true, 
             country_id: None, 
-            country_name: Some(COUNTRY_NAMES.get().await.get(0).unwrap().to_string()),
+            country_name: Some(COUNTRIES.get().unwrap().get(0).unwrap().name.clone()),
             primary_lang_id: id, 
-            primary_lang_name: LANGUAGE_NAMES.get().await.get(0).unwrap().to_string(),
+            primary_lang_name: LANGUAGES.get().unwrap().get(0).unwrap().name.clone(),
             secondary_lang_id: id + 1, 
-            secondary_lang_name: LANGUAGE_NAMES.get().await.get(1).unwrap().to_string(),
+            secondary_lang_name: LANGUAGES.get().unwrap().get(0).unwrap().name.clone(),
             industry_id: id, 
-            industry_name: INDUSTRY_NAMES.get().await.get(0).unwrap().to_string(),
+            industry_name: INDUSTRIES.get().unwrap().get(0).unwrap().name.clone(),
             salary_id: id,
-            salary: SALARY_BASE.get().await.get(0).unwrap().base
+            salary: SALARY_BASE.get().unwrap().get(0).unwrap().base
         }
     }
 
@@ -178,7 +183,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_create_job_route() {
-        init_fixtures();
+        init_fixtures().await;
         let repo = MockDbRepo::init().await;
         let auth_service = MockAuthService;
         let app_data = get_app_data(repo, auth_service).await;
@@ -200,6 +205,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_job_route() {
+        init_fixtures().await;
         let repo = MockDbRepo::init().await;
         let auth_service = MockAuthService;
         let app_data = get_app_data(repo, auth_service).await;
@@ -211,6 +217,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_all_jobs_route() {
+        init_fixtures().await;
         let repo = MockDbRepo::init().await;
         let auth_service = MockAuthService;
         let app_data = get_app_data(repo, auth_service).await;
@@ -222,6 +229,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_jobs_by_dev_profile() {
+        init_fixtures().await;
         let repo = MockDbRepo::init().await;
         let auth_service = MockAuthService;
         let app_data = get_app_data(repo, auth_service).await;

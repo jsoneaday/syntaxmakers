@@ -10,8 +10,8 @@ use syntaxmakers_server::common_test::fixtures::{ init_fixtures, get_fake_fullna
 
 #[tokio::test]
 async fn test_create_employer_and_get_back() {
-    init_fixtures();
     let repo = DbRepo::init().await;
+    init_fixtures().await;
     let user_name = Username().fake::<String>();
     let full_name = get_fake_fullname();
     let email = SafeEmail().fake::<String>();
@@ -39,8 +39,8 @@ async fn test_create_employer_and_get_back() {
 
 #[tokio::test]
 async fn test_create_two_employers_and_get_back_both() {
-    init_fixtures();
     let repo = DbRepo::init().await;
+    init_fixtures().await;
     let logo = get_company_logo_randomly();
 
     let company_create_result = repo.insert_company(NewCompany{ name: CompanyName().fake::<String>(), logo: Some(logo), headquarters_country_id: 1 }).await.unwrap();

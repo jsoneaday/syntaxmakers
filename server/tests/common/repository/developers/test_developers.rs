@@ -7,8 +7,9 @@ use syntaxmakers_server::common_test::fixtures::{ init_fixtures, get_fake_fullna
 
 #[tokio::test]
 async fn test_create_developer_and_get_back() {
-    init_fixtures();
     let repo = DbRepo::init().await;
+    init_fixtures().await;
+    
     let user_name = Username().fake::<String>();
     let full_name = get_fake_fullname();
     let email = SafeEmail().fake::<String>();
@@ -33,8 +34,8 @@ async fn test_create_developer_and_get_back() {
 
 #[tokio::test]
 async fn test_create_developer_and_get_back_by_email() {
-    init_fixtures();
     let repo = DbRepo::init().await;
+    init_fixtures().await;
     let user_name = Username().fake::<String>();
     let full_name = get_fake_fullname();
     let email = SafeEmail().fake::<String>();
@@ -59,8 +60,8 @@ async fn test_create_developer_and_get_back_by_email() {
 
 #[tokio::test]
 async fn test_create_two_developers_and_get_all() {
-    init_fixtures();
     let repo = DbRepo::init().await;
+    init_fixtures().await;
     
     let create_result1 = repo.insert_developer(NewDeveloper {
         user_name: Username().fake::<String>(),

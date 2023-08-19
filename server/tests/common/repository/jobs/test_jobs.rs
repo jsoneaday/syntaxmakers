@@ -16,8 +16,8 @@ use syntaxmakers_server::common_test::fixtures::{ init_fixtures, get_fake_fullna
 
 #[tokio::test]
 async fn test_create_job_and_get_back() {
-    init_fixtures();
     let repo = DbRepo::init().await;
+    init_fixtures().await;
     let user_name = Username().fake::<String>();
     let full_name = get_fake_fullname();
     let email = SafeEmail().fake::<String>();
@@ -54,8 +54,8 @@ async fn test_create_job_and_get_back() {
 
 #[tokio::test]
 async fn test_create_two_jobs_and_get_back_both() {
-    init_fixtures();
     let repo = DbRepo::init().await;
+    init_fixtures().await;
     let user_name = Username().fake::<String>();
     let full_name = get_fake_fullname();
     let email = SafeEmail().fake::<String>();
@@ -107,8 +107,8 @@ async fn test_create_two_jobs_and_get_back_both() {
 
 #[tokio::test]
 async fn test_create_two_jobs_and_get_back_only_one_that_matches_dev_profile() {
-    init_fixtures();
     let repo = DbRepo::init().await;
+    init_fixtures().await;
     let user_name = Username().fake::<String>();
     let full_name = get_fake_fullname();
     let email = SafeEmail().fake::<String>();

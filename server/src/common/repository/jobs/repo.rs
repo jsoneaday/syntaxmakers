@@ -4,9 +4,10 @@ use sqlx::{Postgres, Pool, query_as};
 use crate::common::repository::base::{DbRepo, ConnGetter};
 use crate::common::repository::jobs::models::{NewJob, Job};
 use crate::common::repository::base::EntityId;
+use crate::common::repository::{error::SqlxError, developers::models::Developer, base::CountResult};
 
 mod internal {
-    use crate::common::repository::{error::SqlxError, developers::models::Developer};
+    
     use super::*;    
 
     pub async fn insert_job(conn: &Pool<Postgres>, new_job: NewJob) -> Result<EntityId, Error> {
@@ -157,7 +158,14 @@ mod internal {
             .fetch_all(conn).await
     }
 
-    
+    pub async fn query_all_jobs_count(conn: &Pool<Postgres>) -> Result<CountResult, Error> {
+        query_as::<_, CountResult>(
+            r"
+            select count(*) as count
+            from job 
+            ")
+        .fetch_one(conn).await
+    }
 
     pub async fn query_jobs_by_dev_profile(conn: &Pool<Postgres>, dev_id: i64, page_size: i32, last_offset: i64) -> Result<Vec<Job>, Error> {
         let developer_result = query_as::<_, Developer>(
@@ -260,6 +268,18 @@ pub trait QueryAllJobsFn {
 impl QueryAllJobsFn for DbRepo {
     async fn query_all_jobs(&self, page_size: i32, last_offset: i64) -> Result<Vec<Job>, Error> {
         internal::query_all_jobs(self.get_conn(), page_size, last_offset).await
+    }
+}
+
+#[async_trait]
+pub trait QueryJobsCountFn {
+    async fn query_all_jobs_count(&self) -> Result<CountResult, Error>;
+}
+
+#[async_trait]
+impl QueryJobsCountFn for DbRepo {
+    async fn query_all_jobs_count(&self) -> Result<CountResult, Error> {
+        internal::query_all_jobs_count(self.get_conn()).await
     }
 }
 

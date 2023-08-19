@@ -7,8 +7,8 @@ use syntaxmakers_server::{
 
 #[tokio::test]
 async fn test_create_companies_and_get_back() {
-    init_fixtures();
     let repo = DbRepo::init().await;
+    init_fixtures().await;
     
     let company_name = CompanyName().fake::<String>();
     let logo = get_company_logo_randomly();

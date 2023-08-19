@@ -5,6 +5,8 @@ use actix_web::http::header;
 use actix_web::web::Bytes;
 use actix_web::{HttpRequest, test};
 use fake::Fake;
+use fake::faker::company::en::CompanyName;
+use fake::faker::internet::en::{Username, FreeEmail};
 use fake::faker::name::en::{FirstName, LastName};
 use jsonwebtoken::{EncodingKey, DecodingKey};
 use serde::Serialize;
@@ -13,56 +15,50 @@ use crate::common::authentication::auth_service::{init_auth_keys, get_token, Aut
 use crate::common::fs_utils::get_file_buffer;
 use crate::common::rand_utils::get_random_no_from_range;
 use crate::common::repository::base::{Repository, DbRepo};
+use crate::common::repository::companies::models::NewCompany;
+use crate::common::repository::companies::repo::InsertCompanyFn;
+use crate::common::repository::countries::models::Country;
 use crate::common::repository::countries::repo::QueryAllCountriesFn;
+use crate::common::repository::employers::models::NewEmployer;
+use crate::common::repository::employers::repo::InsertEmployerFn;
+use crate::common::repository::industries::models::Industry;
 use crate::common::repository::industries::repo::QueryAllIndustriesFn;
+use crate::common::repository::jobs::models::NewJob;
+use crate::common::repository::jobs::repo::{InsertJobFn, QueryJobsCountFn};
+use crate::common::repository::languages::models::Language;
 use crate::common::repository::languages::repo::QueryAllLanguagesFn;
 use crate::common::repository::salaries::repo::QueryAllSalariesFn;
 use crate::common::repository::salaries::models::Salary;
 use crate::common::repository::user::models::DeveloperOrEmployer;
 use async_trait::async_trait;
-use async_once::AsyncOnce;
-use lazy_static::lazy_static;
 
-lazy_static! {
-    static ref DBREPO: AsyncOnce<DbRepo> = AsyncOnce::new(async {
-        DbRepo::init().await
-    });    
-}
-lazy_static! {
-    pub static ref COUNTRY_NAMES: AsyncOnce<Vec<String>> = AsyncOnce::new(async {
-        let repo = DBREPO.get().await;
-        repo.query_all_countries().await.unwrap().into_iter().map(|country| {
-            country.name
-        }).collect::<Vec<String>>()
-    });
-}
-lazy_static! {
-    pub static ref INDUSTRY_NAMES: AsyncOnce<Vec<String>> = AsyncOnce::new(async {
-        let repo = DBREPO.get().await;
-        repo.query_all_industries().await.unwrap().into_iter().map(|industry| {
-            industry.name
-        }).collect::<Vec<String>>()
-    });
-}
-lazy_static! {
-    pub static ref LANGUAGE_NAMES: AsyncOnce<Vec<String>> = AsyncOnce::new(async {
-        let repo = DBREPO.get().await;
-        repo.query_all_languages().await.unwrap().into_iter().map(|language| {
-            language.name
-        }).collect::<Vec<String>>()
-    });
-}
-lazy_static! {
-    pub static ref SALARY_BASE: AsyncOnce<Vec<Salary>> = AsyncOnce::new(async {
-        let repo = DBREPO.get().await;
-        repo.query_all_salaries().await.unwrap()
-    });
-}
+pub static COUNTRIES: OnceLock<Vec<Country>> = OnceLock::new();
+pub static INDUSTRIES: OnceLock<Vec<Industry>> = OnceLock::new();
+pub static LANGUAGES: OnceLock<Vec<Language>> = OnceLock::new();
+pub static SALARY_BASE: OnceLock<Vec<Salary>> = OnceLock::new();
 pub static FAKE_JOB_TITLES: OnceLock<Vec<&str>> = OnceLock::new();
 pub static FAKE_JOB_DESC: OnceLock<Vec<&str>> = OnceLock::new(); 
 use actix_http::body::BoxBody;
 
-pub fn init_fixtures() {
+pub async fn init_fixtures() {    
+    let repo = DbRepo::init().await;
+    
+    if let None = COUNTRIES.get() {
+        let countries = repo.query_all_countries().await.unwrap();
+        COUNTRIES.get_or_init(move || countries);
+    }
+    if let None = INDUSTRIES.get() {
+        let industries = repo.query_all_industries().await.unwrap();
+        INDUSTRIES.get_or_init(move || industries);
+    }
+    if let None = LANGUAGES.get() {
+        let languages = repo.query_all_languages().await.unwrap();
+        LANGUAGES.get_or_init(move || languages);
+    }
+    if let None = SALARY_BASE.get() {
+        let salaries = repo.query_all_salaries().await.unwrap();
+        SALARY_BASE.get_or_init(move || salaries);   
+    }
     FAKE_JOB_TITLES.get_or_init(|| {
         vec![
             "Senior Web Developer",
@@ -141,6 +137,45 @@ pub fn init_fixtures() {
             "
         ]
     });
+
+    setup_data().await;
+}
+
+async fn setup_data() {
+    let repo = DbRepo::init().await;
+    let jobs = repo.query_all_jobs_count().await.unwrap().count;
+    
+    if jobs == 0 {
+        for _ in [..30] {
+            let logo = get_company_logo_randomly();
+            let company_create_result = repo.insert_company(NewCompany{ 
+                name: CompanyName().fake::<String>(), 
+                logo: Some(logo), 
+                headquarters_country_id: 1 
+            }).await.unwrap();
+            let company_id = company_create_result.id;
+
+            let create_employer_result = repo.insert_employer(NewEmployer {
+                user_name: Username().fake::<String>(),
+                full_name: get_fake_fullname(),
+                email: FreeEmail().fake::<String>(),
+                password: "test123".to_string(),
+                company_id
+            }).await.unwrap();
+
+            repo.insert_job(NewJob {
+                employer_id: create_employer_result.id,
+                title: get_fake_title().to_string(),
+                description: get_fake_desc().to_string(),
+                is_remote: true,
+                country_id: None,
+                primary_lang_id: get_random_language().await.id,
+                secondary_lang_id: Some(get_random_language().await.id),
+                industry_id: get_random_industry().await.id,
+                salary_id: get_random_salary().await.id
+            }).await.unwrap();
+        }
+    }
 }
 
 pub async fn get_app_data<T: Repository, U: Authenticator>(repo: T, auth_service: U) -> actix_web::web::Data<AppState<T, U>> {
@@ -224,11 +259,25 @@ pub fn get_httpresponse_body_as_string(body_bytes_result: Result<Bytes, BoxBody>
 pub fn get_company_logo_randomly() -> Vec<u8> {
     let file_no = get_random_no_from_range(1, 7);
     let file_path = format!("src/common_test/files/office-cl-{}.png", file_no);
-    println!("file_path for logo {}", file_path);
+    
     get_file_buffer(&file_path)
 }
 
 pub async fn get_random_salary() -> Salary {    
     let index = get_random_no_from_range(0, 3);
-    SALARY_BASE.get().await.get(index).unwrap().clone()
+    SALARY_BASE.get().unwrap().get(index).unwrap().clone()
+}
+
+pub async fn get_random_language() -> Language {
+    let index = get_random_no_from_range(0, 8);
+    LANGUAGES.get().unwrap().get(index).unwrap().clone()
+}
+
+pub async fn get_random_industry() -> Industry {
+    let index = get_random_no_from_range(0, 4);
+    INDUSTRIES.get().unwrap().get(index).unwrap().clone()
+}
+
+pub async fn get_random_country() -> Country {
+    COUNTRIES.get().unwrap().get(0).unwrap().clone()
 }

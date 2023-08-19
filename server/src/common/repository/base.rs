@@ -4,6 +4,11 @@ use std::env;
 use dotenv::dotenv;
 use async_trait::async_trait;
 
+#[derive(FromRow)]
+pub struct CountResult {
+    pub count: i64,
+}
+
 #[derive(FromRow, Clone)]
 pub struct EntityId {
     pub id: i64
@@ -14,7 +19,7 @@ pub trait Repository{
     async fn init() -> Self;
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct DbRepo {
     conn: Pool<Postgres>
 }
