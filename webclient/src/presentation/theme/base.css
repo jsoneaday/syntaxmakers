@@ -31,8 +31,8 @@
 }
 
 #root {
-  max-width: 1280px;
-  margin: 0 auto;
+  margin-right: auto;
+  margin-left: auto;
   padding: 2rem;
   text-align: center;
 }
@@ -78,6 +78,10 @@ main {
   max-width: 1150px;
   margin-left: auto;
   margin-right: auto;
+}
+
+.layout-container {
+  margin: auto;
 }
 
 .panel-col {

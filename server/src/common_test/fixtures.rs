@@ -45,98 +45,103 @@ pub async fn init_fixtures() {
     
     if let None = COUNTRIES.get() {
         let countries = repo.query_all_countries().await.unwrap();
-        COUNTRIES.get_or_init(move || countries);
+        COUNTRIES.get_or_init(|| countries);
     }
     if let None = INDUSTRIES.get() {
         let industries = repo.query_all_industries().await.unwrap();
-        INDUSTRIES.get_or_init(move || industries);
+        INDUSTRIES.get_or_init(|| industries);
     }
     if let None = LANGUAGES.get() {
         let languages = repo.query_all_languages().await.unwrap();
-        LANGUAGES.get_or_init(move || languages);
+        LANGUAGES.get_or_init(|| languages);
     }
     if let None = SALARY_BASE.get() {
         let salaries = repo.query_all_salaries().await.unwrap();
-        SALARY_BASE.get_or_init(move || salaries);   
+        SALARY_BASE.get_or_init(|| salaries);   
     }
-    FAKE_JOB_TITLES.get_or_init(|| {
-        vec![
-            "Senior Web Developer",
-            "Senior Full-Stack Developer",
-            "Senior Java Developer",
-            "Senior TypeScript Engineer",
-            "Senior NodeJS Developer",
-            "Full-Stack Python Developer",
-            "Senior C# Developer"
-        ]
-    });
-    FAKE_JOB_DESC.get_or_init(|| {
-        vec![
-            r"
-            About the job
-            As a Senior Mobile Engineer, you will be one of the first 5 engineers at our client, responsible for building ambitious new features end-to-end while ensuring the client's app remains performant and bug-free. Your contributions will have an enormous and long-lasting impact. Users love our client's mobile app (4.9 stars from 350+ App Store reviews), and you will be relentless to continue raising the bar for field sales software.
-        
-        
-            Location (Hybrid)
-        
-            New York, NY
-        
-        
-            Qualifications (Must):
-        
-            4-10 years of professional engineering experience
-            Fluent in React and Typescript
-            Proven track record of high-performance
-            Able to work 3 days in person in NYC
-        
-        
-            Qualifications (Preferred):
-        
-            Worked at a company with < 300 employees
-            Founding Engineer Experience
-            Mobile Engineering experience
-        
-        
-            Responsibilities
-        
-            Architect and assemble core features, including novel interfaces powered by LLMs on the way to building a world-class AI coach and sales co-pilot
-            Write great code quickly and be counted on to deploy with minimal code review
-            Monitor analytics and communicate directly with customer-facing teams to Identify, communicate, and resolve bugs and performance issues
-            Iterate and improve DevOps in preparation for the rapid scaling of both our engineering team and our user base
-            Work directly with the founders, Joe and Jake, daily and be counted on to tell them when they’re wrong
-        
-        
-            Keywords
-        
-            Frontend, ReactJS, TypeScript, AI, Artificial Intelligence, Mobile Engineering, DevOps, Front-End.
-            ",
-            r"
-            About the job
-            How is this unique data platform about to scale to the next Billion Dollars Unicorn out of SF?
-        
-        
-        
-            Could you be the Frontend Tech Lead to dictate the success of the frontend strategy of this data privacy and governance platform?
-        
-        
-        
-            If so, this is the perfect Frontend Tech Lead role for you.
-        
-        
-            This company is at the helm of an emerging market in data privacy and governance for businesses. The platform covers all regulations in this ever-growingly data sensitive environment where fundamentally, privacy matters.
-        
-        
-            You will be joining an emerging market at a company that has achieved 0-1 and now has huge growth ambitions for the future. The CEO & CTO have huge success in scaling companies, with their last ventures being acquired by FAANG for $100 M's.
-        
-        
-            You will be in charge of the Frontend Strategy of this platform as it massively upscales. Your role will consist of a mix of team leadership, Frontend strategy and architecture and diving in hands on too. 
-        
-        
-        
-            Get ready to role your sleeves up.
-            "
-        ]
-    });
+    if let None = FAKE_JOB_TITLES.get() {
+        FAKE_JOB_TITLES.get_or_init(|| {
+            vec![
+                "Senior Web Developer",
+                "Senior Full-Stack Developer",
+                "Senior Java Developer",
+                "Senior TypeScript Engineer",
+                "Senior NodeJS Developer",
+                "Full-Stack Python Developer",
+                "Senior C# Developer",
+                "Full-Stack Engineer"
+            ]
+        });
+    }
+    if let None = FAKE_JOB_DESC.get() {
+        FAKE_JOB_DESC.get_or_init(|| {
+            vec![
+                r"
+                About the job
+                As a Senior Mobile Engineer, you will be one of the first 5 engineers at our client, responsible for building ambitious new features end-to-end while ensuring the client's app remains performant and bug-free. Your contributions will have an enormous and long-lasting impact. Users love our client's mobile app (4.9 stars from 350+ App Store reviews), and you will be relentless to continue raising the bar for field sales software.
+            
+            
+                Location (Hybrid)
+            
+                New York, NY
+            
+            
+                Qualifications (Must):
+            
+                4-10 years of professional engineering experience
+                Fluent in React and Typescript
+                Proven track record of high-performance
+                Able to work 3 days in person in NYC
+            
+            
+                Qualifications (Preferred):
+            
+                Worked at a company with < 300 employees
+                Founding Engineer Experience
+                Mobile Engineering experience
+            
+            
+                Responsibilities
+            
+                Architect and assemble core features, including novel interfaces powered by LLMs on the way to building a world-class AI coach and sales co-pilot
+                Write great code quickly and be counted on to deploy with minimal code review
+                Monitor analytics and communicate directly with customer-facing teams to Identify, communicate, and resolve bugs and performance issues
+                Iterate and improve DevOps in preparation for the rapid scaling of both our engineering team and our user base
+                Work directly with the founders, Joe and Jake, daily and be counted on to tell them when they’re wrong
+            
+            
+                Keywords
+            
+                Frontend, ReactJS, TypeScript, AI, Artificial Intelligence, Mobile Engineering, DevOps, Front-End.
+                ",
+                r"
+                About the job
+                How is this unique data platform about to scale to the next Billion Dollars Unicorn out of SF?
+            
+            
+            
+                Could you be the Frontend Tech Lead to dictate the success of the frontend strategy of this data privacy and governance platform?
+            
+            
+            
+                If so, this is the perfect Frontend Tech Lead role for you.
+            
+            
+                This company is at the helm of an emerging market in data privacy and governance for businesses. The platform covers all regulations in this ever-growingly data sensitive environment where fundamentally, privacy matters.
+            
+            
+                You will be joining an emerging market at a company that has achieved 0-1 and now has huge growth ambitions for the future. The CEO & CTO have huge success in scaling companies, with their last ventures being acquired by FAANG for $100 M's.
+            
+            
+                You will be in charge of the Frontend Strategy of this platform as it massively upscales. Your role will consist of a mix of team leadership, Frontend strategy and architecture and diving in hands on too. 
+            
+            
+            
+                Get ready to role your sleeves up.
+                "
+            ]
+        });
+    }
 
     setup_data().await;
 }
@@ -146,7 +151,7 @@ async fn setup_data() {
     let jobs = repo.query_all_jobs_count().await.unwrap().count;
     
     if jobs == 0 {
-        for _ in [..30] {
+        for _ in 1..40 {
             let logo = get_company_logo_randomly();
             let company_create_result = repo.insert_company(NewCompany{ 
                 name: CompanyName().fake::<String>(), 
@@ -155,10 +160,11 @@ async fn setup_data() {
             }).await.unwrap();
             let company_id = company_create_result.id;
 
+            let email_prefix = get_random_no_from_range(0, 100);
             let create_employer_result = repo.insert_employer(NewEmployer {
                 user_name: Username().fake::<String>(),
                 full_name: get_fake_fullname(),
-                email: FreeEmail().fake::<String>(),
+                email: format!("{}{}", email_prefix, FreeEmail().fake::<String>()),
                 password: "test123".to_string(),
                 company_id
             }).await.unwrap();
@@ -187,12 +193,12 @@ pub fn get_fake_fullname() -> String {
 }
 
 pub fn get_fake_title() -> &'static str {
-    let index = get_random_no_from_range(0, 6);
+    let index = get_random_no_from_range(0, FAKE_JOB_TITLES.get().unwrap().len()-1);
     FAKE_JOB_TITLES.get().unwrap()[index]
 }
 
 pub fn get_fake_desc() -> &'static str {
-    let index = get_random_no_from_range(0, 1);
+    let index = get_random_no_from_range(0, FAKE_JOB_DESC.get().unwrap().len()-1);
     FAKE_JOB_DESC.get().unwrap()[index]
 }
 

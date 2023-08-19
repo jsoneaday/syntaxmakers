@@ -2,30 +2,19 @@ import "../../presentation/theme/developer.css";
 import LeftMenu from "../components/LeftMenu";
 /// @ts-ignore
 import { v4 as uuidv4 } from "uuid";
-import Login from "../components/authentication/Login";
-import { DevOrEmployer } from "../models/DevOrEmployer";
-import { startViewTransition } from "../common/transitions/ViewTransition";
-import { useState } from "react";
 import JobPreviewList from "../components/jobs/JobPreviewList";
+import Layout from "../components/Layout";
+import { useLoginOpen } from "../common/redux/loginOpen/LoginOpenHooks";
 
 export default function DeveloperJobs() {
-  const [loginIsOpen, setLoginIsOpen] = useState(false);
-
-  const toggleOpen = () => {
-    startViewTransition(() => setLoginIsOpen(!loginIsOpen));
-  };
+  const [_loginOpen, setLoginOpen] = useLoginOpen();
 
   return (
-    <>
-      <Login
-        devOrEmployer={DevOrEmployer.Developer}
-        isOpen={loginIsOpen}
-        toggleOpen={toggleOpen}
-      />
+    <Layout>
       <div className="dev-container" data-testid="developer-page">
         <LeftMenu />
-        <JobPreviewList setLoginIsOpen={setLoginIsOpen} />
+        <JobPreviewList setLoginIsOpen={setLoginOpen} />
       </div>
-    </>
+    </Layout>
   );
 }
