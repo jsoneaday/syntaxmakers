@@ -14,3 +14,8 @@
 .job-full-view-subtitle-item-secondary {
   margin-top: 1em;
 }
+
+.job-icon {
+  width: 18px;
+  cursor: pointer;
+}

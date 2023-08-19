@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import "../theme/job_full_view.css";
 import { appendPlusLargeCurrency } from "../common/CurrencyFormatter";
 import Layout from "../components/Layout";
+import flag from "../theme/assets/flag.png";
+import similar from "../theme/assets/similar.png";
 
 export default function JobFullView() {
   const { state } = useLocation();
@@ -60,7 +62,10 @@ export default function JobFullView() {
               {`Base Salary: ${salary}`}
             </div>
           </div>
-          <div className="stack">
+          <div
+            className="stack"
+            style={{ alignItems: "flex-end", textAlign: "right" }}
+          >
             <button
               className="primary-btn small-btn"
               style={{ marginBottom: ".5em" }}
@@ -68,6 +73,18 @@ export default function JobFullView() {
               apply
             </button>
             <button className="secondary-btn small-btn">save</button>
+            <img
+              src={flag}
+              className="job-icon"
+              style={{ marginTop: "1em" }}
+              title="inappropriate"
+            />
+            <img
+              src={similar}
+              className="job-icon"
+              style={{ marginTop: ".50em" }}
+              title="similar jobs"
+            />
           </div>
         </div>
 
