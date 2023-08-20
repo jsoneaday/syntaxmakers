@@ -1,0 +1,13 @@
+.goback-container {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  cursor: pointer;
+}
+
+.goback-img {
+  width: 22px;
+  transform: rotate(90deg);
+  margin-right: 0.5em;
+}

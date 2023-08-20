@@ -1,5 +1,5 @@
 import "../../presentation/theme/developer.css";
-import LeftMenu from "../components/LeftMenu";
+import LeftMenu from "../components/navigation/LeftMenu";
 /// @ts-ignore
 import { v4 as uuidv4 } from "uuid";
 import JobPreviewList from "../components/jobs/JobPreviewList";

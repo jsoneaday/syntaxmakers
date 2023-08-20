@@ -6,6 +6,7 @@ import { appendPlusLargeCurrency } from "../common/CurrencyFormatter";
 import Layout from "../components/Layout";
 import flag from "../theme/assets/flag.png";
 import similar from "../theme/assets/similar.png";
+import GoBack from "../components/navigation/GoBack";
 
 export default function JobFullView() {
   const { state } = useLocation();
@@ -20,6 +21,11 @@ export default function JobFullView() {
   return (
     <Layout>
       <div className="dev-main" style={{ width: "738px", margin: "auto" }}>
+        <div
+          style={{ paddingTop: "2em", paddingLeft: "2em", paddingRight: "2em" }}
+        >
+          <GoBack label="dev home" />
+        </div>
         <div
           className="opposites"
           style={{ paddingTop: "2em", paddingLeft: "2em", paddingRight: "2em" }}
