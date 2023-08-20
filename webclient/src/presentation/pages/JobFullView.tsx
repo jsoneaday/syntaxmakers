@@ -7,6 +7,7 @@ import Layout from "../components/Layout";
 import flag from "../theme/assets/flag.png";
 import similar from "../theme/assets/similar.png";
 import GoBack from "../components/navigation/GoBack";
+import TextEditor from "../components/TextEditor";
 
 export default function JobFullView() {
   const { state } = useLocation();
@@ -96,12 +97,27 @@ export default function JobFullView() {
 
         <div
           className="normal-font dev-post-preview-container"
-          style={{ paddingTop: "2em", paddingLeft: "2em", paddingRight: "2em" }}
+          style={{
+            paddingTop: "2em",
+            paddingLeft: "2em",
+            paddingRight: "2em",
+            paddingBottom: "2em",
+          }}
         >
           <span className="title-font" style={{ marginBottom: "1em" }}>
             Description
           </span>
-          <span style={{ paddingBottom: "2em" }}>{jobPost?.description}</span>
+          {jobPost ? (
+            <TextEditor
+              initialValue={[
+                {
+                  type: "paragraph",
+                  children: [{ text: jobPost.description }],
+                },
+              ]}
+              readOnly={false}
+            />
+          ) : null}
         </div>
       </div>
     </Layout>
