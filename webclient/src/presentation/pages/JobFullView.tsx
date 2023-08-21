@@ -7,7 +7,7 @@ import Layout from "../components/Layout";
 import flag from "../theme/assets/flag.png";
 import similar from "../theme/assets/similar.png";
 import GoBack from "../components/navigation/GoBack";
-import TextEditor from "../components/TextEditor";
+import TextEditor from "../components/textEditor/TextEditor";
 
 export default function JobFullView() {
   const { state } = useLocation();
@@ -107,17 +107,7 @@ export default function JobFullView() {
           <span className="title-font" style={{ marginBottom: "1em" }}>
             Description
           </span>
-          {jobPost ? (
-            <TextEditor
-              initialValue={[
-                {
-                  type: "paragraph",
-                  children: [{ text: jobPost.description }],
-                },
-              ]}
-              readOnly={false}
-            />
-          ) : null}
+          <TextEditor initialValue={jobPost?.description || ""} />
         </div>
       </div>
     </Layout>
