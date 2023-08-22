@@ -18,7 +18,7 @@ export type Heading1Element = {
 
 export type CustomElement = ParagraphElement | Heading1Element;
 
-export type FormattedText = { text: string; bold?: true };
+export type FormattedText = { text: string; bold?: true; italic?: true };
 
 export type CustomText = FormattedText;
 
