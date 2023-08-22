@@ -15,8 +15,9 @@ export default function JobFullView() {
   const [salary, setSalary] = useState("");
 
   useEffect(() => {
-    setJobPost(state);
-    setSalary(appendPlusLargeCurrency(state?.salary || ""));
+    const currentJobPost = state as JobPost;
+    setJobPost(currentJobPost);
+    setSalary(appendPlusLargeCurrency(currentJobPost?.salary || ""));
   }, [state]);
 
   return (
@@ -107,7 +108,15 @@ export default function JobFullView() {
           <span className="title-font" style={{ marginBottom: "1em" }}>
             Description
           </span>
-          <TextEditor initialValue={jobPost?.description || ""} />
+          <TextEditor
+            initialValue={[
+              {
+                type: "paragraph",
+                children: [{ text: "A line of text in a paragraph." }],
+              },
+            ]}
+            readOnly={true}
+          />
         </div>
       </div>
     </Layout>

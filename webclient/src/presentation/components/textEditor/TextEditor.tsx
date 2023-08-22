@@ -8,20 +8,21 @@ import { ElementHeaderTypeLevels } from "./ElementTypes";
 import "../../theme/texteditor.css";
 import { Toolbar } from "./TextEditorComponents";
 
-const initialValue: Descendant[] = [
-  {
-    type: "paragraph",
-    children: [{ text: "A line of text in a paragraph." }],
-  },
-];
+interface TextEditorProps {
+  readOnly: boolean;
+  initialValue: Descendant[];
+}
 
-export default function TextEditor() {
+export default function TextEditor({
+  readOnly,
+  initialValue,
+}: TextEditorProps) {
   const [_value, _setValue] = useState<string | null>();
   const [editor] = useState(() => withReact(withHistory(createEditor())));
 
   const onKeyDown = useCallback(
     (e: KeyboardEvent<HTMLDivElement>) => {
-      if (!e.ctrlKey) return;
+      if (!e.ctrlKey || readOnly) return;
 
       switch (e.key) {
         case "`":
@@ -43,12 +44,14 @@ export default function TextEditor() {
 
   return (
     <Slate editor={editor} initialValue={initialValue} onChange={onChange}>
-      <Toolbar editor={editor} />
+      {readOnly ? null : <Toolbar editor={editor} />}
+
       <Editable
         className="txtedit-container"
         renderLeaf={renderLeaf}
         renderElement={renderElement}
         onKeyDown={onKeyDown}
+        readOnly={readOnly}
       />
     </Slate>
   );
