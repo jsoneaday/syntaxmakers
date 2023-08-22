@@ -32,7 +32,7 @@ export function convert(job: Job) {
   const companyLogoUInt8Array = job.companyLogo
     ? new Uint8Array(job.companyLogo)
     : undefined;
-  console.log("salary", Number(job.salary));
+
   return new JobPost(
     uuidv4(),
     job.id,

@@ -3,6 +3,7 @@ import employer from "../../presentation/theme/assets/businessman.png";
 import "../../presentation/theme/home.css";
 import { Link } from "react-router-dom";
 import Layout from "../components/Layout";
+import { RoutePaths } from "../../App";
 
 export default function Home() {
   return (
@@ -10,7 +11,7 @@ export default function Home() {
       <div className="home" data-testid="home-page">
         <div className="panel-col home-item-dev">
           <Link
-            to="developerjobs"
+            to={RoutePaths.DevHome}
             className="home-item-link"
             data-testid="dev-link"
           >
@@ -20,7 +21,11 @@ export default function Home() {
         </div>
 
         <div className="panel-col home-item-emp">
-          <Link to="employer" className="home-item-link" data-testid="emp-link">
+          <Link
+            to={RoutePaths.EmpHome}
+            className="home-item-link"
+            data-testid="emp-link"
+          >
             <img className="home-icon" src={employer} />
             <div className="title-font home-item-content">I'm an Employer</div>
           </Link>

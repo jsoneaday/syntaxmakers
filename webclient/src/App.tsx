@@ -1,20 +1,32 @@
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import Home from "./presentation/pages/Home";
-import DeveloperJobs from "./presentation/pages/DeveloperJobs";
+import DeveloperHome from "./presentation/pages/DeveloperHome";
 import JobFullView from "./presentation/pages/JobFullView";
+import EmployerHome from "./presentation/pages/EmployerHome";
+
+export enum RoutePaths {
+  Root = "/",
+  DevHome = "devhome",
+  EmpHome = "emphome",
+  JobFullView = "jobfullview",
+}
 
 const router = createBrowserRouter([
   {
-    path: "/",
+    path: RoutePaths.Root,
     element: <Home />,
   },
   {
-    path: "/developerjobs",
-    element: <DeveloperJobs />,
+    path: RoutePaths.DevHome,
+    element: <DeveloperHome />,
   },
   {
-    path: "/jobfullview",
+    path: RoutePaths.JobFullView,
     element: <JobFullView />,
+  },
+  {
+    path: RoutePaths.EmpHome,
+    element: <EmployerHome />,
   },
 ]);
 

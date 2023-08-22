@@ -46,7 +46,7 @@ export default function JobPreviewList({
 
   return (
     <div className="dev-main">
-      <div className="dev-top">
+      <div className="dev-top" style={{ padding: "2em" }}>
         <div className="title-font dev-header">Developer job search</div>
         <div className="sub-title-font dev-sub-header">
           Enter your preferences to find your next job
@@ -71,7 +71,7 @@ export default function JobPreviewList({
         />
         Date jun 16, 2023
       </div>
-      <div className="dev-post-preview-container">
+      <div className="dev-post-preview-container" style={{ padding: "2em" }}>
         <ul>
           <Lister
             dataItems={jobData}

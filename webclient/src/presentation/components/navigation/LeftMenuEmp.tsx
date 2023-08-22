@@ -4,7 +4,7 @@ import notification from "../../theme/assets/notification.png";
 import { useProfile } from "../../common/redux/profile/ProfileHooks";
 import { startViewTransition } from "../../common/transitions/ViewTransition";
 
-export default function LeftMenu() {
+export default function LeftMenuEmp() {
   const [profile, setProfile] = useProfile();
 
   const onClickLogout = (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -20,11 +20,11 @@ export default function LeftMenu() {
           <span className="title-font left-menu-header">{`@${profile?.userName}`}</span>
           <a className="sub-title-font dev-menu-item">
             <img className="dev-menu-icon" src={safebox} />
-            <span>Saved jobs</span>
+            <span>Job Posts</span>
           </a>
           <a className="sub-title-font dev-menu-item">
             <img className="dev-menu-icon" src={notification} />
-            <span>Job alerts</span>
+            <span>Job applicants</span>
           </a>
         </div>
         <button className="secondary-btn" onClick={onClickLogout}>
