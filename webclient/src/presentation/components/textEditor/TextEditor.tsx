@@ -1,78 +1,56 @@
-import { $getRoot, $getSelection, EditorState, LexicalEditor } from "lexical";
-import { useEffect, useRef, useState } from "react";
-import { OnChangePlugin } from "@lexical/react/LexicalOnChangePlugin";
-import { LexicalComposer } from "@lexical/react/LexicalComposer";
-import { PlainTextPlugin } from "@lexical/react/LexicalPlainTextPlugin";
-import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin";
-import { ContentEditable } from "@lexical/react/LexicalContentEditable";
-import { HistoryPlugin } from "@lexical/react/LexicalHistoryPlugin";
-import {
-  DEFAULT_TRANSFORMERS,
-  MarkdownShortcutPlugin,
-} from "@lexical/react/LexicalMarkdownShortcutPlugin";
-import {
-  $convertToMarkdownString,
-  $convertFromMarkdownString,
-  TRANSFORMERS,
-} from "@lexical/markdown";
-import LexicalErrorBoundary from "@lexical/react/LexicalErrorBoundary";
-import { CodeNode } from "@lexical/code";
-import { LinkNode } from "@lexical/link";
-import { ListNode, ListItemNode } from "@lexical/list";
-import { HeadingNode, QuoteNode } from "@lexical/rich-text";
-import { HorizontalRuleNode } from "@lexical/react/LexicalHorizontalRuleNode";
-import "../../theme/texteditor.css";
+import { KeyboardEvent, useCallback, useState } from "react";
+import { createEditor, Descendant, Editor, Element, Transforms } from "slate";
+import { withHistory } from "slate-history";
+import { Slate, Editable, withReact, RenderElementProps } from "slate-react";
+import { Heading1 } from "./ElementRenderers";
 
-const theme = {};
+const initialValue: Descendant[] = [
+  {
+    type: "paragraph",
+    children: [{ text: "A line of text in a paragraph." }],
+  },
+];
 
-function onError(error: Error, _editor: LexicalEditor): void {
-  console.error(error);
-}
-
-interface TextEditorProps {
-  initialValue: string;
-}
-const initialConfig = {
-  namespace: "JobDescEditor",
-  theme,
-  onError,
-  editable: true,
-  nodes: [
-    HorizontalRuleNode,
-    CodeNode,
-    HeadingNode,
-    LinkNode,
-    ListNode,
-    ListItemNode,
-    QuoteNode,
-  ],
+const renderElement = (props: RenderElementProps) => {
+  switch (props.element.type) {
+    case "heading":
+      return <Heading1 {...props} />;
+    case "paragraph":
+      return <p {...props} />;
+    default:
+      return <span {...props} />;
+  }
 };
-export default function TextEditor({ initialValue }: TextEditorProps) {
-  const [_editorState, setEditorState] = useState<EditorState>();
-  const editorStateRef = useRef<EditorState>();
 
-  useEffect(() => {}, [initialValue]);
+export default function TextEditor() {
+  const [editor] = useState(() => withReact(withHistory(createEditor())));
 
-  const onChangeState = (
-    editorState: EditorState,
-    _editor: LexicalEditor,
-    _tags: Set<string>
-  ) => {
-    editorStateRef.current = editorState;
-    console.log("editorState", editorState.toJSON());
-    setEditorState(editorState);
-  };
+  const onKeyDown = useCallback(
+    (e: KeyboardEvent<HTMLDivElement>) => {
+      e.preventDefault();
+
+      const [match] = Editor.nodes(editor, {
+        match: (n: any) => n.type === "heading",
+      });
+
+      if (e.key === "`" && e.ctrlKey) {
+        Transforms.setNodes(
+          editor,
+          {
+            type: match ? "paragraph" : "heading",
+          },
+          {
+            match: (n) => Element.isElement(n) && Editor.isBlock(editor, n),
+          }
+        );
+      }
+    },
+    [editor]
+  );
 
   return (
-    <LexicalComposer initialConfig={initialConfig}>
-      <RichTextPlugin
-        contentEditable={<ContentEditable className="texteditor-container" />}
-        placeholder={<div>Enter some text...</div>}
-        ErrorBoundary={LexicalErrorBoundary}
-      />
-      <MarkdownShortcutPlugin transformers={TRANSFORMERS} />
-      <HistoryPlugin />
-      <OnChangePlugin onChange={onChangeState} />
-    </LexicalComposer>
+    <Slate editor={editor} initialValue={initialValue}>
+      <Editable renderElement={renderElement} onKeyDown={onKeyDown} />
+    </Slate>
   );
 }
