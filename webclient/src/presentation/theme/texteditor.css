@@ -1,5 +1,13 @@
-.texteditor-container {
-  height: 100%;
+.txtedit-container {
+  height: 400px;
   width: 100%;
   outline: none;
+}
+
+.txtedit-toolbar {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  width: 100%;
 }
