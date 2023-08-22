@@ -1,7 +1,7 @@
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import Home from "./presentation/pages/Home";
 import DeveloperHome from "./presentation/pages/developer/DeveloperHome";
-import JobFullView from "./presentation/pages/developer/JobFullView";
+import JobFullviewPage from "./presentation/pages/developer/JobFullviewPage";
 import EmployerHome from "./presentation/pages/employer/EmployerHome";
 
 export enum RoutePaths {
@@ -22,7 +22,7 @@ const router = createBrowserRouter([
   },
   {
     path: RoutePaths.JobFullView,
-    element: <JobFullView />,
+    element: <JobFullviewPage />,
   },
   {
     path: RoutePaths.EmpHome,
