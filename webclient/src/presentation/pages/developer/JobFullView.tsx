@@ -1,13 +1,13 @@
 import { useLocation } from "react-router-dom";
-import JobPost from "../models/JobPost";
+import JobPost from "../../models/JobPost";
 import { useEffect, useState } from "react";
-import "../theme/job_full_view.css";
-import { appendPlusLargeCurrency } from "../common/CurrencyFormatter";
-import Layout from "../components/Layout";
-import flag from "../theme/assets/flag.png";
-import similar from "../theme/assets/similar.png";
-import GoBack from "../components/navigation/GoBack";
-import TextEditor from "../components/textEditor/TextEditor";
+import "../../theme/job_full_view.css";
+import { appendPlusLargeCurrency } from "../../common/CurrencyFormatter";
+import Layout from "../../components/Layout";
+import flag from "../../theme/assets/flag.png";
+import similar from "../../theme/assets/similar.png";
+import GoBack from "../../components/navigation/GoBack";
+import TextEditor from "../../components/textEditor/TextEditor";
 
 export default function JobFullView() {
   const { state } = useLocation();
