@@ -32,19 +32,9 @@ export default function EmpJobPreviewList({
   return (
     <div className="userhome-main">
       <div className="userhome-top" style={{ padding: "2em" }}>
-        <div className="emphome-post-container" style={{ marginBottom: "2em" }}>
-          <div
-            className="title-font userhome-header"
-            style={{ marginRight: "1em" }}
-          >
-            Post a new job
-          </div>
-          <button className="primary-btn" style={{ width: "10em" }}>
-            post
-          </button>
+        <div className="title-font userhome-header">
+          Search your existing jobs posts
         </div>
-
-        <div className="title-font userhome-header">Search your jobs posts</div>
         <div className="search-header">
           <input
             className="search-input"
@@ -55,7 +45,9 @@ export default function EmpJobPreviewList({
           <button className="primary-btn">search</button>
         </div>
       </div>
-      <JobPreviewList jobPosts={jobData} />
+      <div className="emphome-job-list">
+        <JobPreviewList jobPosts={jobData} />
+      </div>
     </div>
   );
 }

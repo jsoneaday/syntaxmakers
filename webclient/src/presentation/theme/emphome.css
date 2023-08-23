@@ -4,3 +4,8 @@
   align-items: center;
   justify-content: flex-start;
 }
+
+.emphome-job-list {
+  width: 100%;
+  border-top: solid 1px var(--border-cl);
+}

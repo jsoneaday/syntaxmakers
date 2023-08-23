@@ -11,6 +11,10 @@ export default function LeftMenuEmp() {
       <div className="leftmenu-body">
         <span className="title-font leftmenu-header">{`@${profile?.userName}`}</span>
         <a className="sub-title-font leftmenu-item">
+          <img className="leftmenu-icon" src={notification} />
+          <span>Post new job</span>
+        </a>
+        <a className="sub-title-font leftmenu-item">
           <img className="leftmenu-icon" src={safebox} />
           <span>Job posts</span>
         </a>
