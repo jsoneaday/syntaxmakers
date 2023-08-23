@@ -4,8 +4,16 @@ import "../../presentation/theme/home.css";
 import { Link } from "react-router-dom";
 import Layout from "../components/Layout";
 import { RoutePaths } from "../../App";
+import { useEffect } from "react";
+import { useProfile } from "../common/redux/profile/ProfileHooks";
 
 export default function Home() {
+  const [_profile, setProfile] = useProfile();
+
+  useEffect(() => {
+    setProfile(null);
+  }, []);
+
   return (
     <Layout includeLogin={false}>
       <div className="home" data-testid="home-page">

@@ -11,7 +11,7 @@ use crate::{
         repository::{
             base::Repository, 
             user::{repo::AuthenticateDbFn, models::{AuthenticateResult, DeveloperOrEmployer as UserDeveloperOrEmployer}}, 
-            developers::repo::QueryDeveloperFn
+            developers::repo::QueryDeveloperFn, employers::repo::QueryEmployerFn
         }, 
         authentication::auth_service::{get_token, STANDARD_REFRESH_TOKEN_EXPIRATION, Authenticator, STANDARD_ACCESS_TOKEN_EXPIRATION, REFRESH_TOKEN_LABEL, decode_token}
     }, 
@@ -56,7 +56,7 @@ pub async fn refresh_access_token<T: Repository, U: Authenticator>(app_data: Dat
 }
 
 
-pub async fn login<T: AuthenticateDbFn + QueryDeveloperFn + Repository, U: Authenticator>(app_data: Data<AppState<T, U>>, json: Json<LoginCredential>) 
+pub async fn login<T: AuthenticateDbFn + QueryDeveloperFn + QueryEmployerFn + Repository, U: Authenticator>(app_data: Data<AppState<T, U>>, json: Json<LoginCredential>) 
     -> HttpResponse {
     println!("start login {}, {}", json.email, json.password);
 
@@ -71,35 +71,59 @@ pub async fn login<T: AuthenticateDbFn + QueryDeveloperFn + Repository, U: Authe
         Ok(result) => {
             match result {
                 AuthenticateResult::Success { id } => {
-                    let developer = app_data.repo.query_developer(id).await;
-                    match developer {
-                        Ok(opt_dev) => {
-                            if let Some(dev) = opt_dev {
-                                let access_token = get_token(dev.user_name.clone(), dev_or_emp.clone(), &app_data.auth_keys.encoding_key, Some(STANDARD_ACCESS_TOKEN_EXPIRATION));
-                                let refresh_token = get_token(dev.user_name, dev_or_emp, &app_data.auth_keys.encoding_key, None);
-                                let refresh_cookie = Cookie::build(REFRESH_TOKEN_LABEL, refresh_token.to_owned())
-                                    .path("/")
-                                    .max_age(ActixWebDuration::new(STANDARD_REFRESH_TOKEN_EXPIRATION, 0))
-                                    .http_only(true)
-                                    .secure(false)
-                                    //.same_site(SameSite::Lax)
-                                    .finish();
-                                
-                                HttpResponse::Ok()
-                                    .cookie(refresh_cookie)
-                                    .body(access_token)
-                            } else {
-                                HttpResponse::Unauthorized()
+                    let mut user_name = "".to_string();
+                    #[allow(unused)]
+                    let mut http_response: Option<HttpResponse> = None;
+                    if dev_or_emp == UserDeveloperOrEmployer::Developer {
+                        println!("Developer trying to login");
+                        let developer = app_data.repo.query_developer(id).await;
+                        match developer {
+                            Ok(opt_dev) => {
+                                if let Some(dev) = opt_dev {
+                                    user_name = dev.user_name;
+                                    let (refresh_cookie, access_token) = get_refresh_and_access_token_response(app_data, user_name.as_str(), &dev_or_emp);
+                                    println!("Developer complete {} {}", refresh_cookie, access_token);
+                                    http_response = Some(HttpResponse::Ok()
+                                        .cookie(refresh_cookie)
+                                        .body(access_token));
+                                } else {
+                                    http_response = Some(HttpResponse::Unauthorized()
+                                        .content_type(ContentType::json())
+                                        .body("Authentication failed. User not found"));
+                                }
+                            },
+                            Err(_) => {
+                                http_response = Some(HttpResponse::Unauthorized()
                                     .content_type(ContentType::json())
-                                    .body("Authentication failed. User not found")
+                                    .body("Authentication failed. Error occurred while trying to get user"));
                             }
-                        },
-                        Err(_) => {
-                            HttpResponse::Unauthorized()
-                                .content_type(ContentType::json())
-                                .body("Authentication failed. Error occurred while trying to get user")
                         }
-                    }                    
+                    } else {
+                        println!("Employer trying to login");
+                        let employer = app_data.repo.query_employer(id).await;
+                        match employer {
+                            Ok(opt_emp) => {
+                                if let Some(emp) = opt_emp {
+                                    user_name = emp.user_name;
+                                    let (refresh_cookie, access_token) = get_refresh_and_access_token_response(app_data, user_name.as_str(), &dev_or_emp);
+                                    println!("Employer complete {} {}", refresh_cookie, access_token);
+                                    http_response = Some(HttpResponse::Ok()
+                                        .cookie(refresh_cookie)
+                                        .body(access_token));
+                                } else {
+                                    http_response = Some(HttpResponse::Unauthorized()
+                                        .content_type(ContentType::json())
+                                        .body("Authentication failed. User not found"));
+                                }
+                            },
+                            Err(_) => {
+                                http_response = Some(HttpResponse::Unauthorized()
+                                    .content_type(ContentType::json())
+                                    .body("Authentication failed. Error occurred while trying to get user"));
+                            }
+                        }
+                    }          
+                    return http_response.unwrap();          
                 },
                 _ => {
                     HttpResponse::Unauthorized()
@@ -116,6 +140,21 @@ pub async fn login<T: AuthenticateDbFn + QueryDeveloperFn + Repository, U: Authe
     }  
 }
 
+fn get_refresh_and_access_token_response<'a, T: AuthenticateDbFn + QueryDeveloperFn + Repository, U: Authenticator>(
+    app_data: Data<AppState<T, U>>, user_name: &'a str, dev_or_emp: &'a UserDeveloperOrEmployer
+) -> (Cookie<'a>, String) {
+    let access_token = get_token(user_name.to_string(), dev_or_emp.clone(), &app_data.auth_keys.encoding_key, Some(STANDARD_ACCESS_TOKEN_EXPIRATION));
+    let refresh_token = get_token(user_name.to_string(), dev_or_emp.clone(), &app_data.auth_keys.encoding_key, None);
+    let refresh_cookie = Cookie::build(REFRESH_TOKEN_LABEL, refresh_token.to_owned())
+        .path("/")
+        .max_age(ActixWebDuration::new(STANDARD_REFRESH_TOKEN_EXPIRATION, 0))
+        .http_only(true)
+        .secure(false)
+        //.same_site(SameSite::Lax)
+        .finish();
+                    
+    (refresh_cookie, access_token)
+}
 
 #[cfg(test)]
 mod tests {
@@ -127,7 +166,8 @@ mod tests {
     use jsonwebtoken::{decode, Validation, DecodingKey};
     use crate::{
         common::{
-            repository::{user::repo::AuthenticateDbFn, developers::models::Developer}, authentication::auth_service::{Claims, STANDARD_REFRESH_TOKEN_EXPIRATION, AuthenticationError}
+            repository::{user::repo::AuthenticateDbFn, developers::models::Developer, employers::models::Employer}, 
+            authentication::auth_service::{Claims, STANDARD_REFRESH_TOKEN_EXPIRATION, AuthenticationError}
         }, 
         common_test::fixtures::get_app_data
     };
@@ -168,6 +208,21 @@ mod tests {
                 email: FreeEmail().fake::<String>(),
                 primary_lang_id: 1,
                 secondary_lang_id: None
+            }))
+        }
+    }    
+
+    #[async_trait]
+    impl QueryEmployerFn for MockDbRepo {
+        async fn query_employer(&self, _: i64) -> Result<Option<Employer>, sqlx::Error> {
+            Ok(Some(Employer {
+                id: 1,
+                created_at: Utc::now(),
+                updated_at: Utc::now(),
+                user_name: DEV_USERNAME.to_string(),
+                full_name: "Tester Test".to_string(),
+                email: FreeEmail().fake::<String>(),
+                company_id: 1
             }))
         }
     }    

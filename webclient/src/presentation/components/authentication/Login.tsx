@@ -1,54 +1,83 @@
 import { LoginResult, login } from "../../../domain/repository/AuthRepo";
 import { getDeveloperByEmail } from "../../../domain/repository/DeveloperRepo";
 import { useProfile } from "../../common/redux/profile/ProfileHooks";
-import { DevOrEmployer } from "../../models/DevOrEmployer";
 import "../../theme/login.css";
 import { PrimaryButton } from "../controls/Buttons";
 import Modal from "../Modal";
 import { convert as convertDev } from "../../models/DevProfile";
+import { convert as convertEmp } from "../../models/EmpProfile";
 import Checkbox from "../controls/Checkbox";
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
+import { useDevOrEmployer } from "../../common/redux/devOrEmployer/DevOrEmployerHooks";
+import { DevOrEmployer } from "../../models/DevOrEmployer";
+import { getEmployerByEmail } from "../../../domain/repository/EmployerRepo";
 
 interface LoginProps {
-  devOrEmployer: DevOrEmployer;
   isOpen: boolean;
   toggleOpen: () => void;
 }
 
-export default function Login({
-  devOrEmployer,
-  isOpen,
-  toggleOpen,
-}: LoginProps) {
+export default function Login({ isOpen, toggleOpen }: LoginProps) {
   const [_profile, setProfile] = useProfile();
-  const [email, setEmail] = useState("jon@jon.com");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("test123");
   const [_isPending, startTransition] = useTransition();
   const [errorMessage, setErrorMessage] = useState("");
+  const [devOrEmp, _setDevOrEmp] = useDevOrEmployer();
+
+  useEffect(() => {
+    // todo: remove hard codings when ready
+    if (devOrEmp === DevOrEmployer.Developer) {
+      setEmail("jon@jon.com");
+    } else {
+      setEmail("lshin@AmazingAndCo.com");
+    }
+  }, [devOrEmp]);
 
   const onClickLogin = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
 
-    login(devOrEmployer, email, password)
+    login(devOrEmp, email, password)
       .then(({ message, status }: LoginResult) => {
+        console.log("token", message);
         if (status === 200) {
-          getDeveloperByEmail(email, message)
-            .then((dev) => {
-              if (dev) {
-                startTransition(() => {
-                  setProfile(convertDev(dev, message));
-                  toggleOpen();
-                });
-              } else {
-                startTransition(() => {
-                  setProfile(null);
-                  setErrorMessage(`Failed to find user with email ${email}`);
-                });
-              }
-            })
-            .catch((error) => {
-              console.log("Developer: failed to get developer", error);
-            });
+          if (devOrEmp === DevOrEmployer.Developer) {
+            getDeveloperByEmail(email, message)
+              .then((dev) => {
+                if (dev) {
+                  startTransition(() => {
+                    setProfile(convertDev(dev, message));
+                    toggleOpen();
+                  });
+                } else {
+                  startTransition(() => {
+                    setProfile(null);
+                    setErrorMessage(`Failed to find user with email ${email}`);
+                  });
+                }
+              })
+              .catch((error) => {
+                console.log("Developer: failed to get developer", error);
+              });
+          } else {
+            getEmployerByEmail(email, message)
+              .then((emp) => {
+                if (emp) {
+                  startTransition(() => {
+                    setProfile(convertEmp(emp, message));
+                    toggleOpen();
+                  });
+                } else {
+                  startTransition(() => {
+                    setProfile(null);
+                    setErrorMessage(`Failed to find user with email ${email}`);
+                  });
+                }
+              })
+              .catch((error) => {
+                console.log("Developer: failed to get developer", error);
+              });
+          }
         } else {
           setErrorMessage(
             status === 401

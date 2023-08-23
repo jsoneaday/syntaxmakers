@@ -8,15 +8,18 @@ import DevSavedJobs from "./presentation/pages/developer/DevSavedJobs";
 import DevJobAlerts from "./presentation/pages/developer/DevJobAlerts";
 import EmpPostNewJob from "./presentation/pages/employer/EmpPostNewJob";
 
+export const DEV_ROUTE_PREFIX = "devhome";
+export const EMP_ROUTE_PREFIX = "emphome";
+
 export enum RoutePaths {
   Root = "/",
-  DevJobPosts = "/devhome/jobposts",
-  DevSavedJobs = "/devhome/savedjobs",
-  DevJobAlerts = "/devhome/jobalerts",
-  EmpPostNewJob = "/emphome/postnewjob",
-  EmpJobPosts = "/emphome/jobposts",
-  EmpJobApplicants = "/emphome/jobapplicants",
-  JobFullView = "/jobfullview",
+  DevJobPosts = `/${DEV_ROUTE_PREFIX}/jobposts`,
+  DevSavedJobs = `/${DEV_ROUTE_PREFIX}/savedjobs`,
+  DevJobAlerts = `/${DEV_ROUTE_PREFIX}/jobalerts`,
+  EmpPostNewJob = `/${EMP_ROUTE_PREFIX}/postnewjob`,
+  EmpJobPosts = `/${EMP_ROUTE_PREFIX}/jobposts`,
+  EmpJobApplicants = `/${EMP_ROUTE_PREFIX}/jobapplicants`,
+  JobFullView = `/jobfullview`,
 }
 
 const router = createBrowserRouter([

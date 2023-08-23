@@ -3,7 +3,7 @@ use actix_web::{Responder, HttpResponse, http::header::ContentType};
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct NewEmployerForRoute {
     pub user_name: String,

@@ -98,6 +98,7 @@ use common::authentication::auth_service::{init_auth_keys, AuthService};
 use common::repository::base::{DbRepo, Repository};
 use routes::authentication::routes::{login, refresh_access_token};
 use routes::developers::routes::get_developer_by_email;
+use routes::employers::routes::get_employer_by_email;
 use routes::{
     salaries::routes::get_all_salaries, 
     languages::routes::get_all_languages, 
@@ -175,6 +176,8 @@ pub async fn run() -> std::io::Result<()> {
                         .route(web::get().to(get_employer::<DbRepo, AuthService>)))
                     .service(web::resource("/employer")
                         .route(web::post().to(create_employer::<DbRepo, AuthService>)))
+                    .service(web::resource("/employer_email/{email}")
+                        .route(web::get().to(get_employer_by_email::<DbRepo, AuthService>)))
                     .service(web::resource("/employers")
                         .route(web::get().to(get_all_employers::<DbRepo, AuthService>)))
                     .service(web::resource("/developer_email/{email}")

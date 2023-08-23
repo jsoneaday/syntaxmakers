@@ -1,7 +1,9 @@
-use actix_web::web::{Data, Json, Path};
+use actix_web::{web::{Data, Json, Path}, HttpRequest};
 use crate::{
-    common::{repository::{employers::{repo::{InsertEmployerFn, QueryEmployerFn, QueryAllEmployersFn}, models::NewEmployer}, base::Repository}, authentication::auth_service::Authenticator}, 
-    routes::{base_model::{OutputId, PagingModel}, user_error::UserError}, 
+    common::{
+        repository::{employers::{repo::{InsertEmployerFn, QueryEmployerFn, QueryAllEmployersFn, QueryEmployerByEmailFn}, models::NewEmployer}, base::Repository}, authentication::auth_service::Authenticator
+    }, 
+    routes::{base_model::{OutputId, PagingModel}, user_error::UserError, route_utils::get_header_strings}, 
     app_state::AppState
 };
 use super::models::{NewEmployerForRoute, EmployerResponder, EmployerResponders};
@@ -43,6 +45,44 @@ pub async fn get_employer<T: QueryEmployerFn + Repository, U: Authenticator>(app
     }
 }
 
+pub async fn get_employer_by_email<T: QueryEmployerByEmailFn + Repository, U: Authenticator>(
+    app_data: Data<AppState<T, U>>, 
+    path: Path<String>,
+    req: HttpRequest
+) -> Result<Option<EmployerResponder>, UserError> {    
+    println!("start get_employer_by_email");
+    let email = path.into_inner();
+    let result = app_data.repo.query_employer_by_email(email).await;
+
+    match result {
+        Ok(opt_emp) => match opt_emp {
+            Some(emp) => {
+                let headers = get_header_strings(req.headers());
+                let authenticated = app_data.auth_service.is_authenticated(emp.user_name.clone(), headers, &app_data.auth_keys.decoding_key).await;
+                match authenticated {
+                    Ok(auth) => {
+                        if auth {
+                            Ok(Some(EmployerResponder { 
+                                id: emp.id, 
+                                updated_at: emp.updated_at, 
+                                user_name: emp.user_name.to_owned(), 
+                                full_name: emp.full_name.to_owned(), 
+                                email: emp.email.to_owned(), 
+                                company_id: emp.company_id
+                            }))
+                        } else {
+                            Err(UserError::AuthenticationFailed)
+                        }
+                    },
+                    Err(_) => Err(UserError::InternalError)
+                }
+            },
+            None => Ok(None)
+        },
+        Err(e) => Err(e.into())
+    }
+}
+
 pub async fn get_all_employers<T: QueryAllEmployersFn + Repository, U: Authenticator>(
     app_data: Data<AppState<T, U>>, 
     json: Json<PagingModel>
@@ -71,7 +111,7 @@ pub async fn get_all_employers<T: QueryAllEmployersFn + Repository, U: Authentic
 #[cfg(test)]
 mod tests {
     use std::vec;
-    use crate::{common_test::fixtures::{MockDbRepo, get_app_data, get_fake_fullname}, common::{repository::{base::EntityId, employers::{models::Employer, repo::QueryAllEmployersFn}}, authentication::auth_service::AuthenticationError}};
+    use crate::{common_test::fixtures::{MockDbRepo, get_app_data, get_fake_fullname, get_fake_httprequest_with_bearer_token}, common::{repository::{base::EntityId, employers::{models::Employer, repo::QueryAllEmployersFn}, user::models::DeveloperOrEmployer}, authentication::auth_service::AuthenticationError}};
     use super::*;
     use async_trait::async_trait;
     use chrono::Utc;
@@ -96,6 +136,21 @@ mod tests {
     #[async_trait]
     impl QueryEmployerFn for MockDbRepo {
         async fn query_employer(&self, _: i64) -> Result<Option<Employer>, sqlx::Error> {
+            Ok(Some(Employer {
+                id: 1,
+                created_at: Utc::now(),
+                updated_at: Utc::now(),
+                user_name: Username().fake::<String>(),
+                full_name: get_fake_fullname(),
+                email: FreeEmail().fake::<String>(),
+                company_id: 1
+            }))
+        }
+    }
+
+    #[async_trait]
+    impl QueryEmployerByEmailFn for MockDbRepo {
+        async fn query_employer_by_email(&self, _: String) -> Result<Option<Employer>, sqlx::Error> {
             Ok(Some(Employer {
                 id: 1,
                 created_at: Utc::now(),
@@ -149,6 +204,18 @@ mod tests {
         let app_data = get_app_data(repo, auth_service).await;
 
         let result = get_employer(app_data, Path::from(1)).await.unwrap().unwrap();
+
+        assert!(result.id == 1);
+    }
+
+    #[tokio::test]
+    async fn test_get_employer_by_email_route() {
+        let repo = MockDbRepo::init().await;
+        let auth_service = MockAuthService;
+        let app_data = get_app_data(repo, auth_service).await;
+
+        let req = get_fake_httprequest_with_bearer_token("linda".to_string(), DeveloperOrEmployer::Employer, &app_data.auth_keys.encoding_key, "/employer_email/{email}", "lshin@AmazingAndCo.com".to_string(), None, None);
+        let result = get_employer_by_email(app_data, Path::from("lshin@AmazingAndCo.com".to_string()), req).await.unwrap().unwrap();
 
         assert!(result.id == 1);
     }

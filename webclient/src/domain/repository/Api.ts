@@ -5,6 +5,7 @@ export const JOB_URL = `${API_ROOT_URL}job`;
 export const JOBS_URL = `${API_ROOT_URL}jobs`;
 export const INDUSTRIES_URL = `${API_ROOT_URL}industries`;
 export const EMPLOYER_URL = `${API_ROOT_URL}employer`;
+export const EMPLOYER_EMAIL_URL = `${API_ROOT_URL}employer_email`;
 export const EMPLOYERS_URL = `${API_ROOT_URL}employers`;
 export const DEVELOPER_URL = `${API_ROOT_URL}developer`;
 export const DEVELOPER_EMAIL_URL = `${API_ROOT_URL}developer_email`;

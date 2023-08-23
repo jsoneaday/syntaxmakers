@@ -37,6 +37,16 @@ mod internal {
             .fetch_optional(conn).await
     }
 
+    pub async fn query_employer_by_email(conn: &Pool<Postgres>, email: String) -> Result<Option<Employer>, Error> {
+        query_as::<_, Employer>(
+            r"
+            select id, created_at, updated_at, user_name, full_name, email, company_id 
+            from employer where email = $1
+            ")
+            .bind(email)
+            .fetch_optional(conn).await
+    }
+
     pub async fn query_all_employers(conn: &Pool<Postgres>, page_size: i32, last_offset: i64) -> Result<Vec<Employer>, Error> {
         query_as::<_, Employer>(
             r"
@@ -74,6 +84,18 @@ pub trait QueryEmployerFn {
 impl QueryEmployerFn for DbRepo {
     async fn query_employer(&self, id: i64) -> Result<Option<Employer>, Error> {
         internal::query_employer(self.get_conn(), id).await
+    }
+}
+
+#[async_trait]
+pub trait QueryEmployerByEmailFn {
+    async fn query_employer_by_email(&self, email: String) -> Result<Option<Employer>, Error>;
+}
+
+#[async_trait]
+impl QueryEmployerByEmailFn for DbRepo {
+    async fn query_employer_by_email(&self, email: String) -> Result<Option<Employer>, Error> {
+        internal::query_employer_by_email(self.get_conn(), email).await
     }
 }
 
