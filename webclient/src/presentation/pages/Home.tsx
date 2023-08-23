@@ -11,7 +11,7 @@ export default function Home() {
       <div className="home" data-testid="home-page">
         <div className="panel-col home-item-dev">
           <Link
-            to={RoutePaths.DevHome}
+            to={RoutePaths.DevJobPosts}
             className="home-item-link"
             data-testid="dev-link"
           >

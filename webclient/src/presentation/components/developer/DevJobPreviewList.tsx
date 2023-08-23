@@ -7,13 +7,7 @@ import clipboard from "../../theme/assets/clipboard.png";
 import clock from "../../theme/assets/wall-clock.png";
 import JobPreviewList from "../jobs/JobPreviewList";
 
-interface JobPreviewListProps {
-  setLoginIsOpen: (isOpen: boolean) => void;
-}
-
-export default function DevJobPreviewList({
-  setLoginIsOpen,
-}: JobPreviewListProps) {
+export default function DevJobPreviewList() {
   const [jobData, setJobsData] = useState<JobPost[]>([]);
   const [searchInput, setSearchInput] = useState("");
   const [profile, _setProfile] = useProfile();
@@ -32,8 +26,6 @@ export default function DevJobPreviewList({
         .catch((error) => {
           console.log("failed to get jobs for current profile", error);
         });
-    } else {
-      setLoginIsOpen(true);
     }
   }, [profile]);
 

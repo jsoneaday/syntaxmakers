@@ -13,7 +13,7 @@ export default function LeftMenu({ children }: LeftMenuProps) {
 
   useEffect(() => {
     if (!profile) {
-      setLoginOpen(true);
+      startViewTransition(() => setLoginOpen(true));
     }
   }, []);
 
