@@ -20,7 +20,7 @@ export default function JobFullview() {
   }, [state]);
 
   return (
-    <div className="dev-main" style={{ width: "738px", margin: "auto" }}>
+    <div className="userhome-main" style={{ width: "738px", margin: "auto" }}>
       <div
         style={{ paddingTop: "2em", paddingLeft: "2em", paddingRight: "2em" }}
       >
@@ -30,7 +30,7 @@ export default function JobFullview() {
         className="opposites"
         style={{ paddingTop: "2em", paddingLeft: "2em", paddingRight: "2em" }}
       >
-        <div className="dev-top">
+        <div className="userhome-top">
           <div className="opposites">
             <div className="title-font">{jobPost?.title}</div>
           </div>

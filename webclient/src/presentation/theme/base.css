@@ -34,6 +34,7 @@
   margin-right: auto;
   margin-left: auto;
   text-align: left;
+  height: 100vh;
 }
 
 .opposites {
@@ -98,6 +99,7 @@ main {
 
 .layout-container {
   margin: auto;
+  height: 100vh;
 }
 
 .panel-col {

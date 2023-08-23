@@ -6,7 +6,7 @@ import { useLoginOpen } from "../../common/redux/loginOpen/LoginOpenHooks";
 import Layout from "../../components/Layout";
 import LeftMenuDev from "../../components/navigation/leftMenu/LeftMenuDev";
 import LeftMenu from "../../components/navigation/leftMenu/LeftMenu";
-import DevJobPreviewList from "../../components/developer/DevJobPreviewLists";
+import DevJobPreviewList from "../../components/developer/DevJobPreviewList";
 
 export default function DeveloperHome() {
   const [_loginOpen, setLoginOpen] = useLoginOpen();

@@ -43,10 +43,10 @@ export default function DevJobPreviewList({
   };
 
   return (
-    <div className="dev-main">
-      <div className="dev-top" style={{ padding: "2em" }}>
-        <div className="title-font dev-header">Developer job search</div>
-        <div className="sub-title-font dev-sub-header">
+    <div className="userhome-main">
+      <div className="userhome-top" style={{ padding: "2em" }}>
+        <div className="title-font userhome-header">Developer job search</div>
+        <div className="sub-title-font userhome-sub-header">
           Enter your preferences to find your next job
         </div>
         <div className="search-header">

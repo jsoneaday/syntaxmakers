@@ -1,7 +1,38 @@
 .userhome-container {
   width: 1000px;
+  height: 100%;
   display: grid;
   grid-template-columns: 262px 738px;
   column-gap: 1rem;
   margin: auto;
+}
+
+.userhome-main {
+  background-color: var(--bg-cl);
+  grid-column: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  width: 100%;
+  height: 100%;
+  border: 1px solid var(--border-cl);
+  border-radius: var(--border-rad);
+  box-shadow: 0em 5em 5em 0em rgba(0, 0, 0, 0.05);
+}
+
+.userhome-top {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  width: 100%;
+}
+
+.userhome-header {
+  margin-bottom: 1em;
+}
+
+.userhome-sub-header {
+  margin-bottom: 1em;
 }

@@ -1,33 +1,3 @@
-.dev-main {
-  background-color: var(--bg-cl);
-  grid-column: 2;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: flex-start;
-  width: 100%;
-  height: 100%;
-  border: 1px solid var(--border-cl);
-  border-radius: var(--border-rad);
-  box-shadow: 0em 5em 5em 0em rgba(0, 0, 0, 0.05);
-}
-
-.dev-top {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: flex-start;
-  width: 100%;
-}
-
-.dev-header {
-  margin-bottom: 1em;
-}
-
-.dev-sub-header {
-  margin-bottom: 1em;
-}
-
 .search-header {
   display: flex;
   flex-direction: row;
@@ -70,6 +40,7 @@
   justify-content: flex-start;
   text-align: left;
   width: 100%;
+  height: 100%;
 }
 
 .dev-preview-item {
