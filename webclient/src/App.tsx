@@ -2,13 +2,15 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import Home from "./presentation/pages/Home";
 import DeveloperHome from "./presentation/pages/developer/DeveloperHome";
 import JobFullviewPage from "./presentation/pages/developer/JobFullviewPage";
-import EmployerHome from "./presentation/pages/employer/EmployerHome";
+import EmpJobPosts from "./presentation/pages/employer/EmpJobPosts";
+import EmpJobApplicants from "./presentation/pages/employer/EmpJobApplicants";
 
 export enum RoutePaths {
   Root = "/",
-  DevHome = "devhome",
-  EmpHome = "emphome",
-  JobFullView = "jobfullview",
+  DevHome = "/devhome",
+  EmpJobPosts = "/emphome/jobposts",
+  EmpJobApplicants = "/emphome/jobapplicants",
+  JobFullView = "/jobfullview",
 }
 
 const router = createBrowserRouter([
@@ -21,12 +23,16 @@ const router = createBrowserRouter([
     element: <DeveloperHome />,
   },
   {
-    path: RoutePaths.JobFullView,
-    element: <JobFullviewPage />,
+    path: RoutePaths.EmpJobPosts,
+    element: <EmpJobPosts />,
   },
   {
-    path: RoutePaths.EmpHome,
-    element: <EmployerHome />,
+    path: RoutePaths.EmpJobApplicants,
+    element: <EmpJobApplicants />,
+  },
+  {
+    path: RoutePaths.JobFullView,
+    element: <JobFullviewPage />,
   },
 ]);
 

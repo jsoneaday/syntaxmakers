@@ -5,7 +5,6 @@ import { v4 as uuidv4 } from "uuid";
 import { useLoginOpen } from "../../common/redux/loginOpen/LoginOpenHooks";
 import Layout from "../../components/Layout";
 import LeftMenuDev from "../../components/navigation/leftMenu/LeftMenuDev";
-import LeftMenu from "../../components/navigation/leftMenu/LeftMenu";
 import DevJobPreviewList from "../../components/developer/DevJobPreviewList";
 
 export default function DeveloperHome() {
@@ -14,9 +13,7 @@ export default function DeveloperHome() {
   return (
     <Layout>
       <div className="userhome-container" data-testid="developer-page">
-        <LeftMenu>
-          <LeftMenuDev />
-        </LeftMenu>
+        <LeftMenuDev />
         <DevJobPreviewList setLoginIsOpen={setLoginOpen} />
       </div>
     </Layout>

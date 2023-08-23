@@ -2,22 +2,21 @@ import "../../theme/emphome.css";
 import "../../theme/userhome.css";
 /// @ts-ignore
 import { v4 as uuidv4 } from "uuid";
-import { useLoginOpen } from "../../common/redux/loginOpen/LoginOpenHooks";
 import Layout from "../../components/Layout";
 import LeftMenuEmp from "../../components/navigation/leftMenu/LeftMenuEmp";
-import LeftMenu from "../../components/navigation/leftMenu/LeftMenu";
-import EmpJobPreviewList from "../../components/employer/EmpJobPreviewList";
+import { ReactNode } from "react";
 
-export default function DeveloperHome() {
-  const [_loginOpen, setLoginOpen] = useLoginOpen();
+interface EmployerHomeProps {
+  children: ReactNode;
+}
 
+export default function EmployerHome({ children }: EmployerHomeProps) {
+  console.log("emphome");
   return (
     <Layout>
       <div className="userhome-container" data-testid="employer-page">
-        <LeftMenu>
-          <LeftMenuEmp />
-        </LeftMenu>
-        <EmpJobPreviewList setLoginIsOpen={setLoginOpen} />
+        <LeftMenuEmp />
+        {children}
       </div>
     </Layout>
   );

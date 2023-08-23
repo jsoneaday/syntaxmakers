@@ -4,13 +4,7 @@ import { useProfile } from "../../common/redux/profile/ProfileHooks";
 import JobPreviewList from "../jobs/JobPreviewList";
 import "../../theme/emphome.css";
 
-interface JobPreviewListProps {
-  setLoginIsOpen: (isOpen: boolean) => void;
-}
-
-export default function EmpJobPreviewList({
-  setLoginIsOpen,
-}: JobPreviewListProps) {
+export default function EmpJobPreviewList() {
   const [jobData, setJobsData] = useState<JobPost[]>([]);
   const [searchInput, setSearchInput] = useState("");
   const [profile, _setProfile] = useProfile();
@@ -19,8 +13,6 @@ export default function EmpJobPreviewList({
     setJobsData([]);
     if (profile) {
       // todo: get employers posted jobs
-    } else {
-      setLoginIsOpen(true);
     }
   }, [profile]);
 
