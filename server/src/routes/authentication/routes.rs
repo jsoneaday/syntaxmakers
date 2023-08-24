@@ -71,9 +71,9 @@ pub async fn login<T: AuthenticateDbFn + QueryDeveloperFn + QueryEmployerFn + Re
         Ok(result) => {
             match result {
                 AuthenticateResult::Success { id } => {
-                    let mut user_name = "".to_string();
-                    #[allow(unused)]
+                    let mut user_name = "".to_string();                    
                     let mut http_response: Option<HttpResponse> = None;
+                    
                     if dev_or_emp == UserDeveloperOrEmployer::Developer {
                         println!("Developer trying to login");
                         let developer = app_data.repo.query_developer(id).await;

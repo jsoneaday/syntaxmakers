@@ -16,22 +16,20 @@ export default function JobPreviewList({ jobPosts }: JobPreviewListProps) {
 
   return (
     <div className="dev-post-preview-container" style={{ padding: "2em" }}>
-      <ul>
-        <Lister
-          dataItems={jobPosts}
-          elementCreator={(dataItem) => (
-            <li key={dataItem.key} className="dev-preview-item">
-              <Link
-                to={RoutePaths.DevJobFullView}
-                state={dataItem}
-                onClick={onClickSelectJob}
-              >
-                <JobPreview jobPost={dataItem} isSmall={false} />
-              </Link>
-            </li>
-          )}
-        />
-      </ul>
+      <Lister
+        dataItems={jobPosts}
+        elementCreator={(dataItem) => (
+          <li key={dataItem.key} className="dev-preview-item">
+            <Link
+              to={RoutePaths.DevJobFullView}
+              state={dataItem}
+              onClick={onClickSelectJob}
+            >
+              <JobPreview jobPost={dataItem} isSmall={false} />
+            </Link>
+          </li>
+        )}
+      />
     </div>
   );
 }
