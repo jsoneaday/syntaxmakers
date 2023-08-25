@@ -20,7 +20,10 @@ export default function LeftMenu({ children }: LeftMenuProps) {
   const onClickLogout = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
 
-    startViewTransition(() => setProfile(null));
+    startViewTransition(() => {
+      setLoginOpen(true);
+      setProfile(null);
+    });
   };
 
   if (profile) {

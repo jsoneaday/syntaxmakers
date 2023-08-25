@@ -7,6 +7,7 @@ import DevSavedJobs from "./presentation/pages/developer/DevSavedJobs";
 import DevJobAlerts from "./presentation/pages/developer/DevJobAlerts";
 import EmpPostNewJob from "./presentation/pages/employer/EmpPostNewJob";
 import DevJobFullview from "./presentation/pages/developer/DevJobFullview";
+import EmpJobFullview from "./presentation/pages/employer/EmpJobFullview";
 
 export const DEV_ROUTE_PREFIX = "devhome";
 export const EMP_ROUTE_PREFIX = "emphome";
@@ -20,6 +21,7 @@ export enum RoutePaths {
   EmpPostNewJob = `/${EMP_ROUTE_PREFIX}/postnewjob`,
   EmpJobPosts = `/${EMP_ROUTE_PREFIX}/jobposts`,
   EmpJobApplicants = `/${EMP_ROUTE_PREFIX}/jobapplicants`,
+  EmpJobFullView = `/${EMP_ROUTE_PREFIX}/jobfullview`,
 }
 
 const router = createBrowserRouter([
@@ -54,6 +56,10 @@ const router = createBrowserRouter([
   {
     path: RoutePaths.EmpJobApplicants,
     element: <EmpJobApplicants />,
+  },
+  {
+    path: RoutePaths.EmpJobFullView,
+    element: <EmpJobFullview />,
   },
 ]);
 

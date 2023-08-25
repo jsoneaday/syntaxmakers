@@ -2,13 +2,13 @@ import "../../theme/devhome.css";
 import "../../theme/userhome.css";
 /// @ts-ignore
 import { v4 as uuidv4 } from "uuid";
-import DeveloperHome from "./DeveloperHome";
+import EmployerHome from "./EmployerHome";
 import JobFullview from "../../components/jobs/JobFullview";
 
-export default function DevJobFullview() {
+export default function EmpJobFullview() {
   return (
-    <DeveloperHome>
+    <EmployerHome>
       <JobFullview readOnly={false} />
-    </DeveloperHome>
+    </EmployerHome>
   );
 }

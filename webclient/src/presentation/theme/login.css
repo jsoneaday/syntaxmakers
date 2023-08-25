@@ -29,11 +29,3 @@
 .login-label {
   margin-bottom: 6px;
 }
-
-.login-input {
-  outline: 0;
-  border: solid 1px var(--tertiary-font-cl);
-  border-radius: 5px;
-  padding: 0.75em;
-  width: 100%;
-}

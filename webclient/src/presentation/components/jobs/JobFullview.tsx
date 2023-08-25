@@ -1,17 +1,26 @@
 import { useLocation } from "react-router-dom";
 import JobPost from "../../models/JobPost";
-import { useEffect, useState } from "react";
+import { ChangeEvent, useEffect, useState } from "react";
 import "../../theme/job_full_view.css";
 import { appendPlusLargeCurrency } from "../../common/CurrencyFormatter";
 import flag from "../../theme/assets/flag.png";
 import similar from "../../theme/assets/similar.png";
 import GoBack from "../../components/navigation/GoBack";
 import TextEditor from "../../components/textEditor/TextEditor";
+import DropDown from "../controls/DropDown";
 
-export default function JobFullview() {
+interface JobFullviewProps {
+  readOnly: boolean;
+}
+
+export default function JobFullview({ readOnly }: JobFullviewProps) {
   const { state } = useLocation();
   const [jobPost, setJobPost] = useState<JobPost>();
   const [salary, setSalary] = useState("");
+  const [title, setTitle] = useState("");
+  const [companyName, setCompanyName] = useState("");
+  const [isRemote, setIsRemote] = useState(false);
+  const [updatedAt, setUpdatedAt] = useState("");
 
   useEffect(() => {
     const currentJobPost = state as JobPost;
@@ -19,8 +28,12 @@ export default function JobFullview() {
     setSalary(appendPlusLargeCurrency(currentJobPost?.salary || ""));
   }, [state]);
 
+  const onChangeTitle = (e: ChangeEvent<HTMLInputElement>) => {
+    e.preventDefault();
+  };
+
   return (
-    <div className="userhome-main" style={{ width: "738px", margin: "auto" }}>
+    <form className="userhome-main" style={{ margin: "auto" }}>
       <div
         style={{ paddingTop: "2em", paddingLeft: "2em", paddingRight: "2em" }}
       >
@@ -32,14 +45,33 @@ export default function JobFullview() {
       >
         <div className="userhome-top">
           <div className="opposites">
-            <div className="title-font">{jobPost?.title}</div>
+            {readOnly ? (
+              <div className="title-font">{jobPost?.title}</div>
+            ) : (
+              <div className="left-align">
+                <label htmlFor="job-title-input" style={{ marginRight: "1em" }}>
+                  Title
+                </label>
+                <input
+                  id="job-title-input"
+                  type="text"
+                  value={title}
+                  onChange={onChangeTitle}
+                  className="input"
+                />
+              </div>
+            )}
           </div>
 
           <div className="opposites">
             <div className="job-full-view-subtitle">
-              <div className="sub-title-font job-full-view-subtitle-item-primary">
-                {jobPost?.companyName}
-              </div>
+              {readOnly ? (
+                <div className="sub-title-font job-full-view-subtitle-item-primary">
+                  {jobPost?.companyName}
+                </div>
+              ) : (
+                <DropDown optionItems={[{ name: "Company A", value: "1" }]} />
+              )}
               <div className="sub-title-font job-full-view-subtitle-item-primary">
                 {jobPost?.isRemote ? "Remote" : jobPost?.countryName}
               </div>
@@ -97,10 +129,7 @@ export default function JobFullview() {
       <div
         className="normal-font dev-post-preview-container"
         style={{
-          paddingTop: "2em",
-          paddingLeft: "2em",
-          paddingRight: "2em",
-          paddingBottom: "2em",
+          padding: "2em",
         }}
       >
         <span className="title-font" style={{ marginBottom: "1em" }}>
@@ -113,9 +142,9 @@ export default function JobFullview() {
               children: [{ text: "A line of text in a paragraph." }],
             },
           ]}
-          readOnly={true}
+          readOnly={readOnly}
         />
       </div>
-    </div>
+    </form>
   );
 }

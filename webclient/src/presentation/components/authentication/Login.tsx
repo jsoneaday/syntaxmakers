@@ -115,7 +115,7 @@ export default function Login({ isOpen, toggleOpen }: LoginProps) {
         <div className="login-item">
           <span className="login-label">Email</span>
           <input
-            className="login-input normal-font"
+            className="input normal-font"
             type="text"
             value={email}
             onChange={onChangeEmail}
@@ -124,7 +124,7 @@ export default function Login({ isOpen, toggleOpen }: LoginProps) {
         <div className="login-item">
           <span className="login-label">Password</span>
           <input
-            className="login-input normal-font"
+            className="input normal-font"
             type="password"
             value={password}
             onChange={onChangePassword}
