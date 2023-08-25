@@ -1,15 +1,14 @@
 select {
-  outline: none;
-  appearance: none;
   background-color: transparent;
   border: none;
   padding: 0 1em 0 0;
   margin: 0;
+  width: 100%;
   font-family: inherit;
   font-size: inherit;
   cursor: inherit;
   line-height: inherit;
-  text-align-last: right;
+  outline: none;
 }
 
 option {
@@ -17,16 +16,16 @@ option {
 }
 
 .select {
+  width: 100%;
+  min-width: 15ch;
+  max-width: 30ch;
+  border: 1px solid var(--tertiary-font-cl);
+  border-radius: 0.25em;
   padding: 0.25em 0.5em;
   cursor: pointer;
   line-height: 1.1;
-  display: flex;
-  flex-direction: row;
-  justify-content: flex-end;
-  align-items: center;
-  position: relative;
-  min-width: 10em;
-  font-weight: var(--bold-font);
+  background-color: #fff;
+  background-image: linear-gradient(to top, #f9f9f9, #fff 33%);
 }
 
 .select-container {

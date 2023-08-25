@@ -24,13 +24,14 @@ export default function Login({ isOpen, toggleOpen }: LoginProps) {
   const [_isPending, startTransition] = useTransition();
   const [errorMessage, setErrorMessage] = useState("");
   const [devOrEmp, _setDevOrEmp] = useDevOrEmployer();
+  const [isRemote, setIsRemote] = useState(false);
 
   useEffect(() => {
     // todo: remove hard codings when ready
     if (devOrEmp === DevOrEmployer.Developer) {
       setEmail("jon@jon.com");
     } else {
-      setEmail("25derick_explicabo@gmail.com");
+      setEmail("49fausto_molestias@yahoo.com");
     }
   }, [devOrEmp]);
 
@@ -100,6 +101,10 @@ export default function Login({ isOpen, toggleOpen }: LoginProps) {
     setPassword(e.target.value);
   };
 
+  const toggleIsRemote = () => {
+    setIsRemote(!isRemote);
+  };
+
   return (
     <Modal isOpen={isOpen} toggleOpen={toggleOpen}>
       <form className="login-form">
@@ -131,7 +136,7 @@ export default function Login({ isOpen, toggleOpen }: LoginProps) {
           />
         </div>
         <div className="login-item-row">
-          <Checkbox>
+          <Checkbox isChecked={isRemote} toggleIsChecked={toggleIsRemote}>
             <span className="small-font">Remember me</span>
           </Checkbox>
           <span className="small-font">Forgot password</span>

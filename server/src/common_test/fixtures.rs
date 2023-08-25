@@ -167,14 +167,19 @@ async fn setup_data() {
             password: "test123".to_string(),
             company_id
         }).await.unwrap();
-
+        
+        
         for _ in 1..40 {          
+            let is_remote = if get_random_no_from_range(0, 2) == 0 { false } else { true };
+            let country_id = if is_remote { None } else { Some(1) };
+            println!("is_remote {}, country_id {:?}", is_remote, country_id);
+            
             repo.insert_job(NewJob {
                 employer_id: create_employer_result.id,
                 title: get_fake_title().to_string(),
                 description: get_fake_desc().to_string(),
-                is_remote: true,
-                country_id: None,
+                is_remote,
+                country_id,
                 primary_lang_id: get_random_language().await.id,
                 secondary_lang_id: Some(get_random_language().await.id),
                 industry_id: get_random_industry().await.id,

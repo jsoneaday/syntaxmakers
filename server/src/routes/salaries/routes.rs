@@ -17,10 +17,11 @@ pub async fn get_all_salaries<T: QueryAllSalariesFn + Repository, U: Authenticat
                 SalaryResponder {
                     id: lang.id,
                     updated_at: lang.updated_at,
-                    base: 200000
+                    base: lang.base
                 }
             })
             .collect::<Vec<SalaryResponder>>();
+        
             Ok(SalaryResponders(responders))
         },
         Err(e) => Err(e.into())

@@ -1,15 +1,19 @@
-import { ReactNode, useState } from "react";
+import { ReactNode } from "react";
 import "../../theme/checkbox.css";
 
 interface CheckboxProps {
+  isChecked: boolean;
+  toggleIsChecked: () => void;
   children: ReactNode;
 }
 
-export default function Checkbox({ children }: CheckboxProps) {
-  const [isChecked, setIsChecked] = useState(false);
-
+export default function Checkbox({
+  isChecked,
+  toggleIsChecked,
+  children,
+}: CheckboxProps) {
   const onChange = () => {
-    setIsChecked(!isChecked);
+    toggleIsChecked();
   };
 
   return (

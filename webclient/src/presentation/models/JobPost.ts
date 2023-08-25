@@ -5,6 +5,7 @@ import { Job } from "../../domain/repository/JobRepo";
 import { v4 as uuidv4 } from "uuid";
 import { formatDistanceToNow, parseISO } from "date-fns";
 import { currencyFormatter } from "../common/CurrencyFormatter";
+import { shortenFormattedDateStr } from "../../domain/dateUtils";
 
 export default class JobPost implements KeyItem {
   constructor(
@@ -26,9 +27,11 @@ export default class JobPost implements KeyItem {
 }
 
 export function convert(job: Job) {
-  const updatedAt = formatDistanceToNow(parseISO(job.updatedAt), {
-    addSuffix: true,
-  });
+  const updatedAt = shortenFormattedDateStr(
+    formatDistanceToNow(parseISO(job.updatedAt), {
+      addSuffix: true,
+    })
+  );
   const companyLogoUInt8Array = job.companyLogo
     ? new Uint8Array(job.companyLogo)
     : undefined;

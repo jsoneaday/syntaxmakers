@@ -53,7 +53,7 @@ export async function getJobsByEmployer(
   id: string,
   pageSize: number = 20,
   lastOffset: number = 0
-) {
+): Promise<Job[]> {
   const result = await fetch(JOBS_EMP_URL, {
     method: "post",
     headers: {
@@ -67,8 +67,7 @@ export async function getJobsByEmployer(
   });
 
   if (result.ok) {
-    const jobs: Job[] = await result.json();
-    return jobs;
+    return await result.json();
   }
   return [];
 }
