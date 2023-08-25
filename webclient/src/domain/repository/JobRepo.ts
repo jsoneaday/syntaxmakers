@@ -1,4 +1,4 @@
-import { JOBS_URL } from "./Api";
+import { JOBS_DEV_URL, JOBS_EMP_URL } from "./Api";
 
 export class Job {
   constructor(
@@ -25,12 +25,36 @@ export class Job {
   ) {}
 }
 
-export async function getJobsByDevProfile(
+export async function getJobsByDeveloper(
   id: string,
   pageSize: number = 20,
   lastOffset: number = 0
 ) {
-  const result = await fetch(JOBS_URL, {
+  const result = await fetch(JOBS_DEV_URL, {
+    method: "post",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      id,
+      pageSize,
+      lastOffset,
+    }),
+  });
+
+  if (result.ok) {
+    const jobs: Job[] = await result.json();
+    return jobs;
+  }
+  return [];
+}
+
+export async function getJobsByEmployer(
+  id: string,
+  pageSize: number = 20,
+  lastOffset: number = 0
+) {
+  const result = await fetch(JOBS_EMP_URL, {
     method: "post",
     headers: {
       "Content-Type": "application/json",

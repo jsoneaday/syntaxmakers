@@ -213,7 +213,7 @@ mod internal {
             .fetch_all(conn).await
     }
 
-    pub async fn query_jobs_by_dev_profile(conn: &Pool<Postgres>, dev_id: i64, page_size: i32, last_offset: i64) -> Result<Vec<Job>, Error> {
+    pub async fn query_jobs_by_developer(conn: &Pool<Postgres>, dev_id: i64, page_size: i32, last_offset: i64) -> Result<Vec<Job>, Error> {
         let developer_result = query_as::<_, Developer>(
             r"
             select d.id, d.created_at, d.updated_at, d.user_name, d.full_name, d.email, d.primary_lang_id, dsl.secondary_lang_id
@@ -342,13 +342,13 @@ impl QueryJobsByEmployerFn for DbRepo {
 }
 
 #[async_trait]
-pub trait QueryJobsByDevProfile {
-    async fn query_jobs_by_dev_profile(&self, dev_id: i64, page_size: i32, last_offset: i64) -> Result<Vec<Job>, Error>;
+pub trait QueryJobsByDeveloper {
+    async fn query_jobs_by_developer(&self, dev_id: i64, page_size: i32, last_offset: i64) -> Result<Vec<Job>, Error>;
 }
 
 #[async_trait]
-impl QueryJobsByDevProfile for DbRepo {
-    async fn query_jobs_by_dev_profile(&self, dev_id: i64, page_size: i32, last_offset: i64) -> Result<Vec<Job>, Error> {
-        internal::query_jobs_by_dev_profile(self.get_conn(), dev_id, page_size, last_offset).await
+impl QueryJobsByDeveloper for DbRepo {
+    async fn query_jobs_by_developer(&self, dev_id: i64, page_size: i32, last_offset: i64) -> Result<Vec<Job>, Error> {
+        internal::query_jobs_by_developer(self.get_conn(), dev_id, page_size, last_offset).await
     }
 }

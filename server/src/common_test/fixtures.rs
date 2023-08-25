@@ -151,24 +151,24 @@ async fn setup_data() {
     let jobs = repo.query_all_jobs_count().await.unwrap().count;
     
     if jobs == 0 {
-        for _ in 1..40 {
-            let logo = get_company_logo_randomly();
-            let company_create_result = repo.insert_company(NewCompany{ 
-                name: CompanyName().fake::<String>(), 
-                logo: Some(logo), 
-                headquarters_country_id: 1 
-            }).await.unwrap();
-            let company_id = company_create_result.id;
+        let logo = get_company_logo_randomly();
+        let company_create_result = repo.insert_company(NewCompany{ 
+            name: CompanyName().fake::<String>(), 
+            logo: Some(logo), 
+            headquarters_country_id: 1 
+        }).await.unwrap();
+        let company_id = company_create_result.id;
 
-            let email_prefix = get_random_no_from_range(0, 100);
-            let create_employer_result = repo.insert_employer(NewEmployer {
-                user_name: Username().fake::<String>(),
-                full_name: get_fake_fullname(),
-                email: format!("{}{}", email_prefix, FreeEmail().fake::<String>()),
-                password: "test123".to_string(),
-                company_id
-            }).await.unwrap();
+        let email_prefix = get_random_no_from_range(0, 100);
+        let create_employer_result = repo.insert_employer(NewEmployer {
+            user_name: Username().fake::<String>(),
+            full_name: get_fake_fullname(),
+            email: format!("{}{}", email_prefix, FreeEmail().fake::<String>()),
+            password: "test123".to_string(),
+            company_id
+        }).await.unwrap();
 
+        for _ in 1..40 {          
             repo.insert_job(NewJob {
                 employer_id: create_employer_result.id,
                 title: get_fake_title().to_string(),

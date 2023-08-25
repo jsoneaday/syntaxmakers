@@ -19,6 +19,7 @@ export default function Checkbox({ children }: CheckboxProps) {
         name="checkbox"
         checked={isChecked}
         onChange={onChange}
+        style={{ marginRight: ".6em" }}
       />
       {children}
     </label>

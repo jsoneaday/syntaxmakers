@@ -1,8 +1,9 @@
 import { ChangeEvent, useEffect, useState } from "react";
-import JobPost from "../../models/JobPost";
+import JobPost, { convert } from "../../models/JobPost";
 import { useProfile } from "../../common/redux/profile/ProfileHooks";
 import JobPreviewList from "../jobs/JobPreviewList";
 import "../../theme/emphome.css";
+import { getJobsByEmployer } from "../../../domain/repository/JobRepo";
 
 export default function EmpJobPreviewList() {
   const [jobData, setJobsData] = useState<JobPost[]>([]);
@@ -12,7 +13,13 @@ export default function EmpJobPreviewList() {
   useEffect(() => {
     setJobsData([]);
     if (profile) {
-      // todo: get employers posted jobs
+      getJobsByEmployer(profile.id, 40, 0)
+        .then((jobs) => {
+          setJobsData(jobs.map((job) => convert(job)));
+        })
+        .catch((err) => {
+          console.log("Failed to get employer jobs", err);
+        });
     }
   }, [profile]);
 

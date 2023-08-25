@@ -1,5 +1,5 @@
 use actix_web::web::{Data, Json, Path};
-use crate::{common::{repository::{jobs::{repo::{InsertJobFn, QueryJobFn, QueryAllJobsFn, QueryJobsByDevProfile, QueryJobsByEmployerFn}, models::{NewJob, Job}}, base::Repository}, authentication::auth_service::Authenticator}, app_state::AppState, routes::{base_model::{OutputId, PagingModel, IdAndPagingModel}, user_error::UserError}};
+use crate::{common::{repository::{jobs::{repo::{InsertJobFn, QueryJobFn, QueryAllJobsFn, QueryJobsByDeveloper, QueryJobsByEmployerFn}, models::{NewJob, Job}}, base::Repository}, authentication::auth_service::Authenticator}, app_state::AppState, routes::{base_model::{OutputId, PagingModel, IdAndPagingModel}, user_error::UserError}};
 use super::models::{NewJobForRoute, JobResponders, JobResponder};
 
 #[allow(unused)]
@@ -53,8 +53,8 @@ pub async fn get_all_jobs<T: QueryAllJobsFn + Repository, U: Authenticator>(app_
 }
 
 #[allow(unused)]
-pub async fn get_jobs_by_dev_profile<T: QueryJobsByDevProfile + Repository, U: Authenticator>(app_data: Data<AppState<T, U>>, json: Json<IdAndPagingModel>) -> Result<JobResponders, UserError> {
-    let result = app_data.repo.query_jobs_by_dev_profile(json.id, json.page_size, json.last_offset).await;
+pub async fn get_jobs_by_developer<T: QueryJobsByDeveloper + Repository, U: Authenticator>(app_data: Data<AppState<T, U>>, json: Json<IdAndPagingModel>) -> Result<JobResponders, UserError> {
+    let result = app_data.repo.query_jobs_by_developer(json.id, json.page_size, json.last_offset).await;
     
     match result {
         Ok(jobs) => {
@@ -198,8 +198,8 @@ mod tests {
     }
 
     #[async_trait]
-    impl QueryJobsByDevProfile for MockDbRepo {
-        async fn query_jobs_by_dev_profile(&self, _: i64, _: i32, _: i64) -> Result<Vec<Job>, sqlx::Error> {
+    impl QueryJobsByDeveloper for MockDbRepo {
+        async fn query_jobs_by_developer(&self, _: i64, _: i32, _: i64) -> Result<Vec<Job>, sqlx::Error> {
             Ok(vec![
                 get_test_job(1).await
             ])
@@ -271,7 +271,7 @@ mod tests {
         let auth_service = MockAuthService;
         let app_data = get_app_data(repo, auth_service).await;
 
-        let result = get_jobs_by_dev_profile(app_data, Json(IdAndPagingModel { id: 1, page_size: 10, last_offset: 1 })).await.unwrap();
+        let result = get_jobs_by_developer(app_data, Json(IdAndPagingModel { id: 1, page_size: 10, last_offset: 1 })).await.unwrap();
 
         assert!(result.0.get(0).unwrap().id == 1);
     }

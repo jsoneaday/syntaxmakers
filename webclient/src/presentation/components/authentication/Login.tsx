@@ -30,7 +30,7 @@ export default function Login({ isOpen, toggleOpen }: LoginProps) {
     if (devOrEmp === DevOrEmployer.Developer) {
       setEmail("jon@jon.com");
     } else {
-      setEmail("lshin@AmazingAndCo.com");
+      setEmail("25derick_explicabo@gmail.com");
     }
   }, [devOrEmp]);
 

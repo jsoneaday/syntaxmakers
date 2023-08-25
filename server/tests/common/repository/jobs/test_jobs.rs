@@ -8,7 +8,7 @@ use syntaxmakers_server::common::repository::developers::repo::InsertDeveloperFn
 use syntaxmakers_server::common::repository::employers::models::NewEmployer;
 use syntaxmakers_server::common::repository::employers::repo::InsertEmployerFn;
 use syntaxmakers_server::common::repository::jobs::models::{NewJob, Job};
-use syntaxmakers_server::common::repository::jobs::repo::{QueryJobFn, QueryAllJobsFn, QueryJobsByEmployerFn, InsertJobFn, QueryJobsByDevProfile};
+use syntaxmakers_server::common::repository::jobs::repo::{QueryJobFn, QueryAllJobsFn, QueryJobsByEmployerFn, InsertJobFn, QueryJobsByDeveloper};
 use syntaxmakers_server::common::repository::industries::repo::QueryAllIndustriesFn;
 use syntaxmakers_server::common::repository::languages::repo::QueryAllLanguagesFn;
 use syntaxmakers_server::common::repository::companies::repo::InsertCompanyFn;
@@ -160,7 +160,7 @@ async fn test_create_two_jobs_and_get_back_only_one_that_matches_dev_profile() {
     }).await.unwrap();
 
     // get only jobs that match dev's profile
-    let get_result = repo.query_jobs_by_dev_profile(developer.id, 10, 0).await.unwrap();
+    let get_result = repo.query_jobs_by_developer(developer.id, 10, 0).await.unwrap();
     
     assert!(get_result.iter().find(|job| { job.id == create_result1.id }).is_some());
     assert!(get_result.iter().find(|job| { job.id == create_result2.id }).is_none());

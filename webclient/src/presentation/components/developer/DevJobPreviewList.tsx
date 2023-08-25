@@ -1,7 +1,7 @@
 import { ChangeEvent, useEffect, useState } from "react";
 import JobPost from "../../models/JobPost";
 import { useProfile } from "../../common/redux/profile/ProfileHooks";
-import { getJobsByDevProfile } from "../../../domain/repository/JobRepo";
+import { getJobsByDeveloper } from "../../../domain/repository/JobRepo";
 import { convert as convertJob } from "../../models/JobPost";
 import clipboard from "../../theme/assets/clipboard.png";
 import clock from "../../theme/assets/wall-clock.png";
@@ -15,7 +15,7 @@ export default function DevJobPreviewList() {
   useEffect(() => {
     setJobsData([]);
     if (profile) {
-      getJobsByDevProfile(profile.id)
+      getJobsByDeveloper(profile.id)
         .then((jobs) => {
           setJobsData(
             jobs.map((job) => {

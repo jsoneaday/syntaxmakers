@@ -8,6 +8,7 @@ import similar from "../../theme/assets/similar.png";
 import GoBack from "../../components/navigation/GoBack";
 import TextEditor from "../../components/textEditor/TextEditor";
 import DropDown from "../controls/DropDown";
+import Checkbox from "../controls/Checkbox";
 
 interface JobFullviewProps {
   readOnly: boolean;
@@ -41,7 +42,11 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
       </div>
       <div
         className="opposites"
-        style={{ paddingTop: "2em", paddingLeft: "2em", paddingRight: "2em" }}
+        style={{
+          paddingTop: "2em",
+          paddingLeft: "2em",
+          paddingRight: "2em",
+        }}
       >
         <div className="userhome-top">
           <div className="opposites">
@@ -64,17 +69,31 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
           </div>
 
           <div className="opposites">
-            <div className="job-full-view-subtitle">
+            <div className="job-full-view-subtitle" style={{ width: "100%" }}>
               {readOnly ? (
                 <div className="sub-title-font job-full-view-subtitle-item-primary">
                   {jobPost?.companyName}
                 </div>
               ) : (
-                <DropDown optionItems={[{ name: "Company A", value: "1" }]} />
+                <DropDown
+                  optionItems={[
+                    { name: "Company A", value: "1" },
+                    { name: "Company B", value: "2" },
+                  ]}
+                />
               )}
-              <div className="sub-title-font job-full-view-subtitle-item-primary">
-                {jobPost?.isRemote ? "Remote" : jobPost?.countryName}
-              </div>
+              {readOnly ? (
+                <div className="sub-title-font job-full-view-subtitle-item-primary">
+                  {jobPost?.isRemote ? "Remote" : jobPost?.countryName}
+                </div>
+              ) : (
+                <div className="sub-title-font job-full-view-subtitle-item-primary">
+                  <Checkbox>
+                    {jobPost?.isRemote ? "Remote" : jobPost?.countryName}
+                  </Checkbox>
+                </div>
+              )}
+
               <div className="sub-title-font job-full-view-subtitle-item-primary">
                 {jobPost?.updatedAt}
               </div>
@@ -104,25 +123,39 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
           className="stack"
           style={{ alignItems: "flex-end", textAlign: "right" }}
         >
-          <button
-            className="primary-btn small-btn"
-            style={{ marginBottom: ".5em" }}
-          >
-            apply
-          </button>
-          <button className="secondary-btn small-btn">save</button>
-          <img
-            src={flag}
-            className="job-icon"
-            style={{ marginTop: "1em" }}
-            title="inappropriate"
-          />
-          <img
-            src={similar}
-            className="job-icon"
-            style={{ marginTop: ".50em" }}
-            title="similar jobs"
-          />
+          {readOnly ? (
+            <>
+              <button
+                className="primary-btn small-btn"
+                style={{ marginBottom: ".5em" }}
+              >
+                apply
+              </button>
+              <button className="secondary-btn small-btn">save</button>
+              <img
+                src={flag}
+                className="job-icon"
+                style={{ marginTop: "1em" }}
+                title="inappropriate"
+              />
+              <img
+                src={similar}
+                className="job-icon"
+                style={{ marginTop: ".50em" }}
+                title="similar jobs"
+              />
+            </>
+          ) : (
+            <>
+              <button
+                className="primary-btn small-btn"
+                style={{ marginBottom: ".5em" }}
+              >
+                save
+              </button>
+              <button className="secondary-btn small-btn">cancel</button>
+            </>
+          )}
         </div>
       </div>
 
