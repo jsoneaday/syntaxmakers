@@ -1,6 +1,12 @@
 import { useLocation } from "react-router-dom";
 import JobPost from "../../models/JobPost";
-import { ChangeEvent, useEffect, useState } from "react";
+import {
+  ChangeEvent,
+  useEffect,
+  useReducer,
+  useState,
+  useTransition,
+} from "react";
 import "../../theme/job_full_view.css";
 import { appendPlusLargeCurrency } from "../../common/CurrencyFormatter";
 import flag from "../../theme/assets/flag.png";
@@ -24,27 +30,131 @@ import { convert as convertSalary } from "../../models/SalaryModel";
 /// @ts-ignore
 import { v4 as uuidv4 } from "uuid";
 
+interface FormState {
+  id: string;
+  updatedAt: string;
+  employerId: string;
+  employerFullName: string;
+  title: string;
+  description: string;
+  isRemote: boolean;
+  countryId: string;
+  companyId: string;
+  industryId: string;
+  salaryId: string;
+  primaryLangId: string;
+  secondaryLangId?: string;
+}
+
+enum FormActionTypes {
+  Id = "id",
+  UpdatedAt = "updatedAt",
+  EmployerId = "employerId",
+  EmployerFullName = "employerFullName",
+  Title = "title",
+  Desc = "desc",
+  IsRemote = "isRemote",
+  CountryId = "countryId",
+  CompanyId = "companyId",
+  IndustryId = "industryId",
+  SalaryId = "salaryId",
+  PrimaryLangId = "primaryLangId",
+  SecondaryLangId = "secondaryLangId",
+}
+
+interface FormAction {
+  type: FormActionTypes;
+  payload: any;
+}
+
+function reducer(state: FormState, action: FormAction): FormState {
+  const newState = { ...state };
+
+  switch (action.type) {
+    case FormActionTypes.Id:
+      newState.id = action.payload;
+      break;
+    case FormActionTypes.UpdatedAt:
+      newState.updatedAt = action.payload;
+      break;
+    case FormActionTypes.EmployerId:
+      newState.employerId = action.payload;
+      break;
+    case FormActionTypes.EmployerFullName:
+      newState.employerFullName = action.payload;
+      break;
+    case FormActionTypes.Title:
+      newState.title = action.payload;
+      break;
+    case FormActionTypes.Desc:
+      newState.description = action.payload;
+      break;
+    case FormActionTypes.IsRemote:
+      newState.isRemote = action.payload;
+      break;
+    case FormActionTypes.CountryId:
+      newState.countryId = action.payload;
+      break;
+    case FormActionTypes.CompanyId:
+      newState.companyId = action.payload;
+      break;
+    case FormActionTypes.IndustryId:
+      newState.industryId = action.payload;
+      break;
+    case FormActionTypes.SalaryId:
+      newState.salaryId = action.payload;
+      break;
+    case FormActionTypes.PrimaryLangId:
+      newState.primaryLangId = action.payload;
+      break;
+    case FormActionTypes.SecondaryLangId:
+      newState.secondaryLangId = action.payload;
+      break;
+    default:
+      throw new Error(`Action type, ${action.type}, not found`);
+  }
+
+  return newState;
+}
+
+type Reducer<S, A> = (prevState: S, action: A) => S;
+
 interface JobFullviewProps {
   readOnly: boolean;
 }
 
 export default function JobFullview({ readOnly }: JobFullviewProps) {
   const { state } = useLocation();
-  const [jobPost, setJobPost] = useState<JobPost>();
-  const [salary, setSalary] = useState("");
-  const [title, _setTitle] = useState("");
+  const [readOnlyJobPost, setReadonlyJobPost] = useState<JobPost | null>(null);
+  const [formValues, setFormValues] = useReducer<
+    Reducer<FormState, FormAction>
+  >(reducer, {
+    id: "",
+    updatedAt: "",
+    employerId: "",
+    employerFullName: "",
+    title: "",
+    description: "",
+    isRemote: false,
+    countryId: "",
+    companyId: "",
+    industryId: "",
+    salaryId: "",
+    primaryLangId: "",
+    secondaryLangId: "",
+  });
   const [companies, setCompanies] = useState<OptionType[]>([]);
   const [countries, setCountries] = useState<OptionType[]>([]);
   const [languages, setLanguages] = useState<OptionType[]>([]);
   const [industries, setIndustries] = useState<OptionType[]>([]);
   const [salaries, setSalaries] = useState<OptionType[]>([]);
-  const [isRemote, setIsRemote] = useState(false);
   const [devOrEmp] = useDevOrEmployer();
+  const [_isPending, startTransition] = useTransition();
 
   useEffect(() => {
     const currentJobPost = state as JobPost;
-    setJobPost(currentJobPost);
-    setSalary(appendPlusLargeCurrency(currentJobPost?.salary || ""));
+    setReadonlyJobPost(currentJobPost);
+    setAllFormValues(currentJobPost);
   }, [state]);
 
   useEffect(() => {
@@ -111,16 +221,64 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
     }
   }, [readOnly]);
 
-  useEffect(() => {
-    setIsRemote(jobPost?.isRemote || false);
-  }, [jobPost?.isRemote]);
+  const setAllFormValues = (jobPost: JobPost) => {
+    startTransition(() => {
+      setFormValues({ type: FormActionTypes.Id, payload: jobPost.id });
+      setFormValues({
+        type: FormActionTypes.UpdatedAt,
+        payload: jobPost.updatedAt,
+      });
+      setFormValues({
+        type: FormActionTypes.EmployerId,
+        payload: jobPost.employerId,
+      });
+      setFormValues({
+        type: FormActionTypes.EmployerFullName,
+        payload: jobPost.employerName,
+      });
+      setFormValues({ type: FormActionTypes.Title, payload: jobPost.title });
+      setFormValues({
+        type: FormActionTypes.Desc,
+        payload: jobPost.description,
+      });
+      setFormValues({
+        type: FormActionTypes.CountryId,
+        payload: jobPost.countryId,
+      });
+      setFormValues({
+        type: FormActionTypes.CompanyId,
+        payload: jobPost.companyId,
+      });
+      setFormValues({
+        type: FormActionTypes.IndustryId,
+        payload: jobPost.industryId,
+      });
+      setFormValues({
+        type: FormActionTypes.SalaryId,
+        payload: jobPost.salaryId,
+      });
+      setFormValues({
+        type: FormActionTypes.PrimaryLangId,
+        payload: jobPost.primaryLangId,
+      });
+      setFormValues({
+        type: FormActionTypes.SecondaryLangId,
+        payload: jobPost.secondaryLangId,
+      });
+    });
+  };
 
   const onChangeTitle = (e: ChangeEvent<HTMLInputElement>) => {
     e.preventDefault();
+
+    setFormValues({ type: FormActionTypes.Title, payload: e.target.value });
   };
 
   const toggleIsRemote = () => {
-    setIsRemote(!isRemote);
+    setFormValues({
+      type: FormActionTypes.IsRemote,
+      payload: !formValues.isRemote,
+    });
   };
 
   return (
@@ -146,7 +304,7 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
       >
         <div className="stack">
           {readOnly ? (
-            <div className="title-font">{jobPost?.title}</div>
+            <div className="title-font">{readOnlyJobPost?.title}</div>
           ) : (
             <div className="left-align">
               <label htmlFor="job-title-input" style={{ marginRight: "1em" }}>
@@ -155,7 +313,7 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
               <input
                 id="job-title-input"
                 type="text"
-                value={title}
+                value={formValues.title}
                 onChange={onChangeTitle}
                 className="input"
               />
@@ -173,7 +331,7 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
               >
                 {readOnly ? (
                   <div className="sub-title-font job-full-view-subtitle-item-primary">
-                    {jobPost?.companyName}
+                    {readOnlyJobPost?.companyName}
                   </div>
                 ) : (
                   <DropDown
@@ -184,27 +342,34 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
                 )}
                 {readOnly ? (
                   <div className="sub-title-font job-full-view-subtitle-item-primary">
-                    {jobPost?.isRemote ? "Remote" : jobPost?.countryName}
-                  </div>
-                ) : isRemote ? (
-                  <div className="sub-title-font job-full-view-subtitle-item-primary">
-                    <Checkbox
-                      isChecked={isRemote}
-                      toggleIsChecked={toggleIsRemote}
-                    >
-                      {jobPost?.isRemote ? "Remote" : jobPost?.countryName}
-                    </Checkbox>
+                    {readOnlyJobPost?.isRemote
+                      ? "Remote"
+                      : readOnlyJobPost?.countryName}
                   </div>
                 ) : (
-                  <DropDown
-                    key={`dd-${uuidv4()}`}
-                    label="Country"
-                    optionItems={countries}
-                  />
+                  <>
+                    <div className="sub-title-font job-full-view-subtitle-item-primary">
+                      <Checkbox
+                        isChecked={formValues.isRemote}
+                        toggleIsChecked={toggleIsRemote}
+                      >
+                        Remote
+                      </Checkbox>
+                    </div>
+                    {!formValues.isRemote ? (
+                      <DropDown
+                        key={`dd-${uuidv4()}`}
+                        label="Country"
+                        optionItems={countries}
+                      />
+                    ) : null}
+                  </>
                 )}
-                <div className="small-font job-full-view-subtitle-item-primary">
-                  {jobPost?.updatedAt}
-                </div>
+                {readOnly ? (
+                  <div className="small-font job-full-view-subtitle-item-primary">
+                    {readOnlyJobPost?.updatedAt}
+                  </div>
+                ) : null}
               </div>
             </div>
           </div>
@@ -256,12 +421,18 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
           paddingRight: "2em",
         }}
       >
-        <div className="job-full-view-subtitle-item-secondary">
-          {`Contact ${jobPost?.employerName}`}
-        </div>
         {readOnly ? (
           <div className="job-full-view-subtitle-item-secondary">
-            {`Primary Language ${jobPost?.primaryLangName}`}
+            {`Contact ${readOnlyJobPost?.employerName}`}
+          </div>
+        ) : (
+          <div className="job-full-view-subtitle-item-secondary">
+            {`Contact ${formValues.employerFullName}`}
+          </div>
+        )}
+        {readOnly ? (
+          <div className="job-full-view-subtitle-item-secondary">
+            {`Primary Language ${readOnlyJobPost?.primaryLangName}`}
           </div>
         ) : (
           <div style={{ marginTop: ".75em" }}>
@@ -273,10 +444,11 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
           </div>
         )}
         {readOnly ? (
-          jobPost?.secondaryLangName &&
-          jobPost?.secondaryLangName != jobPost?.primaryLangName ? (
+          readOnlyJobPost?.secondaryLangName &&
+          readOnlyJobPost?.secondaryLangName !=
+            readOnlyJobPost?.primaryLangName ? (
             <div className="job-full-view-subtitle-item-secondary">
-              {`Secondary Language ${jobPost?.secondaryLangName}`}
+              {`Secondary Language ${readOnlyJobPost?.secondaryLangName}`}
             </div>
           ) : null
         ) : (
@@ -290,7 +462,7 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
         )}
         {readOnly ? (
           <div className="job-full-view-subtitle-item-secondary">
-            {`Industry ${jobPost?.industryName}`}
+            {`Industry ${readOnlyJobPost?.industryName}`}
           </div>
         ) : (
           <div style={{ marginTop: ".75em" }}>
@@ -303,7 +475,7 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
         )}
         {readOnly ? (
           <div className="job-full-view-subtitle-item-secondary">
-            {`Base Salary ${salary}`}
+            {`Base Salary ${readOnlyJobPost?.salary}`}
           </div>
         ) : (
           <div style={{ marginTop: ".75em" }}>

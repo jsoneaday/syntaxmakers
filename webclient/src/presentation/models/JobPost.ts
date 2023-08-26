@@ -14,14 +14,21 @@ export default class JobPost implements KeyItem {
     public updatedAt: string,
     public title: string,
     public description: string,
+    public employerId: string,
     public employerName: string,
+    public companyId: string,
     public companyName: string,
     public isRemote: boolean,
+    public primaryLangId: string,
     public primaryLangName: string,
+    public secondaryLangId: string,
     public secondaryLangName: string,
+    public industryId: String,
     public industryName: String,
+    public salaryId: string,
     public salary: string,
     public companyLogo?: Blob,
+    public countryId?: string,
     public countryName?: string
   ) {}
 }
@@ -42,14 +49,21 @@ export function convert(job: Job) {
     updatedAt,
     job.title,
     job.description,
+    job.employerId,
     job.employerName,
+    job.companyId,
     job.companyName,
     job.isRemote,
+    job.primaryLangId,
     job.primaryLangName,
+    job.secondaryLangId,
     job.secondaryLangName,
+    job.industryId,
     job.industryName,
+    job.salaryId,
     currencyFormatter.format(Number(job.salary)),
     companyLogoUInt8Array ? new Blob([companyLogoUInt8Array]) : undefined,
+    job.countryId,
     job.countryName
   );
 }
