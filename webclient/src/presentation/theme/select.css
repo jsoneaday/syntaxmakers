@@ -11,10 +11,6 @@ select {
   outline: none;
 }
 
-option {
-  direction: rtl;
-}
-
 .select {
   width: 100%;
   min-width: 15ch;
@@ -26,37 +22,4 @@ option {
   line-height: 1.1;
   background-color: #fff;
   background-image: linear-gradient(to top, #f9f9f9, #fff 33%);
-}
-
-.select-container {
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-  align-items: center;
-  padding-left: 1.5em;
-  padding-right: 1em;
-}
-
-.select-label {
-  width: 10em;
-}
-
-.select-chevron {
-  width: 1.2em;
-}
-
-.select-icon {
-  width: 1.55em;
-  height: 1.55em;
-  overflow: hidden;
-  border: 1px solid var(--secondary-cl);
-  border-radius: 50%;
-}
-
-.select-icon-label {
-  display: flex;
-  flex-direction: row;
-  justify-content: flex-start;
-  align-items: center;
-  width: 100%;
 }
