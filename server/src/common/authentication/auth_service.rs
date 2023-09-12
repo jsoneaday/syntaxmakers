@@ -6,6 +6,7 @@ use jsonwebtoken::{ Validation, encode, decode, Algorithm };
 use crate::common::repository::user::models::DeveloperOrEmployer;
 use async_trait::async_trait;
 use derive_more::{Error, Display};
+use log::info;
 
 pub const STANDARD_REFRESH_TOKEN_EXPIRATION: i64 = 60 * 60 * 24 * 30;
 pub const STANDARD_ACCESS_TOKEN_EXPIRATION: i64 = 60 * 10; // todo: switch to 2 min once testing complete
@@ -82,7 +83,7 @@ impl Authenticator for AuthService {
             if header_name == "authorization" {
                 let bearer_items: Vec<&str> = header_val.split(' ').collect();
                 let claims = decode_token(bearer_items.get(1).unwrap(), decoding_key);
-                println!("claims {:?}", claims);
+                info!("claims {:?}", claims);
                 if claims.sub == user_name {
                     if claims.exp >= (Utc::now().timestamp() as usize) {
                         result = Ok(true);

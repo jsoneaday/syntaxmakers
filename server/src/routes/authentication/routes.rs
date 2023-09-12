@@ -5,6 +5,7 @@ use actix_web::{
     http::header::ContentType, HttpRequest
 };
 use chrono::Utc;
+use log::error;
 use crate::{
     app_state::AppState, 
     common::{
@@ -47,7 +48,7 @@ pub async fn refresh_access_token<T: Repository, U: Authenticator>(app_data: Dat
             }            
         },
         None => {
-            println!("No refresh cookie found");
+            error!("No refresh cookie found");
             return HttpResponse::BadRequest()
                 .content_type(ContentType::json())
                 .body("Authentication failed. Your request is missing the refresh token")
@@ -58,8 +59,6 @@ pub async fn refresh_access_token<T: Repository, U: Authenticator>(app_data: Dat
 
 pub async fn login<T: AuthenticateDbFn + QueryDeveloperFn + QueryEmployerFn + Repository, U: Authenticator>(app_data: Data<AppState<T, U>>, json: Json<LoginCredential>) 
     -> HttpResponse {
-    println!("start login {}, {}", json.email, json.password);
-
     let dev_or_emp = if json.dev_or_emp == AuthDeveloperOrEmployer::Developer {
         UserDeveloperOrEmployer::Developer
     } else {
@@ -75,51 +74,51 @@ pub async fn login<T: AuthenticateDbFn + QueryDeveloperFn + QueryEmployerFn + Re
                     #[allow(unused)] let mut http_response: Option<HttpResponse> = None;
                     
                     if dev_or_emp == UserDeveloperOrEmployer::Developer {
-                        println!("Developer trying to login");
                         let developer = app_data.repo.query_developer(id).await;
                         match developer {
                             Ok(opt_dev) => {
                                 if let Some(dev) = opt_dev {
                                     user_name = dev.user_name;
                                     let (refresh_cookie, access_token) = get_refresh_and_access_token_response(app_data, user_name.as_str(), &dev_or_emp);
-                                    println!("Developer complete {} {}", refresh_cookie, access_token);
                                     http_response = Some(HttpResponse::Ok()
                                         .cookie(refresh_cookie)
                                         .body(access_token));
                                 } else {
+                                    error!("Authentication failed. Developer not found");
                                     http_response = Some(HttpResponse::Unauthorized()
                                         .content_type(ContentType::json())
-                                        .body("Authentication failed. User not found"));
+                                        .body("Authentication failed. Developer not found"));
                                 }
                             },
                             Err(_) => {
+                                error!("Authentication failed. Error occurred while trying to get developer");
                                 http_response = Some(HttpResponse::Unauthorized()
                                     .content_type(ContentType::json())
-                                    .body("Authentication failed. Error occurred while trying to get user"));
+                                    .body("Authentication failed. Error occurred while trying to get developer"));
                             }
                         }
                     } else {
-                        println!("Employer trying to login");
                         let employer = app_data.repo.query_employer(id).await;
                         match employer {
                             Ok(opt_emp) => {
                                 if let Some(emp) = opt_emp {
                                     user_name = emp.user_name;
                                     let (refresh_cookie, access_token) = get_refresh_and_access_token_response(app_data, user_name.as_str(), &dev_or_emp);
-                                    println!("Employer complete {} {}", refresh_cookie, access_token);
                                     http_response = Some(HttpResponse::Ok()
                                         .cookie(refresh_cookie)
                                         .body(access_token));
                                 } else {
+                                    error!("Authentication faild. Developer not found");
                                     http_response = Some(HttpResponse::Unauthorized()
                                         .content_type(ContentType::json())
-                                        .body("Authentication failed. User not found"));
+                                        .body("Authentication failed. Developer not found"));
                                 }
                             },
                             Err(_) => {
+                                error!("Authentication failed. Error occurred while trying to get developer");
                                 http_response = Some(HttpResponse::Unauthorized()
                                     .content_type(ContentType::json())
-                                    .body("Authentication failed. Error occurred while trying to get user"));
+                                    .body("Authentication failed. Error occurred while trying to get developer"));
                             }
                         }
                     }          
@@ -133,6 +132,7 @@ pub async fn login<T: AuthenticateDbFn + QueryDeveloperFn + QueryEmployerFn + Re
             }
         }
         Err(_) => {
+            error!("Authentication failed. Server error");
             HttpResponse::Unauthorized()
                 .content_type(ContentType::json())
                 .body("Authentication failed. Server error occurred while trying to authenticate")

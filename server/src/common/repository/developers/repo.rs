@@ -5,6 +5,7 @@ use crate::common::repository::base::{DbRepo, ConnGetter};
 use crate::common::repository::developers::models::Developer;
 use crate::common::repository::base::EntityId;
 use crate::common::repository::developers::models::NewDeveloper;
+use log::error;
 
 mod internal {
     use super::*;    
@@ -31,7 +32,7 @@ mod internal {
         let inserted_entity = match insert_result {
             Ok(row) => Ok(row),
             Err(e) => {
-                println!("create developer error: {:?}", e);
+                error!("create developer error: {:?}", e);
                 Err(e)
             }
         };

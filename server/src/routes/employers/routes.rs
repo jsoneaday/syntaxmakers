@@ -49,8 +49,7 @@ pub async fn get_employer_by_email<T: QueryEmployerByEmailFn + Repository, U: Au
     app_data: Data<AppState<T, U>>, 
     path: Path<String>,
     req: HttpRequest
-) -> Result<Option<EmployerResponder>, UserError> {    
-    println!("start get_employer_by_email");
+) -> Result<Option<EmployerResponder>, UserError> {
     let email = path.into_inner();
     let result = app_data.repo.query_employer_by_email(email).await;
 

@@ -27,7 +27,6 @@ async fn test_create_employer_and_get_back() {
         password: "test123".to_string(),
         company_id
     }).await.unwrap();
-    println!("id {}", create_result.id);
     let get_result = repo.query_employer(create_result.id).await.unwrap().unwrap();
     
     assert!(get_result.clone().id == create_result.id);

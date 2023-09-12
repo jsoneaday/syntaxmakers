@@ -61,7 +61,6 @@ async fn test_refresh_access_token_route() {
     let comp_time = Utc::now().timestamp() + STANDARD_ACCESS_TOKEN_EXPIRATION - EXP_SEC_BUFFER;
     let local_comp_time = convert_timestamp_to_local_datetime(comp_time);
 
-    println!("exp {local_date} vs {local_comp_time}");
     assert!(claims.exp >= comp_time as usize);
     assert!(claims.sub == user_name);        
 }

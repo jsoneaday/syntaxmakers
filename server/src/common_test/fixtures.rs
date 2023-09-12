@@ -10,6 +10,7 @@ use fake::faker::internet::en::{Username, FreeEmail};
 use fake::faker::name::en::{FirstName, LastName};
 use jsonwebtoken::{EncodingKey, DecodingKey};
 use serde::Serialize;
+use log::{info, error};
 use crate::app_state::AppState;
 use crate::common::authentication::auth_service::{init_auth_keys, get_token, Authenticator, AuthenticationError};
 use crate::common::fs_utils::get_file_buffer;
@@ -172,7 +173,7 @@ async fn setup_data() {
         for _ in 1..40 {          
             let is_remote = if get_random_no_from_range(0, 2) == 0 { false } else { true };
             let country_id = if is_remote { None } else { Some(1) };
-            println!("is_remote {}, country_id {:?}", is_remote, country_id);
+            error!("is_remote {}, country_id {:?}", is_remote, country_id);
             
             repo.insert_job(NewJob {
                 employer_id: create_employer_result.id,
@@ -257,7 +258,7 @@ pub fn get_httpresponse_body_as_string(body_bytes_result: Result<Bytes, BoxBody>
             let body_str = String::from_utf8(body_bytes.to_vec());
             match body_str {
                 Ok(token) => {
-                    println!("token {}", token);
+                    info!("token {}", token);
                     token
                 },
                 Err(_) => "".to_string()
