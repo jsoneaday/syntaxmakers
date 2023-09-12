@@ -1,0 +1,13 @@
+version: "3.8"
+
+services:
+  devdb:
+    image: postgres:14-alpine
+    ports:
+      - 5433:5432
+    environment:
+      POSTGRES_PASSWORD: syntaxmakers
+      POSTGRES_USER: syntaxmakers
+      POSTGRES_DB: syntaxmakers
+    volumes:
+      - ./devdb:/var/lib/postgresql/data
