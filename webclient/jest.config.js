@@ -12,4 +12,5 @@ export default {
       "identity-obj-proxy",
   },
   testEnvironment: "jsdom",
+  setupFilesAfterEnv: ["<rootDir>/setupTests.ts"],
 };

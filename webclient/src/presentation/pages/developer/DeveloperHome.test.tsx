@@ -5,7 +5,6 @@ import * as JobRepo from "../../../domain/repository/JobRepo";
 import { Developer } from "../../../domain/repository/DeveloperRepo";
 import { render, waitFor, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import "@testing-library/jest-dom/extend-expect";
 import configureStore from "redux-mock-store";
 import { defaultDevProfile } from "../../__test__/Fixtures";
 import App from "../../../App";
@@ -28,7 +27,7 @@ describe("Test Developer page", () => {
         })
     );
 
-    jest.spyOn(JobRepo, "getJobsByDevProfile").mockImplementation(
+    jest.spyOn(JobRepo, "getJobsByDeveloper").mockImplementation(
       () =>
         new Promise((res) => {
           res([
