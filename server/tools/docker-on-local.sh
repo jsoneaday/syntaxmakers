@@ -21,5 +21,8 @@ sqlx migrate run --database-url postgres://syntaxmakers:syntaxmakers@localhost:5
 echo "setup test data"
 psql -h localhost -p 5433 -d syntaxmakers -U syntaxmakers -f ./tools/setup-dev-data.sql
 
+echo "start running tests"
+cargo test -- --nocapture
+
 echo "start rust server locally (not docker)"
 cargo run
