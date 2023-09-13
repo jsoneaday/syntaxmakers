@@ -1,0 +1,168 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Test Developer page matches snapshot 1`] = `
+<div
+  class="userhome-container"
+  data-testid="developer-page"
+>
+  <nav
+    class="leftmenu-container"
+  >
+    <div
+      class="leftmenu-body"
+    >
+      <span
+        class="title-font leftmenu-header"
+      >
+        @tester
+      </span>
+      <a
+        class="sub-title-font leftmenu-item"
+        href="/devhome/jobposts"
+      >
+        <img
+          class="leftmenu-icon"
+          src="default"
+        />
+        <span>
+          Developer jobs
+        </span>
+      </a>
+      <a
+        class="sub-title-font leftmenu-item"
+        href="/devhome/savedjobs"
+      >
+        <img
+          class="leftmenu-icon"
+          src="default"
+        />
+        <span>
+          Saved jobs
+        </span>
+      </a>
+      <a
+        class="sub-title-font leftmenu-item"
+        href="/devhome/jobalerts"
+      >
+        <img
+          class="leftmenu-icon"
+          src="default"
+        />
+        <span>
+          Job alerts
+        </span>
+      </a>
+    </div>
+    <button
+      class="secondary-btn small-btn"
+    >
+      logout
+    </button>
+  </nav>
+  <div
+    class="userhome-main"
+  >
+    <div
+      class="userhome-top"
+      style="padding: 2em;"
+    >
+      <div
+        class="title-font userhome-header"
+      >
+        Developer job search
+      </div>
+      <div
+        class="sub-title-font userhome-sub-header"
+      >
+        Enter your preferences to find your next job
+      </div>
+      <div
+        class="search-header"
+      >
+        <input
+          class="search-input"
+          type="text"
+          value=""
+        />
+        <button
+          class="primary-btn"
+        >
+          search
+        </button>
+      </div>
+    </div>
+    <div
+      class="info-band"
+    >
+      <img
+        class="dev-info-band-icon"
+        src="default"
+      />
+      Result count 231
+      <img
+        class="dev-info-band-icon"
+        src="default"
+        style="margin-left: 1.5em;"
+      />
+      Date jun 16, 2023
+    </div>
+    <div
+      class="dev-post-preview-container"
+      style="padding: 2em;"
+    >
+      <ul
+        class="lister-container"
+      >
+        <li
+          class="dev-preview-item"
+        >
+          <a
+            href="/emphome/jobfullview"
+          >
+            <div
+              class="post-preview-container"
+            >
+              <img
+                class="preview-icon"
+                src=""
+              />
+              <div
+                class="preview-content"
+              >
+                <div
+                  class="title-font"
+                >
+                  Senior React Developer
+                </div>
+                <div
+                  class="sub-title-font"
+                >
+                  Company A
+                </div>
+                <div
+                  class="normal-font"
+                >
+                  Remote
+                </div>
+                <div
+                  class="normal-font preview-salary"
+                >
+                  Base Salary: 
+                  <i>
+                    $200,000
+                  </i>
+                </div>
+                <div
+                  class="small-font preview-timestamp"
+                >
+                  2 m ago
+                </div>
+              </div>
+            </div>
+          </a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>
+`;

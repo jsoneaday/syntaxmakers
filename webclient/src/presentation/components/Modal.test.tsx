@@ -12,13 +12,11 @@ describe("Test Modal", () => {
     });
 
     render(
-      <div id="root">
-        <ReduxProvider store={store}>
-          <Modal isOpen={true} toggleOpen={() => {}}>
-            <div>hello world</div>
-          </Modal>
-        </ReduxProvider>
-      </div>
+      <ReduxProvider store={store}>
+        <Modal isOpen={true} toggleOpen={() => {}}>
+          <div>hello world</div>
+        </Modal>
+      </ReduxProvider>
     );
 
     const result = screen.getByText("hello world");

@@ -1,4 +1,3 @@
-import { faker } from "@faker-js/faker";
 import { Provider as ReduxProvider } from "react-redux";
 import * as DevRepo from "../../../domain/repository/DeveloperRepo";
 import * as JobRepo from "../../../domain/repository/JobRepo";
@@ -8,7 +7,8 @@ import userEvent from "@testing-library/user-event";
 import configureStore from "redux-mock-store";
 import { defaultDevProfile } from "../../__test__/Fixtures";
 import App from "../../../App";
-import MockModal from "../../components/__mocks__/Modal";
+
+const job1UpdatedAt = "2023-07-03T22:21:02.145Z";
 
 describe("Test Developer page", () => {
   beforeAll(() => {
@@ -17,12 +17,12 @@ describe("Test Developer page", () => {
         new Promise((res) => {
           res(
             new Developer(
-              "1",
-              new Date().toISOString(),
-              "testuser",
-              "Tester Test",
-              faker.internet.email(),
-              "1"
+              defaultDevProfile.id,
+              defaultDevProfile.updatedAt,
+              defaultDevProfile.userName,
+              defaultDevProfile.fullName,
+              defaultDevProfile.email,
+              defaultDevProfile.primaryLangId
             )
           );
         })
@@ -34,7 +34,7 @@ describe("Test Developer page", () => {
           res([
             new JobRepo.Job(
               "1",
-              new Date().toISOString(),
+              job1UpdatedAt,
               "1",
               "Employer Tester",
               "1",
@@ -61,16 +61,12 @@ describe("Test Developer page", () => {
     const store = mockStore({
       profile: defaultDevProfile,
     });
-    jest.mock("Modal", () => {
-      return MockModal;
-    });
 
     render(
       <ReduxProvider store={store}>
         <App />
       </ReduxProvider>
     );
-    screen.debug();
 
     await userEvent.click(screen.getByTestId("dev-link"));
 
