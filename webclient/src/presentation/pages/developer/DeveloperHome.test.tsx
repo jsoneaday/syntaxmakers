@@ -8,6 +8,7 @@ import userEvent from "@testing-library/user-event";
 import configureStore from "redux-mock-store";
 import { defaultDevProfile } from "../../__test__/Fixtures";
 import App from "../../../App";
+import MockModal from "../../components/__mocks__/Modal";
 
 describe("Test Developer page", () => {
   beforeAll(() => {
@@ -60,11 +61,16 @@ describe("Test Developer page", () => {
     const store = mockStore({
       profile: defaultDevProfile,
     });
+    jest.mock("Modal", () => {
+      return MockModal;
+    });
+
     render(
       <ReduxProvider store={store}>
         <App />
       </ReduxProvider>
     );
+    screen.debug();
 
     await userEvent.click(screen.getByTestId("dev-link"));
 
