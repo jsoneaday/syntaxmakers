@@ -1,6 +1,7 @@
 import DevProfile from "../models/DevProfile";
 /// @ts-ignore
 import { v4 as uuidv4 } from "uuid";
+const reactmodal = require("react-modal");
 
 export const userName = "tester";
 export const fullName = "Tester Test";
@@ -16,3 +17,12 @@ export const defaultDevProfile: DevProfile = {
   email,
   primaryLangId: "1",
 };
+
+export function setupModalOnRoot() {
+  document.body.innerHTML = `
+      <div id="root">
+      </div>
+    `;
+
+  reactmodal.setAppElement("#root");
+}

@@ -11,7 +11,7 @@ exports[`Test Home matches snapshot 1`] = `
     <a
       class="home-item-link"
       data-testid="dev-link"
-      href="/developer"
+      href="/devhome/jobposts"
     >
       <img
         class="home-icon"
@@ -30,7 +30,7 @@ exports[`Test Home matches snapshot 1`] = `
     <a
       class="home-item-link"
       data-testid="emp-link"
-      href="/employer"
+      href="/emphome/jobposts"
     >
       <img
         class="home-icon"

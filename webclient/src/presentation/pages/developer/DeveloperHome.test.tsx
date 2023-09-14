@@ -5,18 +5,14 @@ import { Developer } from "../../../domain/repository/DeveloperRepo";
 import { render, waitFor, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import configureStore from "redux-mock-store";
-import { defaultDevProfile } from "../../__test__/Fixtures";
+import { defaultDevProfile, setupModalOnRoot } from "../../__test__/Fixtures";
 import App from "../../../App";
-const reactmodal = require("react-modal");
 
 const job1UpdatedAt = "2023-07-03T22:21:02.145Z";
 
 describe("Test Developer page", () => {
   beforeAll(() => {
-    document.body.innerHTML = `
-      <div id="root">
-      </div>
-    `;
+    setupModalOnRoot();
 
     jest.spyOn(DevRepo, "getDeveloper").mockImplementation(
       () =>
@@ -68,7 +64,6 @@ describe("Test Developer page", () => {
       profile: defaultDevProfile,
     });
 
-    reactmodal.setAppElement("#root");
     render(
       <ReduxProvider store={store}>
         <App />
