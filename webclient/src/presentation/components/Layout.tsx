@@ -18,7 +18,6 @@ export default function Layout({ children, includeLogin = true }: LayoutProps) {
   const location = useLocation();
 
   useEffect(() => {
-    console.log("path", location.pathname);
     setDevOrEmp(
       location.pathname.includes(DEV_ROUTE_PREFIX)
         ? DevOrEmployer.Developer
