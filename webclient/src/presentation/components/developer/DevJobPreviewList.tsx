@@ -3,8 +3,6 @@ import JobPost from "../../models/JobPost";
 import { useProfile } from "../../common/redux/profile/ProfileHooks";
 import { getJobsByDeveloper } from "../../../domain/repository/JobRepo";
 import { convert as convertJob } from "../../models/JobPost";
-import clipboard from "../../theme/assets/clipboard.png";
-import clock from "../../theme/assets/wall-clock.png";
 import JobPreviewList from "../jobs/JobPreviewList";
 
 export default function DevJobPreviewList() {

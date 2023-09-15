@@ -92,21 +92,6 @@ exports[`Test Developer page matches snapshot 1`] = `
       </div>
     </div>
     <div
-      class="info-band"
-    >
-      <img
-        class="dev-info-band-icon"
-        src="default"
-      />
-      Result count 231
-      <img
-        class="dev-info-band-icon"
-        src="default"
-        style="margin-left: 1.5em;"
-      />
-      Date jun 16, 2023
-    </div>
-    <div
       class="dev-post-preview-container"
       style="padding: 2em;"
     >
