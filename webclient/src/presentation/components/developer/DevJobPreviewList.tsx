@@ -51,16 +51,6 @@ export default function DevJobPreviewList() {
           <button className="primary-btn">search</button>
         </div>
       </div>
-      <div className="info-band">
-        <img className="dev-info-band-icon" src={clipboard} />
-        Result count 231
-        <img
-          className="dev-info-band-icon"
-          style={{ marginLeft: "1.5em" }}
-          src={clock}
-        />
-        Date jun 16, 2023
-      </div>
       <JobPreviewList jobPosts={jobData} />
     </div>
   );

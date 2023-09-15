@@ -1,5 +1,5 @@
 import { ReactNode } from "react";
-const ReactModal = require("react-modal"); // needed to pass jest tests
+import ReactModal from "react-modal"; // needed to pass jest tests
 import "../theme/modal.css";
 
 interface ModalProps {
