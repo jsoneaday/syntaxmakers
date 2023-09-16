@@ -1,7 +1,7 @@
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 import { DevOrEmployer } from "../../../models/DevOrEmployer";
 
-const initialState: DevOrEmployer | null = null;
+const initialState: DevOrEmployer = DevOrEmployer.Developer;
 
 const devOrEmployerSlice = createSlice({
   name: "devOrEmployer",

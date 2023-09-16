@@ -5,6 +5,7 @@ use crate::common::repository::base::{DbRepo, ConnGetter};
 use crate::common::repository::jobs::models::{NewJob, Job};
 use crate::common::repository::base::EntityId;
 use crate::common::repository::{error::SqlxError, developers::models::Developer, base::CountResult};
+use log::error;
 
 mod internal {
     
@@ -35,7 +36,7 @@ mod internal {
         let inserted_entity = match insert_result {
             Ok(row) => Ok(row.clone()),
             Err(e) => {
-                println!("insert job error: {:?}", e);
+                error!("insert job error: {:?}", e);
                 Err(e)
             }
         };

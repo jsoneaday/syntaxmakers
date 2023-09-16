@@ -4,6 +4,7 @@ use sqlx::{Postgres, Pool, query_as};
 use crate::common::repository::base::{DbRepo, ConnGetter};
 use crate::common::repository::employers::models::{NewEmployer, Employer};
 use crate::common::repository::base::EntityId;
+use log::error;
 
 mod internal {
     use super::*;    
@@ -21,7 +22,7 @@ mod internal {
         match result {
             Ok(entity) => Ok(entity),
             Err(e) => {
-                println!("create employer error: {:?}", e);
+                error!("create employer error: {:?}", e);
                 Err(e)
             }
         }

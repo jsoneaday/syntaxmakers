@@ -1,4 +1,5 @@
 /target
 dbdata
+devdb
 .env
 /ssl

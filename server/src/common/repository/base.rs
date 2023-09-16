@@ -1,4 +1,4 @@
-use log::info;
+use log::{info, error};
 use sqlx::{Pool, Postgres, migrate, FromRow};
 use std::env;
 use dotenv::dotenv;
@@ -64,10 +64,9 @@ async fn get_conn_pool() -> Pool<Postgres> {
     let migrate_result = migrate!("./migrations").run(&conn).await;
     match migrate_result {
         Ok(()) => {
-            info!("testing log");
-            println!("migration complete");
+            info!("migration complete");
         },
-        Err(e) => println!("failed to migrate {}", e)
+        Err(e) => error!("failed to migrate {}", e)
     };
 
     conn

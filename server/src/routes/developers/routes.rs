@@ -67,8 +67,7 @@ pub async fn get_developer_by_email<T: QueryDeveloperByEmailFn + Repository, U: 
     app_data: Data<AppState<T, U>>, 
     path: Path<String>,
     req: HttpRequest
-) -> Result<Option<DeveloperResponder>, UserError> {       
-    println!("start get_developer_by_email"); 
+) -> Result<Option<DeveloperResponder>, UserError> {
     let email = path.into_inner();
     let result = app_data.repo.query_developer_by_email(email).await;
 
