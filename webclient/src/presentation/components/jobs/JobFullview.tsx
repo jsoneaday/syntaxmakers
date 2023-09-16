@@ -3,33 +3,22 @@ import JobPost from "../../models/JobPost";
 import {
   ChangeEvent,
   useEffect,
-  useMemo,
   useReducer,
   useState,
   useTransition,
 } from "react";
 import "../../theme/job_full_view.css";
-import { appendPlusLargeCurrency } from "../../common/CurrencyFormatter";
 import flag from "../../theme/assets/flag.png";
 import similar from "../../theme/assets/similar.png";
-import GoBack from "../../components/navigation/GoBack";
-import TextEditor from "../../components/textEditor/TextEditor";
-import DropDown, { OptionType } from "../controls/DropDown";
+import GoBack from "../navigation/GoBack";
+import TextEditor from "../textEditor/TextEditor";
+import DropDown from "../controls/DropDown";
 import Checkbox from "../controls/Checkbox";
-import { getCountries } from "../../../domain/repository/CountryRepo";
-import { convert as convertCountry } from "../../models/CountryModel";
-import { getCompanies } from "../../../domain/repository/CompanyRepo";
-import { convert as convertCompany } from "../../models/CompanyModel";
 import { useDevOrEmployer } from "../../common/redux/devOrEmployer/DevOrEmployerHooks";
 import { DevOrEmployer } from "../../models/DevOrEmployer";
-import { getLanguages } from "../../../domain/repository/LanguageRepo";
-import { convert as convertLang } from "../../models/LanguageModel";
-import { getIndustries } from "../../../domain/repository/IndustryRepo";
-import { convert as convertIndustry } from "../../models/IndustryModel";
-import { getSalaries } from "../../../domain/repository/SalaryRepo";
-import { convert as convertSalary } from "../../models/SalaryModel";
 /// @ts-ignore
 import { v4 as uuidv4 } from "uuid";
+import { JobPostData, getJobPostData } from "../../models/JobFullviewModel";
 
 interface FormState {
   id: string;
@@ -124,9 +113,23 @@ interface JobFullviewProps {
   readOnly: boolean;
 }
 
+type JobPostDisplayObject = {
+  title: JSX.Element;
+  companyName: JSX.Element;
+  isRemoteOrCountry: JSX.Element;
+  updatedAt: JSX.Element | null;
+  buttons: JSX.Element;
+  employerName: JSX.Element;
+  primaryLang: JSX.Element;
+  secondaryLang: JSX.Element | null;
+  industry: JSX.Element;
+  salary: JSX.Element;
+};
+
 export default function JobFullview({ readOnly }: JobFullviewProps) {
   const { state: routeJobPost } = useLocation();
-  const [readOnlyJobPost, setReadonlyJobPost] = useState<JobPost | null>(null);
+  const [jobPostDisplayComponents, setJobPostDisplayComponents] =
+    useState<JobPostDisplayObject>();
   const [formValues, setFormValues] = useReducer<
     Reducer<FormState, FormAction>
   >(reducer, {
@@ -144,80 +147,27 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
     primaryLangId: "",
     secondaryLangId: "",
   });
-  const [companies, setCompanies] = useState<OptionType[]>([]);
-  const [countries, setCountries] = useState<OptionType[]>([]);
-  const [languages, setLanguages] = useState<OptionType[]>([]);
-  const [industries, setIndustries] = useState<OptionType[]>([]);
-  const [salaries, setSalaries] = useState<OptionType[]>([]);
+  const [jobPostData, setJobPostData] = useState<JobPostData>();
   const [devOrEmp] = useDevOrEmployer();
   const [_isPending, startTransition] = useTransition();
 
   useEffect(() => {
-    const currentJobPost = routeJobPost as JobPost;
-    setReadonlyJobPost(currentJobPost);
-    setAllFormValues(currentJobPost);
+    if (routeJobPost) {
+      const currentJobPost = routeJobPost as JobPost;
+
+      const jobPostDisplayComponentItems =
+        getJobPostDisplayComponents(currentJobPost);
+      setJobPostDisplayComponents(jobPostDisplayComponentItems);
+
+      setAllFormValues(currentJobPost);
+    }
   }, [routeJobPost]);
 
   useEffect(() => {
     if (!readOnly) {
-      getCompanies()
-        .then((companies) => {
-          setCompanies(
-            companies.map((company) => {
-              const model = convertCompany(company);
-              return { name: model.name, value: model.id };
-            })
-          );
-        })
-        .catch((err) => console.log("Failed to get companies", err));
-
-      getCountries()
-        .then((countries) => {
-          setCountries(
-            countries.map((country) => {
-              const model = convertCountry(country);
-              return { name: model.name, value: model.id };
-            })
-          );
-        })
-        .catch((err) => console.log("Failed to get countries", err));
-
-      getLanguages()
-        .then((languages) => {
-          setLanguages(
-            languages.map((language) => {
-              const model = convertLang(language);
-              return { name: model.name, value: model.id };
-            })
-          );
-        })
-        .catch((err) => console.log("Failed to get languages", err));
-
-      getIndustries()
-        .then((industries) => {
-          setIndustries(
-            industries.map((industry) => {
-              const model = convertIndustry(industry);
-              return { name: model.name, value: model.id };
-            })
-          );
-        })
-        .catch((err) => console.log("Failed to get industries", err));
-
-      getSalaries()
-        .then((salaries) => {
-          setSalaries(
-            salaries.map((salary) => {
-              const model = convertSalary(salary);
-
-              return {
-                name: appendPlusLargeCurrency(model.base),
-                value: model.id,
-              };
-            })
-          );
-        })
-        .catch((err) => console.log("Failed to get salaries", err));
+      getJobPostData().then((jobPostData) => {
+        setJobPostData(jobPostData);
+      });
     }
   }, [readOnly]);
 
@@ -274,7 +224,7 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
     setFormValues({ type: FormActionTypes.Title, payload: e.target.value });
   };
 
-  const jobPostDisplayObject = useMemo(() => {
+  const getJobPostDisplayComponents = (jobPostObject: JobPost | undefined) => {
     let title: JSX.Element;
     let companyName: JSX.Element;
     let isRemoteOrCountry: JSX.Element;
@@ -287,20 +237,20 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
     let salary: JSX.Element;
 
     if (readOnly) {
-      title = <div className="title-font">{readOnlyJobPost?.title}</div>;
+      title = <div className="title-font">{jobPostObject?.title}</div>;
       companyName = (
         <div className="sub-title-font job-full-view-subtitle-item-primary">
-          {readOnlyJobPost?.companyName}
+          {jobPostObject?.companyName}
         </div>
       );
       isRemoteOrCountry = (
         <div className="sub-title-font job-full-view-subtitle-item-primary">
-          {readOnlyJobPost?.isRemote ? "Remote" : readOnlyJobPost?.countryName}
+          {jobPostObject?.isRemote ? "Remote" : jobPostObject?.countryName}
         </div>
       );
       updatedAt = (
         <div className="small-font job-full-view-subtitle-item-primary">
-          {readOnlyJobPost?.updatedAt}
+          {jobPostObject?.updatedAt}
         </div>
       );
       buttons = (
@@ -328,30 +278,29 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
       );
       employerName = (
         <div className="job-full-view-subtitle-item-secondary">
-          {`Contact ${readOnlyJobPost?.employerName}`}
+          {`Contact ${jobPostObject?.employerName}`}
         </div>
       );
       primaryLang = (
         <div className="job-full-view-subtitle-item-secondary">
-          {`Primary Language ${readOnlyJobPost?.primaryLangName}`}
+          {`Primary Language ${jobPostObject?.primaryLangName}`}
         </div>
       );
       secondaryLang =
-        readOnlyJobPost?.secondaryLangName &&
-        readOnlyJobPost?.secondaryLangName !=
-          readOnlyJobPost?.primaryLangName ? (
+        jobPostObject?.secondaryLangName &&
+        jobPostObject?.secondaryLangName != jobPostObject?.primaryLangName ? (
           <div className="job-full-view-subtitle-item-secondary">
-            {`Secondary Language ${readOnlyJobPost?.secondaryLangName}`}
+            {`Secondary Language ${jobPostObject?.secondaryLangName}`}
           </div>
         ) : null;
       industry = (
         <div className="job-full-view-subtitle-item-secondary">
-          {`Industry ${readOnlyJobPost?.industryName}`}
+          {`Industry ${jobPostObject?.industryName}`}
         </div>
       );
       salary = (
         <div className="job-full-view-subtitle-item-secondary">
-          {`Base Salary ${readOnlyJobPost?.salary}`}
+          {`Base Salary ${jobPostObject?.salary}`}
         </div>
       );
     } else {
@@ -373,7 +322,7 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
         <DropDown
           key={`dd-${uuidv4()}`}
           label="Company"
-          optionItems={companies}
+          optionItems={jobPostData?.companies || []}
         />
       );
       isRemoteOrCountry = (
@@ -390,7 +339,7 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
             <DropDown
               key={`dd-${uuidv4()}`}
               label="Country"
-              optionItems={countries}
+              optionItems={jobPostData?.countries || []}
             />
           ) : null}
         </>
@@ -417,7 +366,7 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
           <DropDown
             key={`dd-${uuidv4()}`}
             label="Primary Lang"
-            optionItems={languages}
+            optionItems={jobPostData?.languages || []}
           />
         </div>
       );
@@ -426,7 +375,7 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
           <DropDown
             key={`dd-${uuidv4()}`}
             label="Secondary Lang"
-            optionItems={languages}
+            optionItems={jobPostData?.languages || []}
           />
         </div>
       );
@@ -435,7 +384,7 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
           <DropDown
             key={`dd-${uuidv4()}`}
             label="Industry"
-            optionItems={industries}
+            optionItems={jobPostData?.industries || []}
           />
         </div>
       );
@@ -444,7 +393,7 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
           <DropDown
             key={`dd-${uuidv4()}`}
             label="Salary"
-            optionItems={salaries}
+            optionItems={jobPostData?.salaries || []}
           />
         </div>
       );
@@ -462,7 +411,7 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
       industry,
       salary,
     };
-  }, [readOnly]);
+  };
 
   const toggleIsRemote = () => {
     setFormValues({
@@ -499,7 +448,7 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
         }}
       >
         <div className="stack">
-          {jobPostDisplayObject.title}
+          {jobPostDisplayComponents?.title}
 
           <div className="left-align">
             <div className="opposites">
@@ -510,9 +459,9 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
                   alignItems: readOnly ? "center" : "flex-end",
                 }}
               >
-                {jobPostDisplayObject.companyName}
-                {jobPostDisplayObject.isRemoteOrCountry}
-                {jobPostDisplayObject.updatedAt}
+                {jobPostDisplayComponents?.companyName}
+                {jobPostDisplayComponents?.isRemoteOrCountry}
+                {jobPostDisplayComponents?.updatedAt}
               </div>
             </div>
           </div>
@@ -522,7 +471,7 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
           className="stack"
           style={{ alignItems: "flex-end", textAlign: "right" }}
         >
-          {jobPostDisplayObject.buttons}
+          {jobPostDisplayComponents?.buttons}
         </div>
       </div>
 
@@ -533,11 +482,11 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
           marginBottom: "1em",
         }}
       >
-        {jobPostDisplayObject.employerName}
-        {jobPostDisplayObject.primaryLang}
-        {jobPostDisplayObject.secondaryLang}
-        {jobPostDisplayObject.industry}
-        {jobPostDisplayObject.salary}
+        {jobPostDisplayComponents?.employerName}
+        {jobPostDisplayComponents?.primaryLang}
+        {jobPostDisplayComponents?.secondaryLang}
+        {jobPostDisplayComponents?.industry}
+        {jobPostDisplayComponents?.salary}
       </div>
 
       <div
