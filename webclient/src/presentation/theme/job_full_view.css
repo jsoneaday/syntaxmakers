@@ -19,3 +19,13 @@
   width: 18px;
   cursor: pointer;
 }
+
+.job-full-view-header {
+  border-bottom: solid 1px var(--header-border-cl);
+  width: 100%;
+}
+
+.job-full-view-section {
+  border-top: solid 1px var(--border-cl);
+  width: 100%;
+}

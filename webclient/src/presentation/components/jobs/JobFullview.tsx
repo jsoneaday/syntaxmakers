@@ -3,6 +3,7 @@ import JobPost from "../../models/JobPost";
 import {
   ChangeEvent,
   useEffect,
+  useMemo,
   useReducer,
   useState,
   useTransition,
@@ -124,7 +125,7 @@ interface JobFullviewProps {
 }
 
 export default function JobFullview({ readOnly }: JobFullviewProps) {
-  const { state } = useLocation();
+  const { state: routeJobPost } = useLocation();
   const [readOnlyJobPost, setReadonlyJobPost] = useState<JobPost | null>(null);
   const [formValues, setFormValues] = useReducer<
     Reducer<FormState, FormAction>
@@ -152,10 +153,10 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
   const [_isPending, startTransition] = useTransition();
 
   useEffect(() => {
-    const currentJobPost = state as JobPost;
+    const currentJobPost = routeJobPost as JobPost;
     setReadonlyJobPost(currentJobPost);
     setAllFormValues(currentJobPost);
-  }, [state]);
+  }, [routeJobPost]);
 
   useEffect(() => {
     if (!readOnly) {
@@ -205,7 +206,6 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
 
       getSalaries()
         .then((salaries) => {
-          console.log("salaries", salaries);
           setSalaries(
             salaries.map((salary) => {
               const model = convertSalary(salary);
@@ -274,6 +274,196 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
     setFormValues({ type: FormActionTypes.Title, payload: e.target.value });
   };
 
+  const jobPostDisplayObject = useMemo(() => {
+    let title: JSX.Element;
+    let companyName: JSX.Element;
+    let isRemoteOrCountry: JSX.Element;
+    let updatedAt: JSX.Element | null;
+    let buttons: JSX.Element;
+    let employerName: JSX.Element;
+    let primaryLang: JSX.Element;
+    let secondaryLang: JSX.Element | null;
+    let industry: JSX.Element;
+    let salary: JSX.Element;
+
+    if (readOnly) {
+      title = <div className="title-font">{readOnlyJobPost?.title}</div>;
+      companyName = (
+        <div className="sub-title-font job-full-view-subtitle-item-primary">
+          {readOnlyJobPost?.companyName}
+        </div>
+      );
+      isRemoteOrCountry = (
+        <div className="sub-title-font job-full-view-subtitle-item-primary">
+          {readOnlyJobPost?.isRemote ? "Remote" : readOnlyJobPost?.countryName}
+        </div>
+      );
+      updatedAt = (
+        <div className="small-font job-full-view-subtitle-item-primary">
+          {readOnlyJobPost?.updatedAt}
+        </div>
+      );
+      buttons = (
+        <>
+          <button
+            className="primary-btn small-btn"
+            style={{ marginBottom: ".5em" }}
+          >
+            apply
+          </button>
+          <button className="secondary-btn small-btn">save</button>
+          <img
+            src={flag}
+            className="job-icon"
+            style={{ marginTop: "1em" }}
+            title="inappropriate"
+          />
+          <img
+            src={similar}
+            className="job-icon"
+            style={{ marginTop: ".50em" }}
+            title="similar jobs"
+          />
+        </>
+      );
+      employerName = (
+        <div className="job-full-view-subtitle-item-secondary">
+          {`Contact ${readOnlyJobPost?.employerName}`}
+        </div>
+      );
+      primaryLang = (
+        <div className="job-full-view-subtitle-item-secondary">
+          {`Primary Language ${readOnlyJobPost?.primaryLangName}`}
+        </div>
+      );
+      secondaryLang =
+        readOnlyJobPost?.secondaryLangName &&
+        readOnlyJobPost?.secondaryLangName !=
+          readOnlyJobPost?.primaryLangName ? (
+          <div className="job-full-view-subtitle-item-secondary">
+            {`Secondary Language ${readOnlyJobPost?.secondaryLangName}`}
+          </div>
+        ) : null;
+      industry = (
+        <div className="job-full-view-subtitle-item-secondary">
+          {`Industry ${readOnlyJobPost?.industryName}`}
+        </div>
+      );
+      salary = (
+        <div className="job-full-view-subtitle-item-secondary">
+          {`Base Salary ${readOnlyJobPost?.salary}`}
+        </div>
+      );
+    } else {
+      title = (
+        <div className="left-align">
+          <label htmlFor="job-title-input" style={{ marginRight: "1em" }}>
+            Title
+          </label>
+          <input
+            id="job-title-input"
+            type="text"
+            value={formValues.title}
+            onChange={onChangeTitle}
+            className="input"
+          />
+        </div>
+      );
+      companyName = (
+        <DropDown
+          key={`dd-${uuidv4()}`}
+          label="Company"
+          optionItems={companies}
+        />
+      );
+      isRemoteOrCountry = (
+        <>
+          <div className="sub-title-font job-full-view-subtitle-item-primary">
+            <Checkbox
+              isChecked={formValues.isRemote}
+              toggleIsChecked={toggleIsRemote}
+            >
+              Remote
+            </Checkbox>
+          </div>
+          {!formValues.isRemote ? (
+            <DropDown
+              key={`dd-${uuidv4()}`}
+              label="Country"
+              optionItems={countries}
+            />
+          ) : null}
+        </>
+      );
+      updatedAt = null;
+      buttons = (
+        <>
+          <button
+            className="primary-btn small-btn"
+            style={{ marginBottom: ".5em" }}
+          >
+            save
+          </button>
+          <button className="secondary-btn small-btn">cancel</button>
+        </>
+      );
+      employerName = (
+        <div className="job-full-view-subtitle-item-secondary">
+          {`Contact ${formValues.employerFullName}`}
+        </div>
+      );
+      primaryLang = (
+        <div style={{ marginTop: ".75em" }}>
+          <DropDown
+            key={`dd-${uuidv4()}`}
+            label="Primary Lang"
+            optionItems={languages}
+          />
+        </div>
+      );
+      secondaryLang = (
+        <div style={{ marginTop: ".75em" }}>
+          <DropDown
+            key={`dd-${uuidv4()}`}
+            label="Secondary Lang"
+            optionItems={languages}
+          />
+        </div>
+      );
+      industry = (
+        <div style={{ marginTop: ".75em" }}>
+          <DropDown
+            key={`dd-${uuidv4()}`}
+            label="Industry"
+            optionItems={industries}
+          />
+        </div>
+      );
+      salary = (
+        <div style={{ marginTop: ".75em" }}>
+          <DropDown
+            key={`dd-${uuidv4()}`}
+            label="Salary"
+            optionItems={salaries}
+          />
+        </div>
+      );
+    }
+
+    return {
+      title,
+      companyName,
+      isRemoteOrCountry,
+      updatedAt,
+      buttons,
+      employerName,
+      primaryLang,
+      secondaryLang,
+      industry,
+      salary,
+    };
+  }, [readOnly]);
+
   const toggleIsRemote = () => {
     setFormValues({
       type: FormActionTypes.IsRemote,
@@ -284,7 +474,12 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
   return (
     <form className="userhome-main" style={{ margin: "auto" }}>
       <div
-        style={{ paddingTop: "2em", paddingLeft: "2em", paddingRight: "2em" }}
+        className="header-container job-full-view-header"
+        style={{
+          paddingTop: "2em",
+          paddingLeft: "2em",
+          paddingRight: "2em",
+        }}
       >
         <GoBack
           label={
@@ -300,25 +495,11 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
           paddingTop: "2em",
           paddingLeft: "2em",
           paddingRight: "2em",
+          marginBottom: "1.5em",
         }}
       >
         <div className="stack">
-          {readOnly ? (
-            <div className="title-font">{readOnlyJobPost?.title}</div>
-          ) : (
-            <div className="left-align">
-              <label htmlFor="job-title-input" style={{ marginRight: "1em" }}>
-                Title
-              </label>
-              <input
-                id="job-title-input"
-                type="text"
-                value={formValues.title}
-                onChange={onChangeTitle}
-                className="input"
-              />
-            </div>
-          )}
+          {jobPostDisplayObject.title}
 
           <div className="left-align">
             <div className="opposites">
@@ -329,47 +510,9 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
                   alignItems: readOnly ? "center" : "flex-end",
                 }}
               >
-                {readOnly ? (
-                  <div className="sub-title-font job-full-view-subtitle-item-primary">
-                    {readOnlyJobPost?.companyName}
-                  </div>
-                ) : (
-                  <DropDown
-                    key={`dd-${uuidv4()}`}
-                    label="Company"
-                    optionItems={companies}
-                  />
-                )}
-                {readOnly ? (
-                  <div className="sub-title-font job-full-view-subtitle-item-primary">
-                    {readOnlyJobPost?.isRemote
-                      ? "Remote"
-                      : readOnlyJobPost?.countryName}
-                  </div>
-                ) : (
-                  <>
-                    <div className="sub-title-font job-full-view-subtitle-item-primary">
-                      <Checkbox
-                        isChecked={formValues.isRemote}
-                        toggleIsChecked={toggleIsRemote}
-                      >
-                        Remote
-                      </Checkbox>
-                    </div>
-                    {!formValues.isRemote ? (
-                      <DropDown
-                        key={`dd-${uuidv4()}`}
-                        label="Country"
-                        optionItems={countries}
-                      />
-                    ) : null}
-                  </>
-                )}
-                {readOnly ? (
-                  <div className="small-font job-full-view-subtitle-item-primary">
-                    {readOnlyJobPost?.updatedAt}
-                  </div>
-                ) : null}
+                {jobPostDisplayObject.companyName}
+                {jobPostDisplayObject.isRemoteOrCountry}
+                {jobPostDisplayObject.updatedAt}
               </div>
             </div>
           </div>
@@ -379,117 +522,26 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
           className="stack"
           style={{ alignItems: "flex-end", textAlign: "right" }}
         >
-          {readOnly ? (
-            <>
-              <button
-                className="primary-btn small-btn"
-                style={{ marginBottom: ".5em" }}
-              >
-                apply
-              </button>
-              <button className="secondary-btn small-btn">save</button>
-              <img
-                src={flag}
-                className="job-icon"
-                style={{ marginTop: "1em" }}
-                title="inappropriate"
-              />
-              <img
-                src={similar}
-                className="job-icon"
-                style={{ marginTop: ".50em" }}
-                title="similar jobs"
-              />
-            </>
-          ) : (
-            <>
-              <button
-                className="primary-btn small-btn"
-                style={{ marginBottom: ".5em" }}
-              >
-                save
-              </button>
-              <button className="secondary-btn small-btn">cancel</button>
-            </>
-          )}
+          {jobPostDisplayObject.buttons}
         </div>
       </div>
 
       <div
+        className="job-full-view-section"
         style={{
-          paddingLeft: "2em",
-          paddingRight: "2em",
+          padding: "1.5em",
+          marginBottom: "1em",
         }}
       >
-        {readOnly ? (
-          <div className="job-full-view-subtitle-item-secondary">
-            {`Contact ${readOnlyJobPost?.employerName}`}
-          </div>
-        ) : (
-          <div className="job-full-view-subtitle-item-secondary">
-            {`Contact ${formValues.employerFullName}`}
-          </div>
-        )}
-        {readOnly ? (
-          <div className="job-full-view-subtitle-item-secondary">
-            {`Primary Language ${readOnlyJobPost?.primaryLangName}`}
-          </div>
-        ) : (
-          <div style={{ marginTop: ".75em" }}>
-            <DropDown
-              key={`dd-${uuidv4()}`}
-              label="Primary Lang"
-              optionItems={languages}
-            />
-          </div>
-        )}
-        {readOnly ? (
-          readOnlyJobPost?.secondaryLangName &&
-          readOnlyJobPost?.secondaryLangName !=
-            readOnlyJobPost?.primaryLangName ? (
-            <div className="job-full-view-subtitle-item-secondary">
-              {`Secondary Language ${readOnlyJobPost?.secondaryLangName}`}
-            </div>
-          ) : null
-        ) : (
-          <div style={{ marginTop: ".75em" }}>
-            <DropDown
-              key={`dd-${uuidv4()}`}
-              label="Secondary Lang"
-              optionItems={languages}
-            />
-          </div>
-        )}
-        {readOnly ? (
-          <div className="job-full-view-subtitle-item-secondary">
-            {`Industry ${readOnlyJobPost?.industryName}`}
-          </div>
-        ) : (
-          <div style={{ marginTop: ".75em" }}>
-            <DropDown
-              key={`dd-${uuidv4()}`}
-              label="Industry"
-              optionItems={industries}
-            />
-          </div>
-        )}
-        {readOnly ? (
-          <div className="job-full-view-subtitle-item-secondary">
-            {`Base Salary ${readOnlyJobPost?.salary}`}
-          </div>
-        ) : (
-          <div style={{ marginTop: ".75em" }}>
-            <DropDown
-              key={`dd-${uuidv4()}`}
-              label="Salary"
-              optionItems={salaries}
-            />
-          </div>
-        )}
+        {jobPostDisplayObject.employerName}
+        {jobPostDisplayObject.primaryLang}
+        {jobPostDisplayObject.secondaryLang}
+        {jobPostDisplayObject.industry}
+        {jobPostDisplayObject.salary}
       </div>
 
       <div
-        className="normal-font dev-post-preview-container"
+        className="normal-font dev-post-preview-container job-full-view-section"
         style={{
           padding: "2em",
         }}
