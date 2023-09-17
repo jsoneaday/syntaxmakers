@@ -33,10 +33,6 @@ interface FormState {
   secondaryLangId?: string;
 }
 
-interface JobFullviewProps {
-  readOnly: boolean;
-}
-
 type JobPostDisplayObject = {
   title: JSX.Element;
   companyName: JSX.Element;
@@ -50,8 +46,32 @@ type JobPostDisplayObject = {
   salary: JSX.Element;
 };
 
+interface JobFullviewProps {
+  readOnly: boolean;
+}
+
 export default function JobFullview({ readOnly }: JobFullviewProps) {
   const { state: routeJobPost } = useLocation();
+  const [jobPost, setJobPost] = useState<JobPost>({
+    key: uuidv4(),
+    id: "",
+    updatedAt: "",
+    title: "",
+    description: "",
+    employerId: "",
+    employerName: "",
+    companyId: "",
+    companyName: "",
+    isRemote: false,
+    primaryLangId: "",
+    primaryLangName: "",
+    secondaryLangId: "",
+    secondaryLangName: "",
+    industryId: "",
+    industryName: "",
+    salaryId: "",
+    salary: "",
+  });
   const [jobPostDisplayComponents, setJobPostDisplayComponents] =
     useState<JobPostDisplayObject>();
   const [formValues, setFormValues] = useState<FormState>({
@@ -75,30 +95,22 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
     let currentJobPost: JobPost | undefined = undefined;
     if (routeJobPost) {
       currentJobPost = routeJobPost as JobPost;
-      console.log("set jobPost", currentJobPost);
+      setJobPost(currentJobPost);
+      console.log("jobPost", currentJobPost);
     }
+  }, [routeJobPost]);
 
+  useEffect(() => {
     if (!readOnly) {
       getJobPostOptions().then((jobPostOptions) => {
-        console.log("current jobPost", currentJobPost);
         const jobPostDisplayComponentItems = getJobPostDisplayComponents(
           jobPostOptions,
-          currentJobPost
+          jobPost
         );
         setJobPostDisplayComponents(jobPostDisplayComponentItems);
       });
     }
-  }, [routeJobPost]);
-
-  const onChangeTitle = (e: ChangeEvent<HTMLInputElement>) => {
-    e.preventDefault();
-
-    const newFormState: FormState = {
-      ...formValues,
-      title: e.target.value,
-    };
-    setFormValues(newFormState);
-  };
+  }, [jobPost]);
 
   const getJobPostDisplayComponents = (
     jobPostOptions: JobPostOptions,
@@ -204,6 +216,7 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
           key={`dd-${uuidv4()}`}
           label="Company"
           name="companyName"
+          value={jobPostObject?.companyId}
           optionItems={jobPostOptions?.companies || []}
         />
       );
@@ -254,6 +267,7 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
             label="Primary Lang"
             optionItems={jobPostOptions?.languages || []}
             name="primaryLangId"
+            value={jobPostObject?.primaryLangId}
           />
         </div>
       );
@@ -264,6 +278,7 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
             label="Secondary Lang"
             optionItems={jobPostOptions?.languages || []}
             name="secondaryLangId"
+            value={jobPostObject?.secondaryLangId}
           />
         </div>
       );
@@ -274,6 +289,7 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
             label="Industry"
             optionItems={jobPostOptions?.industries || []}
             name="industryId"
+            value={jobPostObject?.industryId}
           />
         </div>
       );
@@ -284,6 +300,7 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
             label="Salary"
             optionItems={jobPostOptions?.salaries || []}
             name="salaryId"
+            value={jobPostObject?.salaryId}
           />
         </div>
       );
@@ -304,11 +321,21 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
   };
 
   const toggleIsRemote = () => {
-    const newFormState: FormState = {
-      ...formValues,
-      isRemote: !formValues.isRemote,
+    const newJobPost: JobPost = {
+      ...jobPost,
+      isRemote: !jobPost.isRemote,
     };
-    setFormValues(newFormState);
+    setJobPost(newJobPost);
+  };
+
+  const onChangeTitle = (e: ChangeEvent<HTMLInputElement>) => {
+    e.preventDefault();
+
+    const newJobPost: JobPost = {
+      ...jobPost,
+      title: e.target.value,
+    };
+    setJobPost(newJobPost);
   };
 
   const onClickSubmit = (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -397,7 +424,7 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
           initialValue={[
             {
               type: "paragraph",
-              children: [{ text: "A line of text in a paragraph." }],
+              children: [{ text: "" }],
             },
           ]}
           readOnly={readOnly}
