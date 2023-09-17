@@ -217,6 +217,7 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
           label="Company"
           name="companyName"
           value={jobPostObject?.companyId}
+          onChange={onChangeCompany}
           optionItems={jobPostOptions?.companies || []}
         />
       );
@@ -236,6 +237,7 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
               key={`dd-${uuidv4()}`}
               label="Country"
               name="countryId"
+              onChange={onChangeCountry}
               optionItems={jobPostOptions?.countries || []}
             />
           ) : null}
@@ -267,6 +269,7 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
             label="Primary Lang"
             optionItems={jobPostOptions?.languages || []}
             name="primaryLangId"
+            onChange={onChangePrimaryLang}
             value={jobPostObject?.primaryLangId}
           />
         </div>
@@ -278,6 +281,7 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
             label="Secondary Lang"
             optionItems={jobPostOptions?.languages || []}
             name="secondaryLangId"
+            onChange={onChangeSecondaryLang}
             value={jobPostObject?.secondaryLangId}
           />
         </div>
@@ -289,6 +293,7 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
             label="Industry"
             optionItems={jobPostOptions?.industries || []}
             name="industryId"
+            onChange={onChangeIndustry}
             value={jobPostObject?.industryId}
           />
         </div>
@@ -300,6 +305,7 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
             label="Salary"
             optionItems={jobPostOptions?.salaries || []}
             name="salaryId"
+            onChange={onChangeSalary}
             value={jobPostObject?.salaryId}
           />
         </div>
@@ -338,8 +344,69 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
     setJobPost(newJobPost);
   };
 
+  const onChangeCompany = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    e.preventDefault();
+
+    const newJobPost: JobPost = {
+      ...jobPost,
+      companyId: e.target.value,
+    };
+    setJobPost(newJobPost);
+  };
+
+  const onChangeCountry = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    e.preventDefault();
+
+    const newJobPost: JobPost = {
+      ...jobPost,
+      countryId: e.target.value,
+    };
+    setJobPost(newJobPost);
+  };
+
+  const onChangePrimaryLang = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    e.preventDefault();
+
+    const newJobPost: JobPost = {
+      ...jobPost,
+      primaryLangId: e.target.value,
+    };
+    setJobPost(newJobPost);
+  };
+
+  const onChangeSecondaryLang = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    e.preventDefault();
+
+    const newJobPost: JobPost = {
+      ...jobPost,
+      secondaryLangId: e.target.value,
+    };
+    setJobPost(newJobPost);
+  };
+
+  const onChangeIndustry = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    e.preventDefault();
+
+    const newJobPost: JobPost = {
+      ...jobPost,
+      industryId: e.target.value,
+    };
+    setJobPost(newJobPost);
+  };
+
+  const onChangeSalary = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    e.preventDefault();
+
+    const newJobPost: JobPost = {
+      ...jobPost,
+      salaryId: e.target.value,
+    };
+    setJobPost(newJobPost);
+  };
+
   const onClickSubmit = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
+    console.log("jobPost to submit", jobPost);
   };
 
   return (

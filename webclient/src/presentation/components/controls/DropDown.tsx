@@ -11,6 +11,7 @@ export type OptionType = {
 interface DropDownProps {
   label: string;
   optionItems: OptionType[];
+  onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
   name?: string;
   value?: any;
 }
@@ -18,12 +19,12 @@ interface DropDownProps {
 export default function DropDown({
   label,
   optionItems,
+  onChange,
   name,
   value,
 }: DropDownProps) {
   const [options, setOptions] = useState<JSX.Element[]>();
   const [selectId, setSelectId] = useState("");
-  const [localValue, setLocalValue] = useState<any>();
 
   useEffect(() => {
     setSelectId(uuidv4());
@@ -39,25 +40,11 @@ export default function DropDown({
     setOptions(_options);
   }, [optionItems]);
 
-  useEffect(() => {
-    setLocalValue(value);
-  }, [value]);
-
-  const onChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    e.preventDefault();
-    setLocalValue(e.target.value);
-  };
-
   return (
     <div style={{ marginRight: ".5em" }}>
       <label htmlFor={selectId}>{label}</label>
       <div className="select" style={{ marginTop: ".5em" }}>
-        <select
-          id={selectId}
-          name={name}
-          value={localValue}
-          onChange={onChange}
-        >
+        <select id={selectId} name={name} value={value} onChange={onChange}>
           {options}
         </select>
       </div>
