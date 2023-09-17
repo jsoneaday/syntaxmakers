@@ -159,9 +159,11 @@ exports[`Test JobFullview matches snapshot 1`] = `
                   style="font-weight: normal;"
                 >
                   <span
-                    data-slate-string="true"
+                    data-slate-length="0"
+                    data-slate-zero-width="n"
                   >
-                    A line of text in a paragraph.
+                    ﻿
+                    <br />
                   </span>
                 </span>
               </span>
@@ -326,9 +328,11 @@ exports[`Test JobFullview matches snapshot 1`] = `
                 style="font-weight: normal;"
               >
                 <span
-                  data-slate-string="true"
+                  data-slate-length="0"
+                  data-slate-zero-width="n"
                 >
-                  A line of text in a paragraph.
+                  ﻿
+                  <br />
                 </span>
               </span>
             </span>

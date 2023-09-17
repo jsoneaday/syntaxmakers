@@ -17,21 +17,21 @@ import {
   getJobPostOptions,
 } from "../../models/JobFullviewModel";
 
-interface FormState {
-  id: string;
-  updatedAt: string;
-  employerId: string;
-  employerName: string;
-  title: string;
-  description: string;
-  isRemote: boolean;
-  countryId: string;
-  companyId: string;
-  industryId: string;
-  salaryId: string;
-  primaryLangId: string;
-  secondaryLangId?: string;
-}
+// interface FormState {
+//   id: string;
+//   updatedAt: string;
+//   employerId: string;
+//   employerName: string;
+//   title: string;
+//   description: string;
+//   isRemote: boolean;
+//   countryId: string;
+//   companyId: string;
+//   industryId: string;
+//   salaryId: string;
+//   primaryLangId: string;
+//   secondaryLangId?: string;
+// }
 
 type JobPostDisplayObject = {
   title: JSX.Element;
@@ -74,21 +74,21 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
   });
   const [jobPostDisplayComponents, setJobPostDisplayComponents] =
     useState<JobPostDisplayObject>();
-  const [formValues, setFormValues] = useState<FormState>({
-    id: "",
-    updatedAt: "",
-    employerId: "",
-    employerName: "",
-    title: "",
-    description: "",
-    isRemote: false,
-    countryId: "",
-    companyId: "",
-    industryId: "",
-    salaryId: "",
-    primaryLangId: "",
-    secondaryLangId: "",
-  });
+  // const [formValues, setFormValues] = useState<FormState>({
+  //   id: "",
+  //   updatedAt: "",
+  //   employerId: "",
+  //   employerName: "",
+  //   title: "",
+  //   description: "",
+  //   isRemote: false,
+  //   countryId: "",
+  //   companyId: "",
+  //   industryId: "",
+  //   salaryId: "",
+  //   primaryLangId: "",
+  //   secondaryLangId: "",
+  // });
   const [devOrEmp] = useDevOrEmployer();
 
   useEffect(() => {
@@ -109,12 +109,18 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
         );
         setJobPostDisplayComponents(jobPostDisplayComponentItems);
       });
+    } else {
+      const jobPostDisplayComponentItems = getJobPostDisplayComponents(
+        undefined,
+        jobPost
+      );
+      setJobPostDisplayComponents(jobPostDisplayComponentItems);
     }
   }, [jobPost]);
 
   const getJobPostDisplayComponents = (
-    jobPostOptions: JobPostOptions,
-    jobPostObject: JobPost | undefined
+    jobPostOptions: JobPostOptions | undefined,
+    jobPostObject: JobPost
   ) => {
     let title: JSX.Element;
     let companyName: JSX.Element;
@@ -128,20 +134,20 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
     let salary: JSX.Element;
 
     if (readOnly) {
-      title = <div className="title-font">{jobPostObject?.title}</div>;
+      title = <div className="title-font">{jobPostObject.title}</div>;
       companyName = (
         <div className="sub-title-font job-full-view-subtitle-item-primary">
-          {jobPostObject?.companyName}
+          {jobPostObject.companyName}
         </div>
       );
       isRemoteOrCountry = (
         <div className="sub-title-font job-full-view-subtitle-item-primary">
-          {jobPostObject?.isRemote ? "Remote" : jobPostObject?.countryName}
+          {jobPostObject.isRemote ? "Remote" : jobPostObject.countryName}
         </div>
       );
       updatedAt = (
         <div className="small-font job-full-view-subtitle-item-primary">
-          {jobPostObject?.updatedAt}
+          {jobPostObject.updatedAt}
         </div>
       );
       buttons = (
@@ -169,29 +175,29 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
       );
       employerName = (
         <div className="job-full-view-subtitle-item-secondary">
-          {`Contact ${jobPostObject?.employerName}`}
+          {`Contact ${jobPostObject.employerName}`}
         </div>
       );
       primaryLang = (
         <div className="job-full-view-subtitle-item-secondary">
-          {`Primary Language ${jobPostObject?.primaryLangName}`}
+          {`Primary Language ${jobPostObject.primaryLangName}`}
         </div>
       );
       secondaryLang =
-        jobPostObject?.secondaryLangName &&
-        jobPostObject?.secondaryLangName != jobPostObject?.primaryLangName ? (
+        jobPostObject.secondaryLangName &&
+        jobPostObject.secondaryLangName != jobPostObject.primaryLangName ? (
           <div className="job-full-view-subtitle-item-secondary">
-            {`Secondary Language ${jobPostObject?.secondaryLangName}`}
+            {`Secondary Language ${jobPostObject.secondaryLangName}`}
           </div>
         ) : null;
       industry = (
         <div className="job-full-view-subtitle-item-secondary">
-          {`Industry ${jobPostObject?.industryName}`}
+          {`Industry ${jobPostObject.industryName}`}
         </div>
       );
       salary = (
         <div className="job-full-view-subtitle-item-secondary">
-          {`Base Salary ${jobPostObject?.salary}`}
+          {`Base Salary ${jobPostObject.salary}`}
         </div>
       );
     } else {
@@ -203,7 +209,7 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
           <input
             id="job-title-input"
             type="text"
-            value={jobPostObject?.title}
+            value={jobPostObject.title}
             onChange={onChangeTitle}
             className="input normal-font"
             name="title"
@@ -216,7 +222,7 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
           key={`dd-${uuidv4()}`}
           label="Company"
           name="companyName"
-          value={jobPostObject?.companyId}
+          value={jobPostObject.companyId}
           onChange={onChangeCompany}
           optionItems={jobPostOptions?.companies || []}
         />
@@ -225,14 +231,14 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
         <>
           <div className="sub-title-font job-full-view-subtitle-item-primary">
             <Checkbox
-              isChecked={jobPostObject?.isRemote || false}
+              isChecked={jobPostObject.isRemote || false}
               toggleIsChecked={toggleIsRemote}
               name="isRemote"
             >
               Remote
             </Checkbox>
           </div>
-          {!jobPostObject?.isRemote ? (
+          {!jobPostObject.isRemote ? (
             <DropDown
               key={`dd-${uuidv4()}`}
               label="Country"
@@ -259,7 +265,7 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
       );
       employerName = (
         <div className="job-full-view-subtitle-item-secondary">
-          {`Contact ${jobPostObject?.employerName}`}
+          {`Contact ${jobPostObject.employerName}`}
         </div>
       );
       primaryLang = (
@@ -270,7 +276,7 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
             optionItems={jobPostOptions?.languages || []}
             name="primaryLangId"
             onChange={onChangePrimaryLang}
-            value={jobPostObject?.primaryLangId}
+            value={jobPostObject.primaryLangId}
           />
         </div>
       );
@@ -282,7 +288,7 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
             optionItems={jobPostOptions?.languages || []}
             name="secondaryLangId"
             onChange={onChangeSecondaryLang}
-            value={jobPostObject?.secondaryLangId}
+            value={jobPostObject.secondaryLangId}
           />
         </div>
       );
@@ -294,7 +300,7 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
             optionItems={jobPostOptions?.industries || []}
             name="industryId"
             onChange={onChangeIndustry}
-            value={jobPostObject?.industryId}
+            value={jobPostObject.industryId}
           />
         </div>
       );
@@ -306,7 +312,7 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
             optionItems={jobPostOptions?.salaries || []}
             name="salaryId"
             onChange={onChangeSalary}
-            value={jobPostObject?.salaryId}
+            value={jobPostObject.salaryId}
           />
         </div>
       );
