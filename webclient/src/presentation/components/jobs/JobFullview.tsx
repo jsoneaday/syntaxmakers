@@ -127,7 +127,7 @@ type JobPostDisplayObject = {
 };
 
 export default function JobFullview({ readOnly }: JobFullviewProps) {
-  const { state: routeJobPost } = useLocation();
+  const { state: routeJobPost, key } = useLocation();
   const [jobPostDisplayComponents, setJobPostDisplayComponents] =
     useState<JobPostDisplayObject>();
   const [formValues, setFormValues] = useReducer<
@@ -152,6 +152,7 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
   const [_isPending, startTransition] = useTransition();
 
   useEffect(() => {
+    console.log(`routeJobPost ${routeJobPost}, key ${key}`);
     if (routeJobPost) {
       const currentJobPost = routeJobPost as JobPost;
 
