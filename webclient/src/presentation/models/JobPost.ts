@@ -23,7 +23,7 @@ export default class JobPost implements KeyItem {
     public primaryLangName: string,
     public secondaryLangId: string,
     public secondaryLangName: string,
-    public industryId: String,
+    public industryId: string,
     public industryName: String,
     public salaryId: string,
     public salary: string,

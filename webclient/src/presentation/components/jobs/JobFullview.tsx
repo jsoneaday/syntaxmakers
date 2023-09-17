@@ -1,12 +1,6 @@
 import { useLocation } from "react-router-dom";
 import JobPost from "../../models/JobPost";
-import {
-  ChangeEvent,
-  useEffect,
-  useReducer,
-  useState,
-  useTransition,
-} from "react";
+import { ChangeEvent, useEffect, useState } from "react";
 import "../../theme/job_full_view.css";
 import flag from "../../theme/assets/flag.png";
 import similar from "../../theme/assets/similar.png";
@@ -18,13 +12,16 @@ import { useDevOrEmployer } from "../../common/redux/devOrEmployer/DevOrEmployer
 import { DevOrEmployer } from "../../models/DevOrEmployer";
 /// @ts-ignore
 import { v4 as uuidv4 } from "uuid";
-import { JobPostData, getJobPostData } from "../../models/JobFullviewModel";
+import {
+  JobPostOptions,
+  getJobPostOptions,
+} from "../../models/JobFullviewModel";
 
 interface FormState {
   id: string;
   updatedAt: string;
   employerId: string;
-  employerFullName: string;
+  employerName: string;
   title: string;
   description: string;
   isRemote: boolean;
@@ -35,79 +32,6 @@ interface FormState {
   primaryLangId: string;
   secondaryLangId?: string;
 }
-
-enum FormActionTypes {
-  Id = "id",
-  UpdatedAt = "updatedAt",
-  EmployerId = "employerId",
-  EmployerFullName = "employerFullName",
-  Title = "title",
-  Desc = "desc",
-  IsRemote = "isRemote",
-  CountryId = "countryId",
-  CompanyId = "companyId",
-  IndustryId = "industryId",
-  SalaryId = "salaryId",
-  PrimaryLangId = "primaryLangId",
-  SecondaryLangId = "secondaryLangId",
-}
-
-interface FormAction {
-  type: FormActionTypes;
-  payload: any;
-}
-
-function reducer(state: FormState, action: FormAction): FormState {
-  const newState = { ...state };
-
-  switch (action.type) {
-    case FormActionTypes.Id:
-      newState.id = action.payload;
-      break;
-    case FormActionTypes.UpdatedAt:
-      newState.updatedAt = action.payload;
-      break;
-    case FormActionTypes.EmployerId:
-      newState.employerId = action.payload;
-      break;
-    case FormActionTypes.EmployerFullName:
-      newState.employerFullName = action.payload;
-      break;
-    case FormActionTypes.Title:
-      newState.title = action.payload;
-      break;
-    case FormActionTypes.Desc:
-      newState.description = action.payload;
-      break;
-    case FormActionTypes.IsRemote:
-      newState.isRemote = action.payload;
-      break;
-    case FormActionTypes.CountryId:
-      newState.countryId = action.payload;
-      break;
-    case FormActionTypes.CompanyId:
-      newState.companyId = action.payload;
-      break;
-    case FormActionTypes.IndustryId:
-      newState.industryId = action.payload;
-      break;
-    case FormActionTypes.SalaryId:
-      newState.salaryId = action.payload;
-      break;
-    case FormActionTypes.PrimaryLangId:
-      newState.primaryLangId = action.payload;
-      break;
-    case FormActionTypes.SecondaryLangId:
-      newState.secondaryLangId = action.payload;
-      break;
-    default:
-      throw new Error(`Action type, ${action.type}, not found`);
-  }
-
-  return newState;
-}
-
-type Reducer<S, A> = (prevState: S, action: A) => S;
 
 interface JobFullviewProps {
   readOnly: boolean;
@@ -127,16 +51,14 @@ type JobPostDisplayObject = {
 };
 
 export default function JobFullview({ readOnly }: JobFullviewProps) {
-  const { state: routeJobPost, key } = useLocation();
+  const { state: routeJobPost } = useLocation();
   const [jobPostDisplayComponents, setJobPostDisplayComponents] =
     useState<JobPostDisplayObject>();
-  const [formValues, setFormValues] = useReducer<
-    Reducer<FormState, FormAction>
-  >(reducer, {
+  const [formValues, setFormValues] = useState<FormState>({
     id: "",
     updatedAt: "",
     employerId: "",
-    employerFullName: "",
+    employerName: "",
     title: "",
     description: "",
     isRemote: false,
@@ -147,85 +69,41 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
     primaryLangId: "",
     secondaryLangId: "",
   });
-  const [jobPostData, setJobPostData] = useState<JobPostData>();
   const [devOrEmp] = useDevOrEmployer();
-  const [_isPending, startTransition] = useTransition();
 
   useEffect(() => {
-    console.log(`routeJobPost ${routeJobPost}, key ${key}`);
+    let currentJobPost: JobPost | undefined = undefined;
     if (routeJobPost) {
-      const currentJobPost = routeJobPost as JobPost;
+      currentJobPost = routeJobPost as JobPost;
+      console.log("set jobPost", currentJobPost);
+    }
 
-      const jobPostDisplayComponentItems =
-        getJobPostDisplayComponents(currentJobPost);
-      setJobPostDisplayComponents(jobPostDisplayComponentItems);
-
-      setAllFormValues(currentJobPost);
+    if (!readOnly) {
+      getJobPostOptions().then((jobPostOptions) => {
+        console.log("current jobPost", currentJobPost);
+        const jobPostDisplayComponentItems = getJobPostDisplayComponents(
+          jobPostOptions,
+          currentJobPost
+        );
+        setJobPostDisplayComponents(jobPostDisplayComponentItems);
+      });
     }
   }, [routeJobPost]);
-
-  useEffect(() => {
-    if (!readOnly) {
-      getJobPostData().then((jobPostData) => {
-        setJobPostData(jobPostData);
-      });
-    }
-  }, [readOnly]);
-
-  const setAllFormValues = (jobPost: JobPost) => {
-    startTransition(() => {
-      setFormValues({ type: FormActionTypes.Id, payload: jobPost.id });
-      setFormValues({
-        type: FormActionTypes.UpdatedAt,
-        payload: jobPost.updatedAt,
-      });
-      setFormValues({
-        type: FormActionTypes.EmployerId,
-        payload: jobPost.employerId,
-      });
-      setFormValues({
-        type: FormActionTypes.EmployerFullName,
-        payload: jobPost.employerName,
-      });
-      setFormValues({ type: FormActionTypes.Title, payload: jobPost.title });
-      setFormValues({
-        type: FormActionTypes.Desc,
-        payload: jobPost.description,
-      });
-      setFormValues({
-        type: FormActionTypes.CountryId,
-        payload: jobPost.countryId,
-      });
-      setFormValues({
-        type: FormActionTypes.CompanyId,
-        payload: jobPost.companyId,
-      });
-      setFormValues({
-        type: FormActionTypes.IndustryId,
-        payload: jobPost.industryId,
-      });
-      setFormValues({
-        type: FormActionTypes.SalaryId,
-        payload: jobPost.salaryId,
-      });
-      setFormValues({
-        type: FormActionTypes.PrimaryLangId,
-        payload: jobPost.primaryLangId,
-      });
-      setFormValues({
-        type: FormActionTypes.SecondaryLangId,
-        payload: jobPost.secondaryLangId,
-      });
-    });
-  };
 
   const onChangeTitle = (e: ChangeEvent<HTMLInputElement>) => {
     e.preventDefault();
 
-    setFormValues({ type: FormActionTypes.Title, payload: e.target.value });
+    const newFormState: FormState = {
+      ...formValues,
+      title: e.target.value,
+    };
+    setFormValues(newFormState);
   };
 
-  const getJobPostDisplayComponents = (jobPostObject: JobPost | undefined) => {
+  const getJobPostDisplayComponents = (
+    jobPostOptions: JobPostOptions,
+    jobPostObject: JobPost | undefined
+  ) => {
     let title: JSX.Element;
     let companyName: JSX.Element;
     let isRemoteOrCountry: JSX.Element;
@@ -313,9 +191,11 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
           <input
             id="job-title-input"
             type="text"
-            value={formValues.title}
+            value={jobPostObject?.title}
             onChange={onChangeTitle}
-            className="input"
+            className="input normal-font"
+            name="title"
+            style={{ width: "20em", textAlign: "right" }}
           />
         </div>
       );
@@ -323,24 +203,27 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
         <DropDown
           key={`dd-${uuidv4()}`}
           label="Company"
-          optionItems={jobPostData?.companies || []}
+          name="companyName"
+          optionItems={jobPostOptions?.companies || []}
         />
       );
       isRemoteOrCountry = (
         <>
           <div className="sub-title-font job-full-view-subtitle-item-primary">
             <Checkbox
-              isChecked={formValues.isRemote}
+              isChecked={jobPostObject?.isRemote || false}
               toggleIsChecked={toggleIsRemote}
+              name="isRemote"
             >
               Remote
             </Checkbox>
           </div>
-          {!formValues.isRemote ? (
+          {!jobPostObject?.isRemote ? (
             <DropDown
               key={`dd-${uuidv4()}`}
               label="Country"
-              optionItems={jobPostData?.countries || []}
+              name="countryId"
+              optionItems={jobPostOptions?.countries || []}
             />
           ) : null}
         </>
@@ -351,6 +234,8 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
           <button
             className="primary-btn small-btn"
             style={{ marginBottom: ".5em" }}
+            name="save"
+            onClick={onClickSubmit}
           >
             save
           </button>
@@ -359,7 +244,7 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
       );
       employerName = (
         <div className="job-full-view-subtitle-item-secondary">
-          {`Contact ${formValues.employerFullName}`}
+          {`Contact ${jobPostObject?.employerName}`}
         </div>
       );
       primaryLang = (
@@ -367,7 +252,8 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
           <DropDown
             key={`dd-${uuidv4()}`}
             label="Primary Lang"
-            optionItems={jobPostData?.languages || []}
+            optionItems={jobPostOptions?.languages || []}
+            name="primaryLangId"
           />
         </div>
       );
@@ -376,7 +262,8 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
           <DropDown
             key={`dd-${uuidv4()}`}
             label="Secondary Lang"
-            optionItems={jobPostData?.languages || []}
+            optionItems={jobPostOptions?.languages || []}
+            name="secondaryLangId"
           />
         </div>
       );
@@ -385,7 +272,8 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
           <DropDown
             key={`dd-${uuidv4()}`}
             label="Industry"
-            optionItems={jobPostData?.industries || []}
+            optionItems={jobPostOptions?.industries || []}
+            name="industryId"
           />
         </div>
       );
@@ -394,7 +282,8 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
           <DropDown
             key={`dd-${uuidv4()}`}
             label="Salary"
-            optionItems={jobPostData?.salaries || []}
+            optionItems={jobPostOptions?.salaries || []}
+            name="salaryId"
           />
         </div>
       );
@@ -415,10 +304,15 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
   };
 
   const toggleIsRemote = () => {
-    setFormValues({
-      type: FormActionTypes.IsRemote,
-      payload: !formValues.isRemote,
-    });
+    const newFormState: FormState = {
+      ...formValues,
+      isRemote: !formValues.isRemote,
+    };
+    setFormValues(newFormState);
+  };
+
+  const onClickSubmit = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
   };
 
   return (

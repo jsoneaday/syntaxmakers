@@ -6,7 +6,7 @@ import { getSalaries } from "../../domain/repository/SalaryRepo";
 import { appendPlusLargeCurrency } from "../common/CurrencyFormatter";
 import { OptionType } from "../components/controls/DropDown";
 
-export interface JobPostData {
+export interface JobPostOptions {
   companies: OptionType[];
   countries: OptionType[];
   languages: OptionType[];
@@ -14,7 +14,7 @@ export interface JobPostData {
   salaries: OptionType[];
 }
 
-export async function getJobPostData(): Promise<JobPostData> {
+export async function getJobPostOptions(): Promise<JobPostOptions> {
   const [companies, countries, languages, industries, salaries] =
     await Promise.all([
       getCompanies(),

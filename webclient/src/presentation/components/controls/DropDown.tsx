@@ -11,9 +11,10 @@ export type OptionType = {
 interface DropDownProps {
   label: string;
   optionItems: OptionType[];
+  name?: string;
 }
 
-export default function DropDown({ label, optionItems }: DropDownProps) {
+export default function DropDown({ label, optionItems, name }: DropDownProps) {
   const [options, setOptions] = useState<JSX.Element[]>();
   const [selectId, setSelectId] = useState("");
   useEffect(() => {
@@ -34,7 +35,9 @@ export default function DropDown({ label, optionItems }: DropDownProps) {
     <div style={{ marginRight: ".5em" }}>
       <label htmlFor={selectId}>{label}</label>
       <div className="select" style={{ marginTop: ".5em" }}>
-        <select id={selectId}>{options}</select>
+        <select id={selectId} name={name}>
+          {options}
+        </select>
       </div>
     </div>
   );
