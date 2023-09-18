@@ -1,4 +1,4 @@
-import { JOBS_DEV_URL, JOBS_EMP_URL } from "./Api";
+import { JOBS_DEV_URL, JOBS_EMP_URL, JOB_UPDATE_URL } from "./Api";
 
 export class Job {
   constructor(
@@ -23,6 +23,19 @@ export class Job {
     public countryId?: string,
     public countryName?: string
   ) {}
+}
+
+export interface JobFormState {
+  id: string;
+  employerId: string;
+  title: string;
+  description: string;
+  isRemote: boolean;
+  industryId: string;
+  salaryId: string;
+  primaryLangId: string;
+  secondaryLangId?: string;
+  countryId?: string;
 }
 
 export async function getJobsByDeveloper(
@@ -70,4 +83,30 @@ export async function getJobsByEmployer(
     return await result.json();
   }
   return [];
+}
+
+export async function updateJobPost(jobFormState: JobFormState) {
+  const result = await fetch(JOB_UPDATE_URL, {
+    method: "post",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      id: jobFormState.id,
+      employerId: jobFormState.employerId,
+      title: jobFormState.title,
+      description: jobFormState.description,
+      isRemote: jobFormState.isRemote,
+      primaryLangId: jobFormState.primaryLangId,
+      industryId: jobFormState.industryId,
+      salaryId: jobFormState.salaryId,
+      secondaryLangId: jobFormState.secondaryLangId,
+      countryId: jobFormState.countryId,
+    }),
+  });
+
+  if (result.ok) {
+    return await result.json();
+  }
+  throw new Error("Failed to update job");
 }

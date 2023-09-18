@@ -5,6 +5,7 @@ use actix_web::http::header;
 use actix_web::web::Bytes;
 use actix_web::{HttpRequest, test};
 use fake::Fake;
+use fake::faker::internet::en::SafeEmail;
 use fake::faker::name::en::{FirstName, LastName};
 use jsonwebtoken::{EncodingKey, DecodingKey};
 use serde::Serialize;
@@ -269,4 +270,10 @@ pub async fn get_random_industry() -> Industry {
 
 pub async fn get_random_country() -> Country {
     COUNTRIES.get().unwrap().get(0).unwrap().clone()
+}
+
+pub fn get_random_email() -> String {
+    let no = get_random_no_from_range(100, 1000);
+    let email = SafeEmail().fake::<String>();
+    format!("{no}{email}")
 }

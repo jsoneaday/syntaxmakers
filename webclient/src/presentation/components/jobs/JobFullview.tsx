@@ -1,6 +1,6 @@
 import { useLocation } from "react-router-dom";
 import JobPost from "../../models/JobPost";
-import { ChangeEvent, useEffect, useState } from "react";
+import { ChangeEvent, useEffect, useRef, useState } from "react";
 import "../../theme/job_full_view.css";
 import flag from "../../theme/assets/flag.png";
 import similar from "../../theme/assets/similar.png";
@@ -16,22 +16,10 @@ import {
   JobPostOptions,
   getJobPostOptions,
 } from "../../models/JobFullviewModel";
-
-// interface FormState {
-//   id: string;
-//   updatedAt: string;
-//   employerId: string;
-//   employerName: string;
-//   title: string;
-//   description: string;
-//   isRemote: boolean;
-//   countryId: string;
-//   companyId: string;
-//   industryId: string;
-//   salaryId: string;
-//   primaryLangId: string;
-//   secondaryLangId?: string;
-// }
+import {
+  JobFormState,
+  updateJobPost,
+} from "../../../domain/repository/JobRepo";
 
 type JobPostDisplayObject = {
   title: JSX.Element;
@@ -74,21 +62,19 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
   });
   const [jobPostDisplayComponents, setJobPostDisplayComponents] =
     useState<JobPostDisplayObject>();
-  // const [formValues, setFormValues] = useState<FormState>({
-  //   id: "",
-  //   updatedAt: "",
-  //   employerId: "",
-  //   employerName: "",
-  //   title: "",
-  //   description: "",
-  //   isRemote: false,
-  //   countryId: "",
-  //   companyId: "",
-  //   industryId: "",
-  //   salaryId: "",
-  //   primaryLangId: "",
-  //   secondaryLangId: "",
-  // });
+  const formValues = useRef<JobFormState>({
+    id: "",
+    employerId: "",
+    title: "",
+    description: "",
+    isRemote: false,
+    countryId: "",
+    companyId: "",
+    industryId: "",
+    salaryId: "",
+    primaryLangId: "",
+    secondaryLangId: "",
+  });
   const [devOrEmp] = useDevOrEmployer();
 
   useEffect(() => {
@@ -413,6 +399,23 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
   const onClickSubmit = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     console.log("jobPost to submit", jobPost);
+    setFormValues();
+    updateJobPost(formValues.current);
+  };
+
+  const setFormValues = () => {
+    formValues.current = {
+      id: jobPost.id,
+      employerId: jobPost.employerId,
+      title: jobPost.title,
+      description: jobPost.description,
+      isRemote: jobPost.isRemote,
+      primaryLangId: jobPost.primaryLangId,
+      industryId: jobPost.industryId,
+      salaryId: jobPost.salaryId,
+      secondaryLangId: jobPost.secondaryLangId,
+      countryId: jobPost.countryId,
+    };
   };
 
   return (

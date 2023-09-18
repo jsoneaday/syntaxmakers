@@ -1,6 +1,6 @@
-use actix_web::web::{Data, Json, Path};
-use crate::{common::{repository::{jobs::{repo::{InsertJobFn, QueryJobFn, QueryAllJobsFn, QueryJobsByDeveloper, QueryJobsByEmployerFn}, models::{NewJob, Job}}, base::Repository}, authentication::auth_service::Authenticator}, app_state::AppState, routes::{base_model::{OutputId, PagingModel, IdAndPagingModel}, user_error::UserError}};
-use super::models::{NewJobForRoute, JobResponders, JobResponder};
+use actix_web::{web::{Data, Json, Path}, HttpResponse};
+use crate::{common::{repository::{jobs::{repo::{InsertJobFn, QueryJobFn, QueryAllJobsFn, QueryJobsByDeveloper, QueryJobsByEmployerFn, UpdateJobFn}, models::{NewJob, Job, UpdateJob}}, base::Repository}, authentication::auth_service::Authenticator}, app_state::AppState, routes::{base_model::{OutputId, PagingModel, IdAndPagingModel}, user_error::UserError}};
+use super::models::{NewJobForRoute, JobResponders, JobResponder, UpdateJobForRoute};
 
 #[allow(unused)]
 pub async fn create_job<T: InsertJobFn + Repository, U: Authenticator>(app_data: Data<AppState<T, U>>, json: Json<NewJobForRoute>)
@@ -20,6 +20,28 @@ pub async fn create_job<T: InsertJobFn + Repository, U: Authenticator>(app_data:
     match result {
         Ok(entity) => Ok(OutputId { id: entity.id }),
         Err(e) => Err(e.into())
+    }
+}
+
+#[allow(unused)]
+pub async fn update_job<T: UpdateJobFn + Repository, U: Authenticator>(app_data: Data<AppState<T, U>>, json: Json<UpdateJobForRoute>)
+ -> HttpResponse {
+    let result = app_data.repo.update_job(UpdateJob {
+        id: json.id,
+        employer_id: json.employer_id,
+        title: json.title.to_owned(),
+        description: json.description.to_owned(),
+        is_remote: json.is_remote,
+        country_id: json.country_id,
+        primary_lang_id: json.primary_lang_id,
+        secondary_lang_id: json.secondary_lang_id,
+        industry_id: json.industry_id,
+        salary_id: json.salary_id
+    }).await;
+
+    match result {
+        Ok(entity) => HttpResponse::NoContent().into(),
+        Err(e) => HttpResponse::InternalServerError().body("Failed to update job")
     }
 }
 
@@ -105,7 +127,7 @@ fn convert(job: &Job) -> JobResponder {
         primary_lang_id: job.primary_lang_id, 
         primary_lang_name: job.primary_lang_name.to_string(),
         secondary_lang_id: job.secondary_lang_id,
-        secondary_lang_name: job.secondary_lang_name.to_string(), 
+        secondary_lang_name: job.secondary_lang_name.clone(), 
         industry_id: job.industry_id, 
         industry_name: job.industry_name.to_string(),
         salary_id: job.salary_id,
@@ -154,8 +176,8 @@ mod tests {
             country_name: Some(COUNTRIES.get().unwrap().get(0).unwrap().name.clone()),
             primary_lang_id: id, 
             primary_lang_name: LANGUAGES.get().unwrap().get(0).unwrap().name.clone(),
-            secondary_lang_id: id + 1, 
-            secondary_lang_name: LANGUAGES.get().unwrap().get(0).unwrap().name.clone(),
+            secondary_lang_id: Some(id + 1), 
+            secondary_lang_name: Some(LANGUAGES.get().unwrap().get(0).unwrap().name.clone()),
             industry_id: id, 
             industry_name: INDUSTRIES.get().unwrap().get(0).unwrap().name.clone(),
             salary_id: id,
@@ -167,6 +189,13 @@ mod tests {
     impl InsertJobFn for MockDbRepo {
         async fn insert_job(&self, _: NewJob) -> Result<EntityId, sqlx::Error> {
             Ok(EntityId { id: 1 })
+        }
+    }
+
+    #[async_trait]
+    impl UpdateJobFn for MockDbRepo {
+        async fn update_job(&self, _: UpdateJob) -> Result<(), sqlx::Error> {
+            Ok(())
         }
     }
 
@@ -226,6 +255,29 @@ mod tests {
         })).await.unwrap();
 
         assert!(result.id == 1);
+    }
+
+    #[tokio::test]
+    async fn test_update_job_route() {
+        init_fixtures().await;
+        let repo = MockDbRepo::init().await;
+        let auth_service = MockAuthService;
+        let app_data = get_app_data(repo, auth_service).await;
+
+        let result = update_job(app_data, Json(UpdateJobForRoute {
+            id: 1,
+            employer_id: 1,
+            title: get_fake_title().to_string(),
+            description: get_fake_desc().to_string(),
+            is_remote: false,
+            country_id: Some(1),
+            primary_lang_id: 1,
+            secondary_lang_id: Some(2),
+            industry_id: 1,
+            salary_id: 1
+        })).await;
+
+        assert!(result.status().is_success());
     }
 
     #[tokio::test]

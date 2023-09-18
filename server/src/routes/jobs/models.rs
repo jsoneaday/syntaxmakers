@@ -17,6 +17,21 @@ pub struct NewJobForRoute {
     pub salary_id: i64
 }
 
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UpdateJobForRoute {
+    pub id: i64,
+    pub employer_id: i64,
+    pub title: String,
+    pub description: String,
+    pub is_remote: bool,
+    pub country_id: Option<i64>,
+    pub primary_lang_id: i64,
+    pub secondary_lang_id: Option<i64>,
+    pub industry_id: i64,
+    pub salary_id: i64
+}
+
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct JobResponder {
@@ -34,8 +49,8 @@ pub struct JobResponder {
     pub country_name: Option<String>,
     pub primary_lang_id: i64,
     pub primary_lang_name: String,
-    pub secondary_lang_id: i64,
-    pub secondary_lang_name: String,
+    pub secondary_lang_id: Option<i64>,
+    pub secondary_lang_name: Option<String>,
     pub industry_id: i64,
     pub industry_name: String,
     pub salary_id: i64,
