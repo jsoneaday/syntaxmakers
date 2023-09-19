@@ -1,10 +1,22 @@
-use actix_web::{web::{Data, Json, Path}, HttpResponse};
-use crate::{common::{repository::{jobs::{repo::{InsertJobFn, QueryJobFn, QueryAllJobsFn, QueryJobsByDeveloper, QueryJobsByEmployerFn, UpdateJobFn}, models::{NewJob, Job, UpdateJob}}, base::Repository}, authentication::auth_service::Authenticator}, app_state::AppState, routes::{base_model::{OutputId, PagingModel, IdAndPagingModel}, user_error::UserError}};
+use actix_web::{web::{Data, Json, Path}, HttpResponse, HttpRequest};
+use crate::{
+    common::{
+        repository::{
+            jobs::{repo::{InsertJobFn, QueryJobFn, QueryAllJobsFn, QueryJobsByDeveloper, QueryJobsByEmployerFn, UpdateJobFn}, models::{NewJob, Job, UpdateJob}}, 
+            base::Repository, employers::repo::QueryEmployerFn, developers::repo::QueryDeveloperFn
+        }, 
+        authentication::auth_service::Authenticator
+    }, 
+    app_state::AppState, routes::{
+        base_model::{OutputId, PagingModel, IdAndPagingModel}, user_error::UserError, auth_helper::check_is_authenticated
+    }
+};
 use super::models::{NewJobForRoute, JobResponders, JobResponder, UpdateJobForRoute};
+use crate::routes::authentication::models::DeveloperOrEmployer as AuthDeveloperOrEmployer;
 
 #[allow(unused)]
 pub async fn create_job<T: InsertJobFn + Repository, U: Authenticator>(app_data: Data<AppState<T, U>>, json: Json<NewJobForRoute>)
- -> Result<OutputId, UserError> {
+ -> Result<OutputId, UserError> {    
     let result = app_data.repo.insert_job(NewJob {
         employer_id: json.employer_id,
         title: json.title.to_owned(),
@@ -24,8 +36,10 @@ pub async fn create_job<T: InsertJobFn + Repository, U: Authenticator>(app_data:
 }
 
 #[allow(unused)]
-pub async fn update_job<T: UpdateJobFn + Repository, U: Authenticator>(app_data: Data<AppState<T, U>>, json: Json<UpdateJobForRoute>)
+pub async fn update_job<T: UpdateJobFn + QueryEmployerFn + QueryDeveloperFn + Repository, U: Authenticator>(app_data: Data<AppState<T, U>>, json: Json<UpdateJobForRoute>, req: HttpRequest)
  -> HttpResponse {
+    let is_auth = check_is_authenticated(app_data.clone(), json.employer_id, AuthDeveloperOrEmployer::Employer, req).await;
+
     let result = app_data.repo.update_job(UpdateJob {
         id: json.id,
         employer_id: json.employer_id,
@@ -138,18 +152,33 @@ fn convert(job: &Job) -> JobResponder {
 #[cfg(test)]
 mod tests {
     use crate::{
-        common::{repository::jobs::models::Job, authentication::auth_service::AuthenticationError}, 
-        common_test::fixtures::{get_fake_fullname, init_fixtures, COUNTRIES, LANGUAGES, INDUSTRIES, SALARY_BASE}
+        common::{
+            repository::{
+                jobs::models::Job, 
+                developers::models::Developer, 
+                employers::models::Employer, 
+                user::{repo::AuthenticateDbFn, models::AuthenticateResult},
+                user::models::DeveloperOrEmployer as UserDeveloperOrEmployer
+            }, 
+            authentication::auth_service::AuthenticationError            
+        }, 
+        common_test::fixtures::{get_fake_fullname, init_fixtures, COUNTRIES, LANGUAGES, INDUSTRIES, SALARY_BASE}, routes::authentication::models::LoginCredential,
+        common_test::fixtures::get_fake_httprequest_with_bearer_token,
+        routes::authentication::routes::login
     };
     use super::*;
     use async_trait::async_trait;
     use chrono::Utc;
-    use fake::{faker::company::en::CompanyName, Fake};
+    use fake::{faker::{company::en::CompanyName, internet::en::FreeEmail}, Fake};
     use jsonwebtoken::DecodingKey;
     use crate::{
-        common::repository::{jobs::repo::InsertJobFn, base::EntityId}, common_test::fixtures::{MockDbRepo, get_app_data, get_fake_title, get_fake_desc}
+        common::repository::{jobs::repo::InsertJobFn, base::EntityId}, common_test::fixtures::{get_app_data, get_fake_title, get_fake_desc}
     };
 
+    const DEV_USERNAME: &str = "tester";
+    const EMP_USERNAME: &str = "employer";
+
+    struct MockDbRepo;
     struct MockAuthService;
     #[async_trait]
     impl Authenticator for MockAuthService {
@@ -184,6 +213,51 @@ mod tests {
             salary: SALARY_BASE.get().unwrap().get(0).unwrap().base
         }
     }
+
+    #[async_trait]
+    impl Repository for MockDbRepo {
+        async fn init() -> Self {
+            MockDbRepo
+        }
+    }
+
+    #[async_trait]
+    impl AuthenticateDbFn for MockDbRepo {
+        async fn authenticate_db(&self, _: UserDeveloperOrEmployer, _: String, _: String) -> Result<AuthenticateResult, sqlx::Error> {
+            Ok(AuthenticateResult::Success{ id: 1 })
+        }
+    }
+
+    #[async_trait]
+    impl QueryDeveloperFn for MockDbRepo {
+        async fn query_developer(&self, _: i64) -> Result<Option<Developer>, sqlx::Error> {
+            Ok(Some(Developer {
+                id: 1,
+                created_at: Utc::now(),
+                updated_at: Utc::now(),
+                user_name: DEV_USERNAME.to_string(),
+                full_name: "Tester Test".to_string(),
+                email: FreeEmail().fake::<String>(),
+                primary_lang_id: 1,
+                secondary_lang_id: None
+            }))
+        }
+    }    
+
+    #[async_trait]
+    impl QueryEmployerFn for MockDbRepo {
+        async fn query_employer(&self, _: i64) -> Result<Option<Employer>, sqlx::Error> {
+            Ok(Some(Employer {
+                id: 1,
+                created_at: Utc::now(),
+                updated_at: Utc::now(),
+                user_name: EMP_USERNAME.to_string(),
+                full_name: "Tester Test".to_string(),
+                email: FreeEmail().fake::<String>(),
+                company_id: 1
+            }))
+        }
+    }    
 
     #[async_trait]
     impl InsertJobFn for MockDbRepo {
@@ -264,6 +338,9 @@ mod tests {
         let auth_service = MockAuthService;
         let app_data = get_app_data(repo, auth_service).await;
 
+        let login_result = login(app_data.clone(), Json(LoginCredential { dev_or_emp: AuthDeveloperOrEmployer::Employer, email: FreeEmail().fake::<String>(), password: "test123".to_string() })).await;
+        let cookie = login_result.cookies().last().unwrap();
+        let req = get_fake_httprequest_with_bearer_token(EMP_USERNAME.to_string(), UserDeveloperOrEmployer::Employer, &app_data.auth_keys.encoding_key, "/v1/job/update", 1, Some(60*2), Some(cookie));
         let result = update_job(app_data, Json(UpdateJobForRoute {
             id: 1,
             employer_id: 1,
@@ -275,7 +352,7 @@ mod tests {
             secondary_lang_id: Some(2),
             industry_id: 1,
             salary_id: 1
-        })).await;
+        }), req).await;
 
         assert!(result.status().is_success());
     }

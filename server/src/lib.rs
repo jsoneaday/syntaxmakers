@@ -54,6 +54,7 @@ pub mod routes {
     pub mod base_model;
     pub mod user_error;
     pub mod route_utils;
+    pub mod auth_helper;
     pub mod authentication {
         pub mod models;
         pub mod routes;

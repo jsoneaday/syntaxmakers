@@ -20,6 +20,7 @@ import {
   JobFormState,
   updateJobPost,
 } from "../../../domain/repository/JobRepo";
+import { useProfile } from "../../common/redux/profile/ProfileHooks";
 
 type JobPostDisplayObject = {
   title: JSX.Element;
@@ -39,6 +40,7 @@ interface JobFullviewProps {
 }
 
 export default function JobFullview({ readOnly }: JobFullviewProps) {
+  const [profile, _] = useProfile();
   const { state: routeJobPost } = useLocation();
   const [jobPost, setJobPost] = useState<JobPost>({
     key: uuidv4(),
@@ -69,7 +71,6 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
     description: "",
     isRemote: false,
     countryId: "",
-    companyId: "",
     industryId: "",
     salaryId: "",
     primaryLangId: "",
@@ -400,7 +401,10 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
     e.preventDefault();
     console.log("jobPost to submit", jobPost);
     setFormValues();
-    updateJobPost(formValues.current);
+    if (!profile || !profile?.accessToken) {
+      throw new Error("Access token is required to save a job record");
+    }
+    updateJobPost(formValues.current, profile.accessToken);
   };
 
   const setFormValues = () => {

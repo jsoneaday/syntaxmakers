@@ -20,6 +20,7 @@ use crate::{
 };
 use super::models::{LoginCredential, RefreshToken};
 
+
 pub async fn refresh_access_token<T: Repository, U: Authenticator>(app_data: Data<AppState<T, U>>, json: Json<RefreshToken>, req: HttpRequest) -> HttpResponse {
     let dev_or_emp = if json.dev_or_emp == AuthDeveloperOrEmployer::Developer {
         UserDeveloperOrEmployer::Developer
@@ -173,6 +174,7 @@ mod tests {
     };
 
     const DEV_USERNAME: &str = "tester";
+    const EMP_USERNAME: &str = "employer";
     struct MockDbRepo;
     struct MockAuthService;
     #[async_trait]
@@ -219,7 +221,7 @@ mod tests {
                 id: 1,
                 created_at: Utc::now(),
                 updated_at: Utc::now(),
-                user_name: DEV_USERNAME.to_string(),
+                user_name: EMP_USERNAME.to_string(),
                 full_name: "Tester Test".to_string(),
                 email: FreeEmail().fake::<String>(),
                 company_id: 1
@@ -243,5 +245,4 @@ mod tests {
         assert!(claims.exp >= STANDARD_REFRESH_TOKEN_EXPIRATION as usize);
         assert!(claims.sub == DEV_USERNAME.to_string());        
     }
-   
 }

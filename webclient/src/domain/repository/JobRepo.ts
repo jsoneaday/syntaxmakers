@@ -85,11 +85,15 @@ export async function getJobsByEmployer(
   return [];
 }
 
-export async function updateJobPost(jobFormState: JobFormState) {
+export async function updateJobPost(
+  jobFormState: JobFormState,
+  access_token: string
+) {
   const result = await fetch(JOB_UPDATE_URL, {
     method: "post",
     headers: {
       "Content-Type": "application/json",
+      Authorization: `Bearer ${access_token}`,
     },
     body: JSON.stringify({
       id: jobFormState.id,
