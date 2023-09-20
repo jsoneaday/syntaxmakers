@@ -10,6 +10,7 @@ pub async fn check_is_authenticated<T: QueryDeveloperFn + QueryEmployerFn + Repo
     dev_or_emp: AuthDeveloperOrEmployer,
     req: HttpRequest
 ) -> bool {
+    #[allow(unused)]
     let mut user_name: String = "".to_string();
 
     if dev_or_emp == AuthDeveloperOrEmployer::Employer {

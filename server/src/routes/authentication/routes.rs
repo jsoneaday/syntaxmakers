@@ -164,11 +164,11 @@ mod tests {
     use async_trait::async_trait;
     use chrono::Utc;
     use fake::{faker::internet::en::FreeEmail, Fake};
-    use jsonwebtoken::{decode, Validation, DecodingKey};
+    use jsonwebtoken::DecodingKey;
     use crate::{
         common::{
             repository::{user::repo::AuthenticateDbFn, developers::models::Developer, employers::models::Employer}, 
-            authentication::auth_service::{Claims, STANDARD_REFRESH_TOKEN_EXPIRATION, AuthenticationError}
+            authentication::auth_service::{STANDARD_REFRESH_TOKEN_EXPIRATION, AuthenticationError}
         }, 
         common_test::fixtures::get_app_data
     };
@@ -240,7 +240,7 @@ mod tests {
         assert!(result.status() == StatusCode::OK);
         let cookie = result.cookies().last().unwrap();
         let refresh_token = cookie.value();
-        let claims = decode::<Claims>(refresh_token, &app_data.auth_keys.decoding_key, &Validation::new(jsonwebtoken::Algorithm::EdDSA)).unwrap().claims;
+        let claims = decode_token(refresh_token, &app_data.auth_keys.decoding_key);
         
         assert!(claims.exp >= STANDARD_REFRESH_TOKEN_EXPIRATION as usize);
         assert!(claims.sub == DEV_USERNAME.to_string());        
