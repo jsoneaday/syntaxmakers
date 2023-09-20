@@ -1,4 +1,4 @@
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import JobPost from "../../models/JobPost";
 import { ChangeEvent, useEffect, useRef, useState } from "react";
 import "../../theme/job_full_view.css";
@@ -42,6 +42,7 @@ interface JobFullviewProps {
 export default function JobFullview({ readOnly }: JobFullviewProps) {
   const [profile, _] = useProfile();
   const { state: routeJobPost } = useLocation();
+  const navigate = useNavigate();
   const [jobPost, setJobPost] = useState<JobPost>({
     key: uuidv4(),
     id: "",
@@ -329,7 +330,7 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
 
   const onChangeTitle = (e: ChangeEvent<HTMLInputElement>) => {
     e.preventDefault();
-
+    console.log("title", e.target.value);
     const newJobPost: JobPost = {
       ...jobPost,
       title: e.target.value,
@@ -397,14 +398,16 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
     setJobPost(newJobPost);
   };
 
-  const onClickSubmit = (e: React.MouseEvent<HTMLButtonElement>) => {
+  const onClickSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     console.log("jobPost to submit", jobPost);
     setFormValues();
     if (!profile || !profile?.accessToken) {
       throw new Error("Access token is required to save a job record");
     }
-    updateJobPost(formValues.current, profile.accessToken);
+    await updateJobPost(formValues.current, profile.accessToken);
+    console.log("jobPost after submit", jobPost);
+    navigate(".", { state: jobPost }); // need this since route state stays on older value
   };
 
   const setFormValues = () => {

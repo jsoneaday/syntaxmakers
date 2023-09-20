@@ -91,6 +91,8 @@ export async function updateJobPost(
 ) {
   const result = await fetch(JOB_UPDATE_URL, {
     method: "post",
+    credentials: "include",
+    cache: "no-store",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${access_token}`,
@@ -110,7 +112,11 @@ export async function updateJobPost(
   });
 
   if (result.ok) {
+    if (result.status === 204) {
+      return "";
+    }
     return await result.json();
   }
+  console.log(result.statusText);
   throw new Error("Failed to update job");
 }

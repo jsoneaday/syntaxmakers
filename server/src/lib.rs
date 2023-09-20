@@ -168,7 +168,7 @@ pub async fn run() -> std::io::Result<()> {
                         .route(web::get().to(get_all_languages::<DbRepo, AuthService>)))
                     .service(web::resource("/job/{id}")
                         .route(web::get().to(get_job::<DbRepo, AuthService>)))
-                    .service(web::resource("/job/update")
+                    .service(web::resource("/job_update")
                         .route(web::post().to(update_job::<DbRepo, AuthService>)))
                     .service(web::resource("/job")
                         .route(web::post().to(create_job::<DbRepo, AuthService>)))
