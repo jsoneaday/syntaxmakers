@@ -1,5 +1,4 @@
 use actix_web::{web::{Data, Json, Path}, HttpResponse, HttpRequest};
-use log::info;
 use crate::{
     common::{
         repository::{
@@ -39,9 +38,10 @@ pub async fn create_job<T: InsertJobFn + Repository, U: Authenticator>(app_data:
 #[allow(unused)]
 pub async fn update_job<T: UpdateJobFn + QueryEmployerFn + QueryDeveloperFn + Repository, U: Authenticator>(app_data: Data<AppState<T, U>>, json: Json<UpdateJobForRoute>, req: HttpRequest)
  -> HttpResponse {
-    info!("start update_job {}", json.title);
     let is_auth = check_is_authenticated(app_data.clone(), json.employer_id, AuthDeveloperOrEmployer::Employer, req).await;
-    info!("authenticated update_job");
+    if !is_auth {
+        return HttpResponse::Unauthorized().body("Request was not authenticated");
+    }
     let result = app_data.repo.update_job(UpdateJob {
         id: json.id,
         employer_id: json.employer_id,
@@ -54,7 +54,7 @@ pub async fn update_job<T: UpdateJobFn + QueryEmployerFn + QueryDeveloperFn + Re
         industry_id: json.industry_id,
         salary_id: json.salary_id
     }).await;
-    info!("updated update_job");
+    
     match result {
         Ok(entity) => HttpResponse::NoContent().into(),
         Err(e) => HttpResponse::InternalServerError().body("Failed to update job")
