@@ -26,16 +26,16 @@ export class Job {
 }
 
 export interface JobFormState {
-  id: string;
-  employerId: string;
+  id: number;
+  employerId: number;
   title: string;
   description: string;
   isRemote: boolean;
-  industryId: string;
-  salaryId: string;
-  primaryLangId: string;
-  secondaryLangId?: string;
-  countryId?: string;
+  industryId: number;
+  salaryId: number;
+  primaryLangId: number;
+  secondaryLangId?: number;
+  countryId?: number;
 }
 
 export async function getJobsByDeveloper(
@@ -89,6 +89,8 @@ export async function updateJobPost(
   jobFormState: JobFormState,
   access_token: string
 ) {
+  console.log("jobFormState", jobFormState);
+
   const result = await fetch(JOB_UPDATE_URL, {
     method: "post",
     credentials: "include",

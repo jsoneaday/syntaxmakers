@@ -66,16 +66,16 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
   const [jobPostDisplayComponents, setJobPostDisplayComponents] =
     useState<JobPostDisplayObject>();
   const formValues = useRef<JobFormState>({
-    id: "",
-    employerId: "",
+    id: 0,
+    employerId: 0,
     title: "",
     description: "",
     isRemote: false,
-    countryId: "",
-    industryId: "",
-    salaryId: "",
-    primaryLangId: "",
-    secondaryLangId: "",
+    countryId: 0,
+    industryId: 0,
+    salaryId: 0,
+    primaryLangId: 0,
+    secondaryLangId: 0,
   });
   const [devOrEmp] = useDevOrEmployer();
 
@@ -361,10 +361,12 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
   const onChangePrimaryLang = (e: React.ChangeEvent<HTMLSelectElement>) => {
     e.preventDefault();
 
+    console.log("before primaryLangId", jobPost.primaryLangId);
     const newJobPost: JobPost = {
       ...jobPost,
       primaryLangId: e.target.value,
     };
+    console.log("after primaryLangId", e.target.value);
     setJobPost(newJobPost);
   };
 
@@ -412,16 +414,16 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
 
   const setFormValues = () => {
     formValues.current = {
-      id: jobPost.id,
-      employerId: jobPost.employerId,
+      id: Number(jobPost.id),
+      employerId: Number(jobPost.employerId),
       title: jobPost.title,
       description: jobPost.description,
       isRemote: jobPost.isRemote,
-      primaryLangId: jobPost.primaryLangId,
-      industryId: jobPost.industryId,
-      salaryId: jobPost.salaryId,
-      secondaryLangId: jobPost.secondaryLangId,
-      countryId: jobPost.countryId,
+      primaryLangId: Number(jobPost.primaryLangId),
+      industryId: Number(jobPost.industryId),
+      salaryId: Number(jobPost.salaryId),
+      secondaryLangId: Number(jobPost.secondaryLangId),
+      countryId: Number(jobPost.countryId),
     };
   };
 
