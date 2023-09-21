@@ -10,25 +10,25 @@ import { shortenFormattedDateStr } from "../../domain/dateUtils";
 export default class JobPost implements KeyItem {
   constructor(
     public key: Key,
-    public id: string,
+    public id: number,
     public updatedAt: string,
     public title: string,
     public description: string,
-    public employerId: string,
+    public employerId: number,
     public employerName: string,
-    public companyId: string,
+    public companyId: number,
     public companyName: string,
     public isRemote: boolean,
-    public primaryLangId: string,
+    public primaryLangId: number,
     public primaryLangName: string,
-    public secondaryLangId: string,
+    public secondaryLangId: number,
     public secondaryLangName: string,
-    public industryId: string,
+    public industryId: number,
     public industryName: String,
-    public salaryId: string,
+    public salaryId: number,
     public salary: string,
     public companyLogo?: Blob,
-    public countryId?: string,
+    public countryId?: number,
     public countryName?: string
   ) {}
 }

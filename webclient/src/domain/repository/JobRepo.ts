@@ -2,25 +2,25 @@ import { JOBS_DEV_URL, JOBS_EMP_URL, JOB_UPDATE_URL } from "./Api";
 
 export class Job {
   constructor(
-    public id: string,
+    public id: number,
     public updatedAt: string, // comes from api as utc string
-    public employerId: string,
+    public employerId: number,
     public employerName: string,
-    public companyId: string,
+    public companyId: number,
     public companyName: string,
     public title: string,
     public description: string,
     public isRemote: boolean,
-    public primaryLangId: string,
+    public primaryLangId: number,
     public primaryLangName: string,
-    public secondaryLangId: string,
+    public secondaryLangId: number,
     public secondaryLangName: string,
-    public industryId: string,
+    public industryId: number,
     public industryName: string,
-    public salaryId: string,
+    public salaryId: number,
     public salary: string,
     public companyLogo?: ArrayBuffer, // normal format for file data received over wire
-    public countryId?: string,
+    public countryId?: number,
     public countryName?: string
   ) {}
 }

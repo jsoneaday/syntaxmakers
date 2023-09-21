@@ -46,15 +46,15 @@ export default function Login({ isOpen, toggleOpen }: LoginProps) {
             getDeveloperByEmail(email, message)
               .then((dev) => {
                 if (dev) {
+                  const profile = convertDev(dev, message);
+                  console.log("get logged in profile", profile);
                   startTransition(() => {
-                    setProfile(convertDev(dev, message));
+                    setProfile(profile);
                     toggleOpen();
                   });
                 } else {
-                  startTransition(() => {
-                    setProfile(null);
-                    setErrorMessage(`Failed to find user with email ${email}`);
-                  });
+                  setProfile(null);
+                  setErrorMessage(`Failed to find user with email ${email}`);
                 }
               })
               .catch((error) => {
@@ -64,15 +64,13 @@ export default function Login({ isOpen, toggleOpen }: LoginProps) {
             getEmployerByEmail(email, message)
               .then((emp) => {
                 if (emp) {
-                  startTransition(() => {
-                    setProfile(convertEmp(emp, message));
-                    toggleOpen();
-                  });
+                  const profile = convertEmp(emp, message);
+                  console.log("get logged in profile", profile);
+                  setProfile(profile);
+                  toggleOpen();
                 } else {
-                  startTransition(() => {
-                    setProfile(null);
-                    setErrorMessage(`Failed to find user with email ${email}`);
-                  });
+                  setProfile(null);
+                  setErrorMessage(`Failed to find user with email ${email}`);
                 }
               })
               .catch((error) => {

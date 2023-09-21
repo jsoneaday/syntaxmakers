@@ -9,6 +9,7 @@ export type OptionType = {
 };
 
 interface DropDownProps {
+  keyName: string;
   label: string;
   optionItems: OptionType[];
   onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
@@ -17,6 +18,7 @@ interface DropDownProps {
 }
 
 export default function DropDown({
+  keyName,
   label,
   optionItems,
   onChange,
@@ -31,8 +33,12 @@ export default function DropDown({
   }, []);
 
   useEffect(() => {
+    console.log("key", keyName);
     const _options = optionItems.map((item) => (
-      <option key={uuidv4()} label={item.name}>
+      <option
+        key={`${keyName}-opt-${item.name}-${item.value}`}
+        label={item.name}
+      >
         {item.value}
       </option>
     ));
