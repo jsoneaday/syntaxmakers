@@ -120,6 +120,19 @@ mod internal {
         if update_job.is_remote {
             if let Some(_) = update_job.country_id {
                 return Err(sqlx::Error::Database(Box::new(SqlxError::IsRemoteContstraintError)));
+            } else {
+                let delete_job_country_result = query::<_>(
+                    r"
+                    delete from jobs_countries where job_id = $1
+                    "
+                )
+                .bind(job_id)
+                .execute(&mut *tx)
+                .await;
+                if let Err(e) = delete_job_country_result {
+                    error!("update job error: {:?}", e);
+                    return Err(e);
+                }
             }
         } else {
             if let Some(country_id) = update_job.country_id {

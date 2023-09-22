@@ -537,7 +537,7 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
 
     setCurrentJobPost({
       type: FormActionTypes.Title,
-      payload: currentJobPost.title,
+      payload: e.target.value,
     });
     setSubmitDisabled(false);
   };
@@ -646,7 +646,7 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
       secondaryLangId: currentJobPost.secondaryLangId,
       industryId: currentJobPost.industryId,
       salaryId: currentJobPost.salaryId,
-      countryId: currentJobPost.countryId,
+      countryId: currentJobPost.isRemote ? undefined : currentJobPost.countryId,
     };
   };
 

@@ -40,7 +40,6 @@ export default function Login({ isOpen, toggleOpen }: LoginProps) {
 
     login(devOrEmp, email, password)
       .then(({ message, status }: LoginResult) => {
-        console.log("token", message);
         if (status === 200) {
           if (devOrEmp === DevOrEmployer.Developer) {
             getDeveloperByEmail(email, message)
