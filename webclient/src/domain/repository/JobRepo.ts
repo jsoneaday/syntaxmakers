@@ -119,6 +119,5 @@ export async function updateJobPost(
     }
     return await result.json();
   }
-  console.log(result.statusText);
   throw new Error("Failed to update job");
 }

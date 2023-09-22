@@ -47,7 +47,7 @@ export default function Login({ isOpen, toggleOpen }: LoginProps) {
               .then((dev) => {
                 if (dev) {
                   const profile = convertDev(dev, message);
-                  console.log("get logged in profile", profile);
+
                   startTransition(() => {
                     setProfile(profile);
                     toggleOpen();
@@ -65,7 +65,7 @@ export default function Login({ isOpen, toggleOpen }: LoginProps) {
               .then((emp) => {
                 if (emp) {
                   const profile = convertEmp(emp, message);
-                  console.log("get logged in profile", profile);
+
                   setProfile(profile);
                   toggleOpen();
                 } else {

@@ -46,7 +46,7 @@ export default function DropDown({
   }, [optionItems]);
 
   return (
-    <div style={{ marginRight: ".5em" }}>
+    <div>
       <label htmlFor={selectId}>{label}</label>
       <div className="select" style={{ marginTop: ".5em" }}>
         <select id={selectId} name={name} value={value} onChange={onChange}>

@@ -14,7 +14,7 @@ export function useProfile(): [
 
   const setProfile = (profile: DevProfile | EmpProfile | null) => {
     const profileToDispatch = setUserProfile(profile);
-    console.log("profile to dispatch", profileToDispatch);
+
     dispatch(profileToDispatch);
   };
 

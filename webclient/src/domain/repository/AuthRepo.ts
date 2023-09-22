@@ -28,7 +28,6 @@ export async function login(
         password,
       }),
     });
-    console.log("login response", response);
 
     if (response.ok) {
       const access_token: string = await response.text();

@@ -214,8 +214,6 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
       currentJobPost = routeJobPost as JobPost;
       setJobPostStates(currentJobPost);
     }
-
-    console.log("currentJobPost", currentJobPost);
   }, [routeJobPost]);
 
   useEffect(() => {
@@ -231,10 +229,6 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
       setJobPostDisplayComponents(jobPostDisplayComponentItems);
     }
   }, [currentJobPost]);
-
-  useEffect(() => {
-    console.log("profile was updated somewhere", profile);
-  }, [profile]);
 
   const setJobPostStates = (jobPost: JobPost) => {
     setCurrentJobPost({ type: FormActionTypes.Id, payload: jobPost.id });
@@ -327,13 +321,20 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
     let _industry: JSX.Element;
     let _salary: JSX.Element;
 
+    _employerName = (
+      <div className="job-full-view-subtitle-item-secondary">
+        {`Contact ${currentJobPost.employerName}`}
+      </div>
+    );
+
+    _companyName = (
+      <div className="sub-title-font job-full-view-subtitle-item-primary">
+        {currentJobPost.companyName}
+      </div>
+    );
+
     if (readOnly) {
       _title = <div className="title-font">{currentJobPost.title}</div>;
-      _companyName = (
-        <div className="sub-title-font job-full-view-subtitle-item-primary">
-          {currentJobPost.companyName}
-        </div>
-      );
       _isRemoteOrCountry = (
         <div className="sub-title-font job-full-view-subtitle-item-primary">
           {currentJobPost.isRemote ? "Remote" : currentJobPost.countryName}
@@ -367,11 +368,7 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
           />
         </>
       );
-      _employerName = (
-        <div className="job-full-view-subtitle-item-secondary">
-          {`Contact ${currentJobPost.employerName}`}
-        </div>
-      );
+
       _primaryLang = (
         <div className="job-full-view-subtitle-item-secondary">
           {`Primary Language ${currentJobPost.primaryLangName}`}
@@ -411,19 +408,12 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
           />
         </div>
       );
-      _companyName = (
-        <DropDown
-          keyName={`dd-company-name`}
-          label="Company"
-          name="companyName"
-          value={currentJobPost.companyId}
-          onChange={onChangeCompany}
-          optionItems={jobPostOptions?.companies || []}
-        />
-      );
       _isRemoteOrCountry = (
         <>
-          <div className="sub-title-font job-full-view-subtitle-item-primary">
+          <div
+            className="sub-title-font job-full-view-subtitle-item-primary"
+            style={{ marginBottom: ".5em" }}
+          >
             <Checkbox
               isChecked={currentJobPost.isRemote || false}
               toggleIsChecked={toggleIsRemote}
@@ -465,11 +455,6 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
             cancel
           </button>
         </>
-      );
-      _employerName = (
-        <div className="job-full-view-subtitle-item-secondary">
-          {`Contact ${currentJobPost.employerName}`}
-        </div>
       );
       _primaryLang = (
         <div style={{ marginTop: ".75em" }}>
@@ -557,16 +542,6 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
     setSubmitDisabled(false);
   };
 
-  const onChangeCompany = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    e.preventDefault();
-
-    setCurrentJobPost({
-      type: FormActionTypes.CompanyId,
-      payload: e.target.value ? Number(e.target.value) : 0,
-    });
-    setSubmitDisabled(false);
-  };
-
   const onChangeCountry = (e: React.ChangeEvent<HTMLSelectElement>) => {
     e.preventDefault();
 
@@ -580,7 +555,6 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
   const onChangePrimaryLang = (e: React.ChangeEvent<HTMLSelectElement>) => {
     e.preventDefault();
 
-    console.log("after primaryLangId", e.target.value);
     setCurrentJobPost({
       type: FormActionTypes.PrimaryLangId,
       payload: e.target.value ? Number(e.target.value) : 0,
@@ -621,7 +595,6 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
   const onClickSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
     setSubmitDisabled(true);
 
-    console.log("profile just before submit", profile);
     e.preventDefault();
     setFormValues();
 
@@ -701,7 +674,6 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
           paddingTop: "2em",
           paddingLeft: "2em",
           paddingRight: "2em",
-          marginBottom: "1.5em",
         }}
       >
         <div className="stack">
@@ -713,10 +685,11 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
                 className="job-full-view-subtitle"
                 style={{
                   width: "100%",
-                  alignItems: readOnly ? "center" : "flex-end",
                 }}
               >
-                {jobPostDisplayComponents?.companyName}
+                <div style={{ marginBottom: ".5em" }}>
+                  {jobPostDisplayComponents?.companyName}
+                </div>
                 {jobPostDisplayComponents?.isRemoteOrCountry}
                 {jobPostDisplayComponents?.updatedAt}
               </div>
