@@ -458,7 +458,12 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
           >
             save
           </button>
-          <button className="secondary-btn small-btn">cancel</button>
+          <button
+            className="secondary-btn small-btn"
+            onClick={onClickSaveCancel}
+          >
+            cancel
+          </button>
         </>
       );
       _employerName = (
@@ -528,6 +533,10 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
       industry: _industry,
       salary: _salary,
     };
+  };
+
+  const onClickSaveCancel = () => {
+    navigate(-1);
   };
 
   const toggleIsRemote = () => {
@@ -644,7 +653,7 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
       countryId: currentJobPost.countryId,
       countryName: currentJobPost.countryName,
     };
-    navigate(".", { state }); // need this since route state stays on older value
+    navigate(".", { state, replace: true });
     setSubmitDisabled(false);
   };
 
