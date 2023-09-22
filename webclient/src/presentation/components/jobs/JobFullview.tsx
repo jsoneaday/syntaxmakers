@@ -206,6 +206,7 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
     secondaryLangId: 0,
   });
   const [devOrEmp] = useDevOrEmployer();
+  const [submitDisabled, setSubmitDisabled] = useState(true);
 
   useEffect(() => {
     let currentJobPost: JobPost | undefined = undefined;
@@ -447,9 +448,13 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
         <>
           <button
             className="primary-btn small-btn"
-            style={{ marginBottom: ".5em" }}
+            style={{
+              marginBottom: ".5em",
+              cursor: submitDisabled ? "not-allowed" : "pointer",
+            }}
             name="save"
             onClick={onClickSubmit}
+            disabled={submitDisabled}
           >
             save
           </button>
@@ -530,16 +535,17 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
       type: FormActionTypes.IsRemote,
       payload: !currentJobPost.isRemote,
     });
+    setSubmitDisabled(false);
   };
 
   const onChangeTitle = (e: ChangeEvent<HTMLInputElement>) => {
     e.preventDefault();
 
-    console.log("title", e.target.value);
     setCurrentJobPost({
       type: FormActionTypes.Title,
       payload: currentJobPost.title,
     });
+    setSubmitDisabled(false);
   };
 
   const onChangeCompany = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -549,6 +555,7 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
       type: FormActionTypes.CompanyId,
       payload: e.target.value ? Number(e.target.value) : 0,
     });
+    setSubmitDisabled(false);
   };
 
   const onChangeCountry = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -558,6 +565,7 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
       type: FormActionTypes.CountryId,
       payload: e.target.value ? Number(e.target.value) : 0,
     });
+    setSubmitDisabled(false);
   };
 
   const onChangePrimaryLang = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -568,6 +576,7 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
       type: FormActionTypes.PrimaryLangId,
       payload: e.target.value ? Number(e.target.value) : 0,
     });
+    setSubmitDisabled(false);
   };
 
   const onChangeSecondaryLang = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -577,6 +586,7 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
       type: FormActionTypes.SecondaryLangId,
       payload: e.target.value ? Number(e.target.value) : 0,
     });
+    setSubmitDisabled(false);
   };
 
   const onChangeIndustry = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -586,6 +596,7 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
       type: FormActionTypes.IndustryId,
       payload: e.target.value ? Number(e.target.value) : 0,
     });
+    setSubmitDisabled(false);
   };
 
   const onChangeSalary = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -595,9 +606,12 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
       type: FormActionTypes.SalaryId,
       payload: e.target.value ? Number(e.target.value) : 0,
     });
+    setSubmitDisabled(false);
   };
 
   const onClickSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    setSubmitDisabled(true);
+
     console.log("profile just before submit", profile);
     e.preventDefault();
     setFormValues();
@@ -631,10 +645,12 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
       countryName: currentJobPost.countryName,
     };
     navigate(".", { state }); // need this since route state stays on older value
+    setSubmitDisabled(false);
   };
 
   const currentDescValue = (text: string) => {
     setCurrentJobPost({ type: FormActionTypes.Desc, payload: text });
+    setSubmitDisabled(false);
   };
 
   const setFormValues = () => {

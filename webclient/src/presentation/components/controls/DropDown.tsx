@@ -33,7 +33,6 @@ export default function DropDown({
   }, []);
 
   useEffect(() => {
-    console.log("key", keyName);
     const _options = optionItems.map((item) => (
       <option
         key={`${keyName}-opt-${item.name}-${item.value}`}
