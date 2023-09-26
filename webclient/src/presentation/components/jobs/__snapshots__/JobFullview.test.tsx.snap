@@ -5,7 +5,7 @@ exports[`Test JobFullview matches snapshot 1`] = `
   "asFragment": [Function],
   "baseElement": <body>
     <div>
-      <form
+      <div
         class="userhome-main"
         style="margin: auto;"
       >
@@ -28,7 +28,7 @@ exports[`Test JobFullview matches snapshot 1`] = `
         </div>
         <div
           class="opposites"
-          style="padding-top: 2em; padding-left: 2em; padding-right: 2em; margin-bottom: 1.5em;"
+          style="padding-top: 2em; padding-left: 2em; padding-right: 2em;"
         >
           <div
             class="stack"
@@ -46,12 +46,16 @@ exports[`Test JobFullview matches snapshot 1`] = `
               >
                 <div
                   class="job-full-view-subtitle"
-                  style="width: 100%; align-items: center;"
+                  style="width: 100%;"
                 >
                   <div
-                    class="sub-title-font job-full-view-subtitle-item-primary"
+                    style="margin-bottom: .5em;"
                   >
-                    Acme Inc
+                    <div
+                      class="sub-title-font job-full-view-subtitle-item-primary"
+                    >
+                      Acme Inc
+                    </div>
                   </div>
                   <div
                     class="sub-title-font job-full-view-subtitle-item-primary"
@@ -159,22 +163,20 @@ exports[`Test JobFullview matches snapshot 1`] = `
                   style="font-weight: normal;"
                 >
                   <span
-                    data-slate-length="0"
-                    data-slate-zero-width="n"
+                    data-slate-string="true"
                   >
-                    ﻿
-                    <br />
+                    Testing Text
                   </span>
                 </span>
               </span>
             </p>
           </div>
         </div>
-      </form>
+      </div>
     </div>
   </body>,
   "container": <div>
-    <form
+    <div
       class="userhome-main"
       style="margin: auto;"
     >
@@ -197,7 +199,7 @@ exports[`Test JobFullview matches snapshot 1`] = `
       </div>
       <div
         class="opposites"
-        style="padding-top: 2em; padding-left: 2em; padding-right: 2em; margin-bottom: 1.5em;"
+        style="padding-top: 2em; padding-left: 2em; padding-right: 2em;"
       >
         <div
           class="stack"
@@ -215,12 +217,16 @@ exports[`Test JobFullview matches snapshot 1`] = `
             >
               <div
                 class="job-full-view-subtitle"
-                style="width: 100%; align-items: center;"
+                style="width: 100%;"
               >
                 <div
-                  class="sub-title-font job-full-view-subtitle-item-primary"
+                  style="margin-bottom: .5em;"
                 >
-                  Acme Inc
+                  <div
+                    class="sub-title-font job-full-view-subtitle-item-primary"
+                  >
+                    Acme Inc
+                  </div>
                 </div>
                 <div
                   class="sub-title-font job-full-view-subtitle-item-primary"
@@ -328,18 +334,16 @@ exports[`Test JobFullview matches snapshot 1`] = `
                 style="font-weight: normal;"
               >
                 <span
-                  data-slate-length="0"
-                  data-slate-zero-width="n"
+                  data-slate-string="true"
                 >
-                  ﻿
-                  <br />
+                  Testing Text
                 </span>
               </span>
             </span>
           </p>
         </div>
       </div>
-    </form>
+    </div>
   </div>,
   "debug": [Function],
   "findAllByAltText": [Function],

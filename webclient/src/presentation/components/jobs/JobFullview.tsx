@@ -21,6 +21,7 @@ import {
   updateJobPost,
 } from "../../../domain/repository/JobRepo";
 import { useProfile } from "../../common/redux/profile/ProfileHooks";
+import { Descendant } from "slate";
 
 type JobPostDisplayObject = {
   title: JSX.Element;
@@ -39,7 +40,7 @@ interface FormState {
   id: number;
   updatedAt: string;
   title: string;
-  description: string;
+  description: Descendant[] | null;
   employerId: number;
   employerName: string;
   companyId: number;
@@ -106,7 +107,14 @@ function reducer(state: FormState, action: FormAction): FormState {
       newState.title = action.payload;
       break;
     case FormActionTypes.Desc:
-      newState.description = action.payload;
+      // this makes no sense and shouldn't be needed and yet it does not work without it???
+      if (typeof action.payload === "string") {
+        newState.description = action.payload
+          ? JSON.parse(action.payload)
+          : null;
+      } else {
+        newState.description = action.payload;
+      }
       break;
     case FormActionTypes.IsRemote:
       newState.isRemote = action.payload;
@@ -176,7 +184,7 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
     id: 0,
     updatedAt: "",
     title: "",
-    description: "",
+    description: null,
     employerId: 0,
     employerName: "",
     isRemote: false,
@@ -240,9 +248,10 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
       payload: jobPost.updatedAt,
     });
     setCurrentJobPost({ type: FormActionTypes.Title, payload: jobPost.title });
+    console.log("jobPost.description", jobPost.description);
     setCurrentJobPost({
       type: FormActionTypes.Desc,
-      payload: jobPost.description,
+      payload: jobPost.description ? JSON.parse(jobPost.description) : null,
     });
     setCurrentJobPost({
       type: FormActionTypes.EmployerId,
@@ -567,7 +576,6 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
       type: FormActionTypes.CountryId,
       payload,
     });
-    console.log("countryId e.target.value", e.target.value);
     setSubmitDisabled(false);
     setLastCountryId(payload);
   };
@@ -623,7 +631,7 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
         `Access token is required to save a job record ${profile}`
       );
     }
-    console.log("description", formValues.current.description);
+
     await updateJobPost(formValues.current, profile.accessToken);
     const state = {
       id: currentJobPost.id,
@@ -651,7 +659,7 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
     setSubmitDisabled(false);
   };
 
-  const getCurrentDescValue = (text: string) => {
+  const getCurrentDescValue = (text: Descendant[]) => {
     setCurrentJobPost({ type: FormActionTypes.Desc, payload: text });
     setSubmitDisabled(false);
   };
@@ -661,7 +669,7 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
       id: currentJobPost.id,
       employerId: currentJobPost.employerId,
       title: currentJobPost.title,
-      description: currentJobPost.description,
+      description: JSON.stringify(currentJobPost.description),
       isRemote: currentJobPost.isRemote,
       primaryLangId: currentJobPost.primaryLangId,
       secondaryLangId: currentJobPost.secondaryLangId,
@@ -749,20 +757,13 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
         <span className="title-font" style={{ marginBottom: "1em" }}>
           Description
         </span>
-        <TextEditor
-          initialValue={
-            currentJobPost.description
-              ? JSON.parse(currentJobPost.description)
-              : [
-                  {
-                    type: "paragraph",
-                    children: [{ text: "hello" }],
-                  },
-                ]
-          }
-          readOnly={readOnly}
-          getCurrentValue={getCurrentDescValue}
-        />
+        {currentJobPost.description ? (
+          <TextEditor
+            initialValue={currentJobPost.description}
+            readOnly={readOnly}
+            getCurrentValue={getCurrentDescValue}
+          />
+        ) : null}
       </div>
     </div>
   );

@@ -80,7 +80,14 @@ export async function getJobsByEmployer(
   });
 
   if (result.ok) {
-    return await result.json();
+    const jobs: Job[] = await result.json();
+    for (let j of jobs) {
+      console.log("description before stringify", j.title, j.description);
+      j.description = JSON.stringify(j.description);
+      console.log("description after stringify", j.title, j.description);
+    }
+
+    return jobs;
   }
   return [];
 }
