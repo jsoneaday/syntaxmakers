@@ -13,8 +13,8 @@ interface DropDownProps {
   label: string;
   optionItems: OptionType[];
   onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
-  name?: string;
   value?: any;
+  name?: string;
 }
 
 export default function DropDown({
@@ -22,8 +22,8 @@ export default function DropDown({
   label,
   optionItems,
   onChange,
-  name,
   value,
+  name,
 }: DropDownProps) {
   const [options, setOptions] = useState<JSX.Element[]>();
   const [selectId, setSelectId] = useState("");

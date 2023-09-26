@@ -11,6 +11,7 @@ export const renderElement = (props: RenderElementProps) => {
     case ElementTypes.Heading3:
       return <Heading3 {...props} />;
     case "paragraph":
+      console.log("paragraph props", props);
       return <p {...props} />;
     default:
       return <span {...props} />;
@@ -18,5 +19,6 @@ export const renderElement = (props: RenderElementProps) => {
 };
 
 export const renderLeaf = (props: RenderLeafProps) => {
+  console.log("leaf props", props);
   return <Leaf {...props} />;
 };

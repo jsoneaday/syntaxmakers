@@ -169,6 +169,7 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
   const [jobPostDisplayComponents, setJobPostDisplayComponents] =
     useState<JobPostDisplayObject>();
 
+  /// currerntJobPost is used for component state
   const [currentJobPost, setCurrentJobPost] = useReducer<
     Reducer<FormState, FormAction>
   >(reducer, {
@@ -193,6 +194,8 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
     salary: "",
     companyLogo: undefined,
   });
+  const [lastCountryId, setLastCountryId] = useState<number>();
+  /// formValues used for form submission
   const formValues = useRef<JobFormState>({
     id: 0,
     employerId: 0,
@@ -269,6 +272,8 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
       type: FormActionTypes.CountryId,
       payload: jobPost.countryId,
     });
+    // if no country selected just default to first on list, as there must be at least one
+    setLastCountryId(jobPost.countryId || 1);
     setCurrentJobPost({
       type: FormActionTypes.CountryName,
       payload: jobPost.countryName,
@@ -428,6 +433,7 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
               label="Country"
               name="countryId"
               onChange={onChangeCountry}
+              value={currentJobPost.countryId || ""}
               optionItems={jobPostOptions?.countries || []}
             />
           ) : null}
@@ -525,11 +531,23 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
   };
 
   const toggleIsRemote = () => {
+    const toggledIsRemote = !currentJobPost.isRemote;
     setCurrentJobPost({
       type: FormActionTypes.IsRemote,
-      payload: !currentJobPost.isRemote,
+      payload: toggledIsRemote,
     });
     setSubmitDisabled(false);
+    if (toggledIsRemote) {
+      setCurrentJobPost({
+        type: FormActionTypes.CountryId,
+        payload: undefined,
+      });
+    } else {
+      setCurrentJobPost({
+        type: FormActionTypes.CountryId,
+        payload: lastCountryId,
+      });
+    }
   };
 
   const onChangeTitle = (e: ChangeEvent<HTMLInputElement>) => {
@@ -544,12 +562,14 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
 
   const onChangeCountry = (e: React.ChangeEvent<HTMLSelectElement>) => {
     e.preventDefault();
-
+    const payload = e.target.value ? Number(e.target.value) : 0;
     setCurrentJobPost({
       type: FormActionTypes.CountryId,
-      payload: e.target.value ? Number(e.target.value) : 0,
+      payload,
     });
+    console.log("countryId e.target.value", e.target.value);
     setSubmitDisabled(false);
+    setLastCountryId(payload);
   };
 
   const onChangePrimaryLang = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -603,6 +623,7 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
         `Access token is required to save a job record ${profile}`
       );
     }
+    console.log("description", formValues.current.description);
     await updateJobPost(formValues.current, profile.accessToken);
     const state = {
       id: currentJobPost.id,
@@ -630,7 +651,7 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
     setSubmitDisabled(false);
   };
 
-  const currentDescValue = (text: string) => {
+  const getCurrentDescValue = (text: string) => {
     setCurrentJobPost({ type: FormActionTypes.Desc, payload: text });
     setSubmitDisabled(false);
   };
@@ -735,12 +756,12 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
               : [
                   {
                     type: "paragraph",
-                    children: [{ text: "" }],
+                    children: [{ text: "hello" }],
                   },
                 ]
           }
           readOnly={readOnly}
-          currentValue={currentDescValue}
+          getCurrentValue={getCurrentDescValue}
         />
       </div>
     </div>
