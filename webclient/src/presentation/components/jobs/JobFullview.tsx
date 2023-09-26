@@ -633,13 +633,14 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
     }
 
     await updateJobPost(formValues.current, profile.accessToken);
-    const state = {
+    const state: JobPost = {
+      key: routeJobPost.key,
       id: currentJobPost.id,
       updatedAt: currentJobPost.updatedAt,
       employerId: currentJobPost.employerId,
       employerName: currentJobPost.employerName,
       title: currentJobPost.title,
-      description: currentJobPost.description,
+      description: JSON.stringify(currentJobPost.description),
       isRemote: currentJobPost.isRemote,
       companyId: currentJobPost.companyId,
       companyName: currentJobPost.companyName,
