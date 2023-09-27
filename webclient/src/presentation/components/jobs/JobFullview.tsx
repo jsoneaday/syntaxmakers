@@ -23,7 +23,7 @@ import {
 import { useProfile } from "../../common/redux/profile/ProfileHooks";
 import { Descendant } from "slate";
 
-type JobPostDisplayObject = {
+type JobPostDisplayComponents = {
   title: JSX.Element;
   companyName: JSX.Element;
   isRemoteOrCountry: JSX.Element;
@@ -175,7 +175,7 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
   const { state: routeJobPost } = useLocation();
   const navigate = useNavigate();
   const [jobPostDisplayComponents, setJobPostDisplayComponents] =
-    useState<JobPostDisplayObject>();
+    useState<JobPostDisplayComponents>();
 
   /// currerntJobPost is used for component state
   const [currentJobPost, setCurrentJobPost] = useReducer<
@@ -621,9 +621,8 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
   };
 
   const onClickSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
-    setSubmitDisabled(true);
-
     e.preventDefault();
+    setSubmitDisabled(true);
     setFormValues();
 
     if (!profile || !profile.accessToken) {
@@ -633,6 +632,13 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
     }
 
     await updateJobPost(formValues.current, profile.accessToken);
+
+    const state = refreshUrlState();
+    navigate(".", { state, replace: true });
+    setSubmitDisabled(false);
+  };
+
+  const refreshUrlState = () => {
     const state: JobPost = {
       key: routeJobPost.key,
       id: currentJobPost.id,
@@ -656,8 +662,7 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
       countryId: currentJobPost.countryId,
       countryName: currentJobPost.countryName,
     };
-    navigate(".", { state, replace: true });
-    setSubmitDisabled(false);
+    return state;
   };
 
   const getCurrentDescValue = (text: Descendant[]) => {
@@ -681,7 +686,7 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
   };
 
   return (
-    <div className="userhome-main" style={{ margin: "auto" }}>
+    <form className="userhome-main" style={{ margin: "auto" }}>
       <div
         className="header-container job-full-view-header"
         style={{
@@ -766,6 +771,6 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
           />
         ) : null}
       </div>
-    </div>
+    </form>
   );
 }
