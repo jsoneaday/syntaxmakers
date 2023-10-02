@@ -6,13 +6,20 @@ import JobFullview from "./JobFullview";
 import { RouterProvider, createBrowserRouter } from "react-router-dom";
 import { Provider } from "react-redux";
 import configureStore from "redux-mock-store";
-import { defaultDevProfile } from "../../__test__/Fixtures";
+import { defaultDevProfile, defaultEmpProfile } from "../../__test__/Fixtures";
 import { DevOrEmployer } from "../../models/DevOrEmployer";
 
-const router = createBrowserRouter([
+const routerWithReadonlyJobFullview = createBrowserRouter([
   {
     path: "/",
     element: <JobFullview readOnly={true} />,
+  },
+]);
+
+const routerWithWriteableJobFullview = createBrowserRouter([
+  {
+    path: "/",
+    element: <JobFullview readOnly={false} />,
   },
 ]);
 
@@ -60,7 +67,7 @@ jest.mock("react-router-dom", () => ({
 }));
 
 describe("Test JobFullview", () => {
-  it("matches snapshot", async () => {
+  it("matches snapshot as a developer", async () => {
     const mockStore = configureStore();
     const store = mockStore({
       profile: defaultDevProfile,
@@ -69,14 +76,14 @@ describe("Test JobFullview", () => {
 
     const result = render(
       <Provider store={store}>
-        <RouterProvider router={router} />
+        <RouterProvider router={routerWithReadonlyJobFullview} />
       </Provider>
     );
 
     expect(result).toMatchSnapshot();
   });
 
-  it("has correct title", async () => {
+  it("screen has correct fields as a developer", async () => {
     const mockStore = configureStore();
     const store = mockStore({
       profile: defaultDevProfile,
@@ -85,7 +92,7 @@ describe("Test JobFullview", () => {
 
     render(
       <Provider store={store}>
-        <RouterProvider router={router} />
+        <RouterProvider router={routerWithReadonlyJobFullview} />
       </Provider>
     );
 
@@ -97,5 +104,21 @@ describe("Test JobFullview", () => {
     screen.getByText(`Secondary Language ${secondaryLangName}`);
     screen.getByText(`Industry ${industryName}`);
     screen.getByText(`Base Salary ${salary}`);
+  });
+
+  it("matches snapshot as a employer", async () => {
+    const mockStore = configureStore();
+    const store = mockStore({
+      profile: defaultEmpProfile,
+      devOrEmployer: DevOrEmployer.Employer,
+    });
+
+    const result = render(
+      <Provider store={store}>
+        <RouterProvider router={routerWithWriteableJobFullview} />
+      </Provider>
+    );
+
+    expect(result).toMatchSnapshot();
   });
 });
