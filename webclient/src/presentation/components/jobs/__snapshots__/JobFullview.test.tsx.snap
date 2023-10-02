@@ -163,11 +163,9 @@ exports[`Test JobFullview matches snapshot 1`] = `
                   style="font-weight: normal;"
                 >
                   <span
-                    data-slate-length="0"
-                    data-slate-zero-width="n"
+                    data-slate-string="true"
                   >
-                    ﻿
-                    <br />
+                    Testing Text
                   </span>
                 </span>
               </span>
@@ -336,11 +334,9 @@ exports[`Test JobFullview matches snapshot 1`] = `
                 style="font-weight: normal;"
               >
                 <span
-                  data-slate-length="0"
-                  data-slate-zero-width="n"
+                  data-slate-string="true"
                 >
-                  ﻿
-                  <br />
+                  Testing Text
                 </span>
               </span>
             </span>
