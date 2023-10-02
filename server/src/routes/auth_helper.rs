@@ -1,5 +1,5 @@
 use actix_web::{web::Data, HttpRequest};
-use log::error;
+use log::{error, info};
 use crate::{common::{repository::{developers::repo::QueryDeveloperFn, employers::repo::QueryEmployerFn, base::Repository}, authentication::auth_service::Authenticator}, app_state::AppState};
 use super::{authentication::models::DeveloperOrEmployer as AuthDeveloperOrEmployer, route_utils::get_header_strings};
 
@@ -42,13 +42,23 @@ pub async fn check_is_authenticated<T: QueryDeveloperFn + QueryEmployerFn + Repo
     }
     
     let headers = get_header_strings(req.headers());
+    info!("headers {:?}", headers);
     let is_authenticated_result = app_data.auth_service.is_authenticated(user_name, headers, &app_data.auth_keys.decoding_key).await;
     match is_authenticated_result {
         Ok(result) => match result {
-            true => true,
-            false => false
+            true => {
+                info!("Successfully authorized");
+                true
+            },
+            false => {
+                info!("Failed authorization");
+                false
+            }
         },
-        Err(_) => false
+        Err(_) => {
+            error!("Authorization attempt failed");
+            false
+        }
     }
 }
 

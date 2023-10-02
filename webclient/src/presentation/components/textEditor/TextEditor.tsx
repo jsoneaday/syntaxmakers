@@ -23,11 +23,7 @@ export default function TextEditor({
   const [editor] = useState(() => withReact(withHistory(createEditor())));
 
   useEffect(() => {
-    console.log("123");
-  }, []);
-
-  useEffect(() => {
-    console.log("text editor received description", initialValue);
+    console.log("initialValue", initialValue);
   }, [initialValue]);
 
   const onKeyDown = useCallback(

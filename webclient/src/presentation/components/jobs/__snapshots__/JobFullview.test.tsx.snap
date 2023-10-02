@@ -5,7 +5,7 @@ exports[`Test JobFullview matches snapshot 1`] = `
   "asFragment": [Function],
   "baseElement": <body>
     <div>
-      <div
+      <form
         class="userhome-main"
         style="margin: auto;"
       >
@@ -163,20 +163,22 @@ exports[`Test JobFullview matches snapshot 1`] = `
                   style="font-weight: normal;"
                 >
                   <span
-                    data-slate-string="true"
+                    data-slate-length="0"
+                    data-slate-zero-width="n"
                   >
-                    Testing Text
+                    ﻿
+                    <br />
                   </span>
                 </span>
               </span>
             </p>
           </div>
         </div>
-      </div>
+      </form>
     </div>
   </body>,
   "container": <div>
-    <div
+    <form
       class="userhome-main"
       style="margin: auto;"
     >
@@ -334,16 +336,18 @@ exports[`Test JobFullview matches snapshot 1`] = `
                 style="font-weight: normal;"
               >
                 <span
-                  data-slate-string="true"
+                  data-slate-length="0"
+                  data-slate-zero-width="n"
                 >
-                  Testing Text
+                  ﻿
+                  <br />
                 </span>
               </span>
             </span>
           </p>
         </div>
       </div>
-    </div>
+    </form>
   </div>,
   "debug": [Function],
   "findAllByAltText": [Function],

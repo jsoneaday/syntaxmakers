@@ -1,5 +1,5 @@
 use actix_web::{web::{Data, Json, Path}, HttpResponse, HttpRequest};
-use log::info;
+use log::{error, info};
 use crate::{
     common::{
         repository::{
@@ -16,8 +16,15 @@ use super::models::{NewJobForRoute, JobResponders, JobResponder, UpdateJobForRou
 use crate::routes::authentication::models::DeveloperOrEmployer as AuthDeveloperOrEmployer;
 
 #[allow(unused)]
-pub async fn create_job<T: InsertJobFn + Repository, U: Authenticator>(app_data: Data<AppState<T, U>>, json: Json<NewJobForRoute>)
+pub async fn create_job<T: InsertJobFn + QueryEmployerFn + QueryDeveloperFn + Repository, U: Authenticator>(app_data: Data<AppState<T, U>>, json: Json<NewJobForRoute>, req: HttpRequest)
  -> Result<OutputId, UserError> {    
+    info!("start insert_job {}", json.description);
+    let is_auth = check_is_authenticated(app_data.clone(), json.employer_id, AuthDeveloperOrEmployer::Employer, req).await;
+    if !is_auth {
+        error!("Authorization failed");
+        return Err(UserError::AuthenticationFailed);
+    }
+
     let result = app_data.repo.insert_job(NewJob {
         employer_id: json.employer_id,
         title: json.title.to_owned(),
@@ -42,6 +49,7 @@ pub async fn update_job<T: UpdateJobFn + QueryEmployerFn + QueryDeveloperFn + Re
     info!("start update_job {}", json.description);
     let is_auth = check_is_authenticated(app_data.clone(), json.employer_id, AuthDeveloperOrEmployer::Employer, req).await;
     if !is_auth {
+        error!("Authorization failed");
         return HttpResponse::Unauthorized().body("Request was not authenticated");
     }
     let result = app_data.repo.update_job(UpdateJob {
@@ -320,6 +328,10 @@ mod tests {
         let auth_service = MockAuthService;
         let app_data = get_app_data(repo, auth_service).await;
 
+        let login_result = login(app_data.clone(), Json(LoginCredential { dev_or_emp: AuthDeveloperOrEmployer::Employer, email: FreeEmail().fake::<String>(), password: "test123".to_string() })).await;
+        let cookie = login_result.cookies().last().unwrap();
+        let req = get_fake_httprequest_with_bearer_token(EMP_USERNAME.to_string(), UserDeveloperOrEmployer::Employer, &app_data.auth_keys.encoding_key, "/v1/job/update", 1, Some(60*2), Some(cookie));
+
         let result = create_job(app_data, Json(NewJobForRoute {
             employer_id: 1,
             title: get_fake_title().to_string(),
@@ -330,7 +342,7 @@ mod tests {
             secondary_lang_id: Some(2),
             industry_id: 1,
             salary_id: 1
-        })).await.unwrap();
+        }), req).await.unwrap();
 
         assert!(result.id == 1);
     }

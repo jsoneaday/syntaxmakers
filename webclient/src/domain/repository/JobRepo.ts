@@ -1,4 +1,4 @@
-import { JOBS_DEV_URL, JOBS_EMP_URL, JOB_UPDATE_URL } from "./Api";
+import { JOBS_DEV_URL, JOBS_EMP_URL, JOB_UPDATE_URL, JOB_URL } from "./Api";
 
 export class Job {
   constructor(
@@ -82,14 +82,48 @@ export async function getJobsByEmployer(
   if (result.ok) {
     const jobs: Job[] = await result.json();
     for (let j of jobs) {
-      console.log("description before stringify", j.title, j.description);
       j.description = JSON.stringify(j.description);
-      console.log("description after stringify", j.title, j.description);
     }
 
     return jobs;
   }
   return [];
+}
+
+export async function insertJobPost(
+  jobFormState: JobFormState,
+  access_token: string
+) {
+  console.log("jobFormState", jobFormState);
+
+  const result = await fetch(JOB_URL, {
+    method: "post",
+    credentials: "include",
+    cache: "no-store",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${access_token}`,
+    },
+    body: JSON.stringify({
+      employerId: jobFormState.employerId,
+      title: jobFormState.title,
+      description: jobFormState.description,
+      isRemote: jobFormState.isRemote,
+      primaryLangId: jobFormState.primaryLangId,
+      industryId: jobFormState.industryId,
+      salaryId: jobFormState.salaryId,
+      secondaryLangId: jobFormState.secondaryLangId,
+      countryId: jobFormState.countryId,
+    }),
+  });
+
+  if (result.ok) {
+    if (result.status === 204) {
+      return "";
+    }
+    return await result.json();
+  }
+  throw new Error("Failed to update job");
 }
 
 export async function updateJobPost(

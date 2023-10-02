@@ -18,10 +18,12 @@ import {
 } from "../../models/JobFullviewModel";
 import {
   JobFormState,
+  insertJobPost,
   updateJobPost,
 } from "../../../domain/repository/JobRepo";
 import { useProfile } from "../../common/redux/profile/ProfileHooks";
 import { Descendant } from "slate";
+import { formatDistanceToNow } from "date-fns";
 
 type JobPostDisplayComponents = {
   title: JSX.Element;
@@ -108,10 +110,11 @@ function reducer(state: FormState, action: FormAction): FormState {
       break;
     case FormActionTypes.Desc:
       // this makes no sense and shouldn't be needed and yet it does not work without it???
+      console.log("set Desc reducer");
       if (typeof action.payload === "string") {
         newState.description = action.payload
           ? JSON.parse(action.payload)
-          : null;
+          : emptyDescendant;
       } else {
         newState.description = action.payload;
       }
@@ -166,6 +169,13 @@ function reducer(state: FormState, action: FormAction): FormState {
 
 type Reducer<S, A> = (prevState: S, action: A) => S;
 
+const emptyDescendant: Descendant[] = [
+  {
+    type: "paragraph",
+    children: [{ text: "" }],
+  },
+];
+
 interface JobFullviewProps {
   readOnly: boolean;
 }
@@ -182,23 +192,23 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
     Reducer<FormState, FormAction>
   >(reducer, {
     id: 0,
-    updatedAt: "",
+    updatedAt: formatDistanceToNow(new Date()),
     title: "",
     description: null,
-    employerId: 0,
+    employerId: 1,
     employerName: "",
     isRemote: false,
-    companyId: 0,
+    companyId: 1,
     companyName: "",
-    countryId: 0,
+    countryId: 1,
     countryName: "",
-    primaryLangId: 0,
+    primaryLangId: 1,
     primaryLangName: "",
-    secondaryLangId: 0,
+    secondaryLangId: 1,
     secondaryLangName: "",
-    industryId: 0,
+    industryId: 1,
     industryName: "",
-    salaryId: 0,
+    salaryId: 1,
     salary: "",
     companyLogo: undefined,
   });
@@ -228,6 +238,20 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
   }, [routeJobPost]);
 
   useEffect(() => {
+    // if there's an employer logged in and no route state, assume new job post
+    if (devOrEmp === DevOrEmployer.Employer && profile && !routeJobPost) {
+      setCurrentJobPost({
+        type: FormActionTypes.EmployerId,
+        payload: profile.id,
+      });
+      setCurrentJobPost({
+        type: FormActionTypes.Desc,
+        payload: emptyDescendant,
+      });
+    }
+  }, [profile]);
+
+  useEffect(() => {
     if (!readOnly) {
       getJobPostOptions().then((jobPostOptions) => {
         const jobPostDisplayComponentItems =
@@ -248,10 +272,11 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
       payload: jobPost.updatedAt,
     });
     setCurrentJobPost({ type: FormActionTypes.Title, payload: jobPost.title });
-    console.log("jobPost.description", jobPost.description);
     setCurrentJobPost({
       type: FormActionTypes.Desc,
-      payload: jobPost.description ? JSON.parse(jobPost.description) : null,
+      payload: jobPost.description
+        ? JSON.parse(jobPost.description)
+        : emptyDescendant,
     });
     setCurrentJobPost({
       type: FormActionTypes.EmployerId,
@@ -631,7 +656,11 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
       );
     }
 
-    await updateJobPost(formValues.current, profile.accessToken);
+    if (formValues.current.id === 0) {
+      await insertJobPost(formValues.current, profile.accessToken);
+    } else {
+      await updateJobPost(formValues.current, profile.accessToken);
+    }
 
     const state = refreshUrlState();
     navigate(".", { state, replace: true });
@@ -640,13 +669,15 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
 
   const refreshUrlState = () => {
     const state: JobPost = {
-      key: routeJobPost.key,
+      key: routeJobPost ? routeJobPost.key : uuidv4(),
       id: currentJobPost.id,
       updatedAt: currentJobPost.updatedAt,
       employerId: currentJobPost.employerId,
       employerName: currentJobPost.employerName,
       title: currentJobPost.title,
-      description: JSON.stringify(currentJobPost.description),
+      description: currentJobPost.description
+        ? JSON.stringify(currentJobPost.description)
+        : "",
       isRemote: currentJobPost.isRemote,
       companyId: currentJobPost.companyId,
       companyName: currentJobPost.companyName,
@@ -675,7 +706,7 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
       id: currentJobPost.id,
       employerId: currentJobPost.employerId,
       title: currentJobPost.title,
-      description: JSON.stringify(currentJobPost.description),
+      description: JSON.stringify(currentJobPost.description || ""),
       isRemote: currentJobPost.isRemote,
       primaryLangId: currentJobPost.primaryLangId,
       secondaryLangId: currentJobPost.secondaryLangId,
