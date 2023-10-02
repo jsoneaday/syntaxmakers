@@ -3,16 +3,18 @@ use fake::faker::company::en::CompanyName;
 use fake::faker::internet::en::{Username, SafeEmail, FreeEmail};
 use syntaxmakers_server::common::repository::base::{Repository, DbRepo};
 use syntaxmakers_server::common::repository::companies::models::NewCompany;
+use syntaxmakers_server::common::repository::countries::repo::QueryAllCountriesFn;
 use syntaxmakers_server::common::repository::developers::models::NewDeveloper;
 use syntaxmakers_server::common::repository::developers::repo::InsertDeveloperFn;
 use syntaxmakers_server::common::repository::employers::models::NewEmployer;
 use syntaxmakers_server::common::repository::employers::repo::InsertEmployerFn;
-use syntaxmakers_server::common::repository::jobs::models::{NewJob, Job};
-use syntaxmakers_server::common::repository::jobs::repo::{QueryJobFn, QueryAllJobsFn, QueryJobsByEmployerFn, InsertJobFn, QueryJobsByDeveloper};
+use syntaxmakers_server::common::repository::jobs::models::{NewJob, Job, UpdateJob};
+use syntaxmakers_server::common::repository::jobs::repo::{QueryJobFn, QueryAllJobsFn, QueryJobsByEmployerFn, InsertJobFn, UpdateJobFn, QueryJobsByDeveloper};
 use syntaxmakers_server::common::repository::industries::repo::QueryAllIndustriesFn;
 use syntaxmakers_server::common::repository::languages::repo::QueryAllLanguagesFn;
 use syntaxmakers_server::common::repository::companies::repo::InsertCompanyFn;
-use syntaxmakers_server::common_test::fixtures::{ init_fixtures, get_fake_fullname, get_company_logo_randomly, get_fake_title, get_fake_desc, get_random_salary, LANGUAGES, INDUSTRIES, COUNTRIES};
+use syntaxmakers_server::common::repository::salaries::repo::QueryAllSalariesFn;
+use syntaxmakers_server::common_test::fixtures::{ init_fixtures, get_fake_fullname, get_company_logo_randomly, get_fake_title, get_fake_desc, get_random_salary, LANGUAGES, INDUSTRIES, COUNTRIES, get_random_email};
 
 #[tokio::test]
 async fn test_create_job_and_get_back() {
@@ -220,4 +222,90 @@ async fn test_create_two_jobs_and_get_back_both_as_employer() {
     assert!(jobs.len() == 2);
     assert!(jobs.get(0).unwrap().id == second_job_id);
     assert!(jobs.get(1).unwrap().id == first_job_id);
+}
+
+#[tokio::test]
+async fn test_update_job_that_is_remote_and_get_back() {
+    let repo = DbRepo::init().await;
+    init_fixtures().await;
+    let user_name = Username().fake::<String>();
+    let full_name = get_fake_fullname();
+    let email = get_random_email();
+    let logo = get_company_logo_randomly();
+    
+    let company_create_result = repo.insert_company(NewCompany{ name: CompanyName().fake::<String>(), logo: Some(logo), headquarters_country_id: 1 }).await.unwrap();
+    let company_id = company_create_result.id;
+    let insert_employer_a_result = repo.insert_employer(NewEmployer {
+        user_name: user_name.clone(),
+        full_name: full_name.clone(),
+        email: email.clone(),
+        password: "test123".to_string(),
+        company_id
+    }).await.unwrap();
+    let countries_result = repo.query_all_countries().await.unwrap();
+    let languages_result = repo.query_all_languages().await.unwrap();
+    let industry_result = repo.query_all_industries().await.unwrap();
+    let salary_result = repo.query_all_salaries().await.unwrap();
+
+    let insert_job_result = repo.insert_job(NewJob {
+        employer_id: insert_employer_a_result.id,
+        title: get_fake_title().to_string(),
+        description: get_fake_desc().to_string(),
+        is_remote: true,
+        country_id: None,
+        primary_lang_id: languages_result.first().unwrap().id,
+        secondary_lang_id: Some(languages_result.first().unwrap().id),
+        industry_id: industry_result.first().unwrap().id,
+        salary_id: salary_result.first().unwrap().id
+    }).await.unwrap();
+    let get_job_inserted_result = repo.query_job(insert_job_result.id).await.unwrap().unwrap();
+
+    let insert_employer_b_result = repo.insert_employer(NewEmployer {
+        user_name: Username().fake::<String>(),
+        full_name: get_fake_fullname(),
+        email: SafeEmail().fake::<String>(),
+        password: "test123".to_string(),
+        company_id
+    }).await.unwrap();
+    let employer_id = insert_employer_b_result.id;
+    let title = get_fake_title().to_string();
+    let description = get_fake_desc().to_string();
+    let is_remote = false;
+    let country_id = Some(countries_result.first().unwrap().id);
+    let primary_lang_id = languages_result.get(1).unwrap().id;
+    let secondary_lang_id = Some(languages_result.get(2).unwrap().id);
+    let industry_id = industry_result.get(1).unwrap().id;
+    let salary_id = salary_result.get(1).unwrap().id;
+    _ = repo.update_job(UpdateJob {
+        id: insert_job_result.id,
+        employer_id,
+        title: title.clone(),
+        description,
+        is_remote,
+        country_id,
+        primary_lang_id,
+        secondary_lang_id,
+        industry_id,
+        salary_id
+    })
+    .await;
+    let get_job_updated_result = repo.query_job(insert_job_result.id).await.unwrap().unwrap();
+    
+    assert!(get_job_inserted_result.clone().employer_id != get_job_updated_result.clone().employer_id);
+    assert!(get_job_inserted_result.clone().title != get_job_updated_result.clone().title);
+    assert!(get_job_inserted_result.is_remote != get_job_updated_result.is_remote);
+    assert!(get_job_inserted_result.country_id != get_job_updated_result.country_id);
+    assert!(get_job_inserted_result.primary_lang_id != get_job_updated_result.primary_lang_id);
+    assert!(get_job_inserted_result.secondary_lang_id != get_job_updated_result.secondary_lang_id);
+    assert!(get_job_inserted_result.industry_id != get_job_updated_result.industry_id);
+    assert!(get_job_inserted_result.salary_id != get_job_updated_result.salary_id);
+
+    assert!(get_job_updated_result.clone().employer_id == employer_id);
+    assert!(get_job_updated_result.title == title.clone());
+    assert!(get_job_updated_result.is_remote == is_remote);
+    assert!(get_job_updated_result.country_id == country_id);
+    assert!(get_job_updated_result.primary_lang_id == primary_lang_id);
+    assert!(get_job_updated_result.secondary_lang_id == secondary_lang_id);
+    assert!(get_job_updated_result.industry_id == industry_id);
+    assert!(get_job_updated_result.salary_id == salary_id);
 }

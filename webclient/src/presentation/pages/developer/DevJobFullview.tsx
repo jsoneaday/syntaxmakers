@@ -8,7 +8,7 @@ import JobFullview from "../../components/jobs/JobFullview";
 export default function DevJobFullview() {
   return (
     <DeveloperHome>
-      <JobFullview readOnly={false} />
+      <JobFullview readOnly={true} />
     </DeveloperHome>
   );
 }

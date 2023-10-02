@@ -35,22 +35,22 @@ describe("Test Developer page", () => {
         new Promise((res) => {
           res([
             new JobRepo.Job(
-              "1",
+              1,
               job1UpdatedAt,
-              "1",
+              1,
               "Employer Tester",
-              "1",
+              1,
               "Company A",
               "Senior React Developer",
               "This role is front end focused. Must have at least 5 years of React and TypeScript",
               true,
-              "1",
+              1,
               "Rust",
-              "2",
+              2,
               "Go",
-              "1",
+              1,
               "United States",
-              "1",
+              1,
               "200000"
             ),
           ]);

@@ -5,8 +5,7 @@ use actix_web::http::header;
 use actix_web::web::Bytes;
 use actix_web::{HttpRequest, test};
 use fake::Fake;
-use fake::faker::company::en::CompanyName;
-use fake::faker::internet::en::{Username, FreeEmail};
+use fake::faker::internet::en::SafeEmail;
 use fake::faker::name::en::{FirstName, LastName};
 use jsonwebtoken::{EncodingKey, DecodingKey};
 use serde::Serialize;
@@ -16,12 +15,8 @@ use crate::common::authentication::auth_service::{init_auth_keys, get_token, Aut
 use crate::common::fs_utils::get_file_buffer;
 use crate::common::rand_utils::get_random_no_from_range;
 use crate::common::repository::base::{Repository, DbRepo};
-use crate::common::repository::companies::models::NewCompany;
-use crate::common::repository::companies::repo::InsertCompanyFn;
 use crate::common::repository::countries::models::Country;
 use crate::common::repository::countries::repo::QueryAllCountriesFn;
-use crate::common::repository::employers::models::NewEmployer;
-use crate::common::repository::employers::repo::InsertEmployerFn;
 use crate::common::repository::industries::models::Industry;
 use crate::common::repository::industries::repo::QueryAllIndustriesFn;
 use crate::common::repository::jobs::models::NewJob;
@@ -152,31 +147,14 @@ async fn setup_data() {
     let jobs = repo.query_all_jobs_count().await.unwrap().count;
     
     if jobs == 0 {
-        let logo = get_company_logo_randomly();
-        let company_create_result = repo.insert_company(NewCompany{ 
-            name: CompanyName().fake::<String>(), 
-            logo: Some(logo), 
-            headquarters_country_id: 1 
-        }).await.unwrap();
-        let company_id = company_create_result.id;
-
-        let email_prefix = get_random_no_from_range(0, 100);
-        let create_employer_result = repo.insert_employer(NewEmployer {
-            user_name: Username().fake::<String>(),
-            full_name: get_fake_fullname(),
-            email: format!("{}{}", email_prefix, FreeEmail().fake::<String>()),
-            password: "test123".to_string(),
-            company_id
-        }).await.unwrap();
-        
-        
         for _ in 1..40 {          
+            let emp_id = get_random_no_from_range(1, 5);
             let is_remote = if get_random_no_from_range(0, 2) == 0 { false } else { true };
             let country_id = if is_remote { None } else { Some(1) };
             error!("is_remote {}, country_id {:?}", is_remote, country_id);
             
             repo.insert_job(NewJob {
-                employer_id: create_employer_result.id,
+                employer_id: emp_id as i64,
                 title: get_fake_title().to_string(),
                 description: get_fake_desc().to_string(),
                 is_remote,
@@ -292,4 +270,10 @@ pub async fn get_random_industry() -> Industry {
 
 pub async fn get_random_country() -> Country {
     COUNTRIES.get().unwrap().get(0).unwrap().clone()
+}
+
+pub fn get_random_email() -> String {
+    let no = get_random_no_from_range(100, 1000);
+    let email = SafeEmail().fake::<String>();
+    format!("{no}{email}")
 }

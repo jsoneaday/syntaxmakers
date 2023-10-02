@@ -5,7 +5,6 @@ import EmpJobApplicants from "./presentation/pages/employer/EmpJobApplicants";
 import DevJobPosts from "./presentation/pages/developer/DevJobPosts";
 import DevSavedJobs from "./presentation/pages/developer/DevSavedJobs";
 import DevJobAlerts from "./presentation/pages/developer/DevJobAlerts";
-import EmpPostNewJob from "./presentation/pages/employer/EmpPostNewJob";
 import DevJobFullview from "./presentation/pages/developer/DevJobFullview";
 import EmpJobFullview from "./presentation/pages/employer/EmpJobFullview";
 
@@ -47,7 +46,7 @@ const router = createBrowserRouter([
   },
   {
     path: RoutePaths.EmpPostNewJob,
-    element: <EmpPostNewJob />,
+    element: <EmpJobFullview />,
   },
   {
     path: RoutePaths.EmpJobPosts,

@@ -1,6 +1,7 @@
 import DevProfile from "../models/DevProfile";
 /// @ts-ignore
 import { v4 as uuidv4 } from "uuid";
+import EmpProfile from "../models/EmpProfile";
 const reactmodal = require("react-modal");
 
 export const userName = "tester";
@@ -16,6 +17,16 @@ export const defaultDevProfile: DevProfile = {
   fullName,
   email,
   primaryLangId: "1",
+};
+
+export const defaultEmpProfile: EmpProfile = {
+  key: uuidv4(),
+  id: "1",
+  updatedAt,
+  userName,
+  fullName,
+  email,
+  companyId: "1",
 };
 
 export function setupModalOnRoot() {

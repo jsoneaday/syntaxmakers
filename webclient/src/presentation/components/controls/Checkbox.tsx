@@ -5,12 +5,14 @@ interface CheckboxProps {
   isChecked: boolean;
   toggleIsChecked: () => void;
   children: ReactNode;
+  name?: string;
 }
 
 export default function Checkbox({
   isChecked,
   toggleIsChecked,
   children,
+  name,
 }: CheckboxProps) {
   const onChange = () => {
     toggleIsChecked();
@@ -20,9 +22,9 @@ export default function Checkbox({
     <label className="form-control">
       <input
         type="checkbox"
-        name="checkbox"
         checked={isChecked}
         onChange={onChange}
+        name={name}
         style={{ marginRight: ".6em" }}
       />
       {children}

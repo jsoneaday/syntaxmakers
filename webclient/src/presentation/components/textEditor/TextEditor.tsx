@@ -1,4 +1,4 @@
-import { KeyboardEvent, useCallback, useState } from "react";
+import { KeyboardEvent, useCallback, useEffect, useState } from "react";
 import { createEditor, Descendant } from "slate";
 import { withHistory } from "slate-history";
 import { Slate, Editable, withReact } from "slate-react";
@@ -11,14 +11,20 @@ import { Toolbar } from "./TextEditorComponents";
 interface TextEditorProps {
   readOnly: boolean;
   initialValue: Descendant[];
+  getCurrentValue: (text: Descendant[]) => void;
 }
 
 export default function TextEditor({
   readOnly,
   initialValue,
+  getCurrentValue,
 }: TextEditorProps) {
   const [_value, _setValue] = useState<string | null>();
   const [editor] = useState(() => withReact(withHistory(createEditor())));
+
+  useEffect(() => {
+    console.log("initialValue", initialValue);
+  }, [initialValue]);
 
   const onKeyDown = useCallback(
     (e: KeyboardEvent<HTMLDivElement>) => {
@@ -39,7 +45,7 @@ export default function TextEditor({
   );
 
   const onChange = (value: Descendant[]) => {
-    console.log("value", value);
+    getCurrentValue(value);
   };
 
   return (

@@ -20,6 +20,7 @@ use crate::{
 };
 use super::models::{LoginCredential, RefreshToken};
 
+
 pub async fn refresh_access_token<T: Repository, U: Authenticator>(app_data: Data<AppState<T, U>>, json: Json<RefreshToken>, req: HttpRequest) -> HttpResponse {
     let dev_or_emp = if json.dev_or_emp == AuthDeveloperOrEmployer::Developer {
         UserDeveloperOrEmployer::Developer
@@ -163,16 +164,17 @@ mod tests {
     use async_trait::async_trait;
     use chrono::Utc;
     use fake::{faker::internet::en::FreeEmail, Fake};
-    use jsonwebtoken::{decode, Validation, DecodingKey};
+    use jsonwebtoken::DecodingKey;
     use crate::{
         common::{
             repository::{user::repo::AuthenticateDbFn, developers::models::Developer, employers::models::Employer}, 
-            authentication::auth_service::{Claims, STANDARD_REFRESH_TOKEN_EXPIRATION, AuthenticationError}
+            authentication::auth_service::{STANDARD_REFRESH_TOKEN_EXPIRATION, AuthenticationError}
         }, 
         common_test::fixtures::get_app_data
     };
 
     const DEV_USERNAME: &str = "tester";
+    const EMP_USERNAME: &str = "employer";
     struct MockDbRepo;
     struct MockAuthService;
     #[async_trait]
@@ -219,7 +221,7 @@ mod tests {
                 id: 1,
                 created_at: Utc::now(),
                 updated_at: Utc::now(),
-                user_name: DEV_USERNAME.to_string(),
+                user_name: EMP_USERNAME.to_string(),
                 full_name: "Tester Test".to_string(),
                 email: FreeEmail().fake::<String>(),
                 company_id: 1
@@ -238,10 +240,9 @@ mod tests {
         assert!(result.status() == StatusCode::OK);
         let cookie = result.cookies().last().unwrap();
         let refresh_token = cookie.value();
-        let claims = decode::<Claims>(refresh_token, &app_data.auth_keys.decoding_key, &Validation::new(jsonwebtoken::Algorithm::EdDSA)).unwrap().claims;
+        let claims = decode_token(refresh_token, &app_data.auth_keys.decoding_key);
         
         assert!(claims.exp >= STANDARD_REFRESH_TOKEN_EXPIRATION as usize);
         assert!(claims.sub == DEV_USERNAME.to_string());        
     }
-   
 }

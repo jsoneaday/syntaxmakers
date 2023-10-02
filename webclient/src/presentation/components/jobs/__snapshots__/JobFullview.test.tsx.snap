@@ -1,0 +1,717 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Test JobFullview matches snapshot as a developer 1`] = `
+{
+  "asFragment": [Function],
+  "baseElement": <body>
+    <div>
+      <form
+        class="userhome-main"
+        style="margin: auto;"
+      >
+        <div
+          class="header-container job-full-view-header"
+          style="padding-top: 2em; padding-left: 2em; padding-right: 2em;"
+        >
+          <div
+            class="goback-container"
+          >
+            <img
+              class="goback-img"
+              src="default"
+              title="Go back"
+            />
+            <label>
+              developer home
+            </label>
+          </div>
+        </div>
+        <div
+          class="opposites"
+          style="padding-top: 2em; padding-left: 2em; padding-right: 2em;"
+        >
+          <div
+            class="stack"
+          >
+            <div
+              class="title-font"
+            >
+              Senior JavaScript Developer
+            </div>
+            <div
+              class="left-align"
+            >
+              <div
+                class="opposites"
+              >
+                <div
+                  class="job-full-view-subtitle"
+                  style="width: 100%;"
+                >
+                  <div
+                    style="margin-bottom: .5em;"
+                  >
+                    <div
+                      class="sub-title-font job-full-view-subtitle-item-primary"
+                    >
+                      Acme Inc
+                    </div>
+                  </div>
+                  <div
+                    class="sub-title-font job-full-view-subtitle-item-primary"
+                  >
+                    Remote
+                  </div>
+                  <div
+                    class="small-font job-full-view-subtitle-item-primary"
+                  >
+                    2022/01/03T22:21:02
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div
+            class="stack"
+            style="align-items: flex-end; text-align: right;"
+          >
+            <button
+              class="primary-btn small-btn"
+              style="margin-bottom: .5em;"
+            >
+              apply
+            </button>
+            <button
+              class="secondary-btn small-btn"
+            >
+              save
+            </button>
+            <img
+              class="job-icon"
+              src="default"
+              style="margin-top: 1em;"
+              title="inappropriate"
+            />
+            <img
+              class="job-icon"
+              src="default"
+              style="margin-top: .50em;"
+              title="similar jobs"
+            />
+          </div>
+        </div>
+        <div
+          class="job-full-view-section"
+          style="padding: 1.5em; margin-bottom: 1em;"
+        >
+          <div
+            class="job-full-view-subtitle-item-secondary"
+          >
+            Contact John Dole
+          </div>
+          <div
+            class="job-full-view-subtitle-item-secondary"
+          >
+            Primary Language JavaScript
+          </div>
+          <div
+            class="job-full-view-subtitle-item-secondary"
+          >
+            Secondary Language C#
+          </div>
+          <div
+            class="job-full-view-subtitle-item-secondary"
+          >
+            Industry Finance
+          </div>
+          <div
+            class="job-full-view-subtitle-item-secondary"
+          >
+            Base Salary 200000
+          </div>
+        </div>
+        <div
+          class="normal-font dev-post-preview-container job-full-view-section"
+          style="padding: 2em;"
+        >
+          <span
+            class="title-font"
+            style="margin-bottom: 1em;"
+          >
+            Description
+          </span>
+          <div
+            autocapitalize="false"
+            autocorrect="false"
+            class="txtedit-container"
+            contenteditable="false"
+            data-slate-editor="true"
+            data-slate-node="value"
+            spellcheck="false"
+            style="position: relative; white-space: pre-wrap; word-wrap: break-word;"
+            zindex="-1"
+          >
+            <p
+              attributes="[object Object]"
+              element="[object Object]"
+            >
+              <span
+                data-slate-node="text"
+              >
+                <span
+                  data-slate-leaf="true"
+                  style="font-weight: normal;"
+                >
+                  <span
+                    data-slate-string="true"
+                  >
+                    Testing Text
+                  </span>
+                </span>
+              </span>
+            </p>
+          </div>
+        </div>
+      </form>
+    </div>
+  </body>,
+  "container": <div>
+    <form
+      class="userhome-main"
+      style="margin: auto;"
+    >
+      <div
+        class="header-container job-full-view-header"
+        style="padding-top: 2em; padding-left: 2em; padding-right: 2em;"
+      >
+        <div
+          class="goback-container"
+        >
+          <img
+            class="goback-img"
+            src="default"
+            title="Go back"
+          />
+          <label>
+            developer home
+          </label>
+        </div>
+      </div>
+      <div
+        class="opposites"
+        style="padding-top: 2em; padding-left: 2em; padding-right: 2em;"
+      >
+        <div
+          class="stack"
+        >
+          <div
+            class="title-font"
+          >
+            Senior JavaScript Developer
+          </div>
+          <div
+            class="left-align"
+          >
+            <div
+              class="opposites"
+            >
+              <div
+                class="job-full-view-subtitle"
+                style="width: 100%;"
+              >
+                <div
+                  style="margin-bottom: .5em;"
+                >
+                  <div
+                    class="sub-title-font job-full-view-subtitle-item-primary"
+                  >
+                    Acme Inc
+                  </div>
+                </div>
+                <div
+                  class="sub-title-font job-full-view-subtitle-item-primary"
+                >
+                  Remote
+                </div>
+                <div
+                  class="small-font job-full-view-subtitle-item-primary"
+                >
+                  2022/01/03T22:21:02
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div
+          class="stack"
+          style="align-items: flex-end; text-align: right;"
+        >
+          <button
+            class="primary-btn small-btn"
+            style="margin-bottom: .5em;"
+          >
+            apply
+          </button>
+          <button
+            class="secondary-btn small-btn"
+          >
+            save
+          </button>
+          <img
+            class="job-icon"
+            src="default"
+            style="margin-top: 1em;"
+            title="inappropriate"
+          />
+          <img
+            class="job-icon"
+            src="default"
+            style="margin-top: .50em;"
+            title="similar jobs"
+          />
+        </div>
+      </div>
+      <div
+        class="job-full-view-section"
+        style="padding: 1.5em; margin-bottom: 1em;"
+      >
+        <div
+          class="job-full-view-subtitle-item-secondary"
+        >
+          Contact John Dole
+        </div>
+        <div
+          class="job-full-view-subtitle-item-secondary"
+        >
+          Primary Language JavaScript
+        </div>
+        <div
+          class="job-full-view-subtitle-item-secondary"
+        >
+          Secondary Language C#
+        </div>
+        <div
+          class="job-full-view-subtitle-item-secondary"
+        >
+          Industry Finance
+        </div>
+        <div
+          class="job-full-view-subtitle-item-secondary"
+        >
+          Base Salary 200000
+        </div>
+      </div>
+      <div
+        class="normal-font dev-post-preview-container job-full-view-section"
+        style="padding: 2em;"
+      >
+        <span
+          class="title-font"
+          style="margin-bottom: 1em;"
+        >
+          Description
+        </span>
+        <div
+          autocapitalize="false"
+          autocorrect="false"
+          class="txtedit-container"
+          contenteditable="false"
+          data-slate-editor="true"
+          data-slate-node="value"
+          spellcheck="false"
+          style="position: relative; white-space: pre-wrap; word-wrap: break-word;"
+          zindex="-1"
+        >
+          <p
+            attributes="[object Object]"
+            element="[object Object]"
+          >
+            <span
+              data-slate-node="text"
+            >
+              <span
+                data-slate-leaf="true"
+                style="font-weight: normal;"
+              >
+                <span
+                  data-slate-string="true"
+                >
+                  Testing Text
+                </span>
+              </span>
+            </span>
+          </p>
+        </div>
+      </div>
+    </form>
+  </div>,
+  "debug": [Function],
+  "findAllByAltText": [Function],
+  "findAllByDisplayValue": [Function],
+  "findAllByLabelText": [Function],
+  "findAllByPlaceholderText": [Function],
+  "findAllByRole": [Function],
+  "findAllByTestId": [Function],
+  "findAllByText": [Function],
+  "findAllByTitle": [Function],
+  "findByAltText": [Function],
+  "findByDisplayValue": [Function],
+  "findByLabelText": [Function],
+  "findByPlaceholderText": [Function],
+  "findByRole": [Function],
+  "findByTestId": [Function],
+  "findByText": [Function],
+  "findByTitle": [Function],
+  "getAllByAltText": [Function],
+  "getAllByDisplayValue": [Function],
+  "getAllByLabelText": [Function],
+  "getAllByPlaceholderText": [Function],
+  "getAllByRole": [Function],
+  "getAllByTestId": [Function],
+  "getAllByText": [Function],
+  "getAllByTitle": [Function],
+  "getByAltText": [Function],
+  "getByDisplayValue": [Function],
+  "getByLabelText": [Function],
+  "getByPlaceholderText": [Function],
+  "getByRole": [Function],
+  "getByTestId": [Function],
+  "getByText": [Function],
+  "getByTitle": [Function],
+  "queryAllByAltText": [Function],
+  "queryAllByDisplayValue": [Function],
+  "queryAllByLabelText": [Function],
+  "queryAllByPlaceholderText": [Function],
+  "queryAllByRole": [Function],
+  "queryAllByTestId": [Function],
+  "queryAllByText": [Function],
+  "queryAllByTitle": [Function],
+  "queryByAltText": [Function],
+  "queryByDisplayValue": [Function],
+  "queryByLabelText": [Function],
+  "queryByPlaceholderText": [Function],
+  "queryByRole": [Function],
+  "queryByTestId": [Function],
+  "queryByText": [Function],
+  "queryByTitle": [Function],
+  "rerender": [Function],
+  "unmount": [Function],
+}
+`;
+
+exports[`Test JobFullview matches snapshot as a employer 1`] = `
+{
+  "asFragment": [Function],
+  "baseElement": <body>
+    <div>
+      <form
+        class="userhome-main"
+        style="margin: auto;"
+      >
+        <div
+          class="header-container job-full-view-header"
+          style="padding-top: 2em; padding-left: 2em; padding-right: 2em;"
+        >
+          <div
+            class="goback-container"
+          >
+            <img
+              class="goback-img"
+              src="default"
+              title="Go back"
+            />
+            <label>
+              employer home
+            </label>
+          </div>
+        </div>
+        <div
+          class="opposites"
+          style="padding-top: 2em; padding-left: 2em; padding-right: 2em;"
+        >
+          <div
+            class="stack"
+          >
+            <div
+              class="left-align"
+            >
+              <div
+                class="opposites"
+              >
+                <div
+                  class="job-full-view-subtitle"
+                  style="width: 100%;"
+                >
+                  <div
+                    style="margin-bottom: .5em;"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+          <div
+            class="stack"
+            style="align-items: flex-end; text-align: right;"
+          />
+        </div>
+        <div
+          class="job-full-view-section"
+          style="padding: 1.5em; margin-bottom: 1em;"
+        />
+        <div
+          class="normal-font dev-post-preview-container job-full-view-section"
+          style="padding: 2em;"
+        >
+          <span
+            class="title-font"
+            style="margin-bottom: 1em;"
+          >
+            Description
+          </span>
+          <div
+            class="txtedit-toolbar"
+          >
+            <button
+              class="secondary-btn small-btn"
+              style="width: 3em; margin-right: .5em;"
+            >
+              H1
+            </button>
+            <button
+              class="secondary-btn small-btn"
+              style="width: 3em; margin-right: .5em;"
+            >
+              H2
+            </button>
+            <button
+              class="secondary-btn small-btn"
+              style="width: 3em; margin-right: .5em;"
+            >
+              H3
+            </button>
+            <button
+              class="secondary-btn small-btn"
+              style="width: 4em; margin-right: .5em;"
+            >
+              Bold
+            </button>
+          </div>
+          <div
+            aria-multiline="true"
+            autocapitalize="false"
+            autocorrect="false"
+            class="txtedit-container"
+            contenteditable="true"
+            data-slate-editor="true"
+            data-slate-node="value"
+            role="textbox"
+            spellcheck="false"
+            style="position: relative; white-space: pre-wrap; word-wrap: break-word;"
+            zindex="-1"
+          >
+            <p
+              attributes="[object Object]"
+              element="[object Object]"
+            >
+              <span
+                data-slate-node="text"
+              >
+                <span
+                  data-slate-leaf="true"
+                  style="font-weight: normal;"
+                >
+                  <span
+                    data-slate-string="true"
+                  >
+                    Testing Text
+                  </span>
+                </span>
+              </span>
+            </p>
+          </div>
+        </div>
+      </form>
+    </div>
+  </body>,
+  "container": <div>
+    <form
+      class="userhome-main"
+      style="margin: auto;"
+    >
+      <div
+        class="header-container job-full-view-header"
+        style="padding-top: 2em; padding-left: 2em; padding-right: 2em;"
+      >
+        <div
+          class="goback-container"
+        >
+          <img
+            class="goback-img"
+            src="default"
+            title="Go back"
+          />
+          <label>
+            employer home
+          </label>
+        </div>
+      </div>
+      <div
+        class="opposites"
+        style="padding-top: 2em; padding-left: 2em; padding-right: 2em;"
+      >
+        <div
+          class="stack"
+        >
+          <div
+            class="left-align"
+          >
+            <div
+              class="opposites"
+            >
+              <div
+                class="job-full-view-subtitle"
+                style="width: 100%;"
+              >
+                <div
+                  style="margin-bottom: .5em;"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+        <div
+          class="stack"
+          style="align-items: flex-end; text-align: right;"
+        />
+      </div>
+      <div
+        class="job-full-view-section"
+        style="padding: 1.5em; margin-bottom: 1em;"
+      />
+      <div
+        class="normal-font dev-post-preview-container job-full-view-section"
+        style="padding: 2em;"
+      >
+        <span
+          class="title-font"
+          style="margin-bottom: 1em;"
+        >
+          Description
+        </span>
+        <div
+          class="txtedit-toolbar"
+        >
+          <button
+            class="secondary-btn small-btn"
+            style="width: 3em; margin-right: .5em;"
+          >
+            H1
+          </button>
+          <button
+            class="secondary-btn small-btn"
+            style="width: 3em; margin-right: .5em;"
+          >
+            H2
+          </button>
+          <button
+            class="secondary-btn small-btn"
+            style="width: 3em; margin-right: .5em;"
+          >
+            H3
+          </button>
+          <button
+            class="secondary-btn small-btn"
+            style="width: 4em; margin-right: .5em;"
+          >
+            Bold
+          </button>
+        </div>
+        <div
+          aria-multiline="true"
+          autocapitalize="false"
+          autocorrect="false"
+          class="txtedit-container"
+          contenteditable="true"
+          data-slate-editor="true"
+          data-slate-node="value"
+          role="textbox"
+          spellcheck="false"
+          style="position: relative; white-space: pre-wrap; word-wrap: break-word;"
+          zindex="-1"
+        >
+          <p
+            attributes="[object Object]"
+            element="[object Object]"
+          >
+            <span
+              data-slate-node="text"
+            >
+              <span
+                data-slate-leaf="true"
+                style="font-weight: normal;"
+              >
+                <span
+                  data-slate-string="true"
+                >
+                  Testing Text
+                </span>
+              </span>
+            </span>
+          </p>
+        </div>
+      </div>
+    </form>
+  </div>,
+  "debug": [Function],
+  "findAllByAltText": [Function],
+  "findAllByDisplayValue": [Function],
+  "findAllByLabelText": [Function],
+  "findAllByPlaceholderText": [Function],
+  "findAllByRole": [Function],
+  "findAllByTestId": [Function],
+  "findAllByText": [Function],
+  "findAllByTitle": [Function],
+  "findByAltText": [Function],
+  "findByDisplayValue": [Function],
+  "findByLabelText": [Function],
+  "findByPlaceholderText": [Function],
+  "findByRole": [Function],
+  "findByTestId": [Function],
+  "findByText": [Function],
+  "findByTitle": [Function],
+  "getAllByAltText": [Function],
+  "getAllByDisplayValue": [Function],
+  "getAllByLabelText": [Function],
+  "getAllByPlaceholderText": [Function],
+  "getAllByRole": [Function],
+  "getAllByTestId": [Function],
+  "getAllByText": [Function],
+  "getAllByTitle": [Function],
+  "getByAltText": [Function],
+  "getByDisplayValue": [Function],
+  "getByLabelText": [Function],
+  "getByPlaceholderText": [Function],
+  "getByRole": [Function],
+  "getByTestId": [Function],
+  "getByText": [Function],
+  "getByTitle": [Function],
+  "queryAllByAltText": [Function],
+  "queryAllByDisplayValue": [Function],
+  "queryAllByLabelText": [Function],
+  "queryAllByPlaceholderText": [Function],
+  "queryAllByRole": [Function],
+  "queryAllByTestId": [Function],
+  "queryAllByText": [Function],
+  "queryAllByTitle": [Function],
+  "queryByAltText": [Function],
+  "queryByDisplayValue": [Function],
+  "queryByLabelText": [Function],
+  "queryByPlaceholderText": [Function],
+  "queryByRole": [Function],
+  "queryByTestId": [Function],
+  "queryByText": [Function],
+  "queryByTitle": [Function],
+  "rerender": [Function],
+  "unmount": [Function],
+}
+`;
