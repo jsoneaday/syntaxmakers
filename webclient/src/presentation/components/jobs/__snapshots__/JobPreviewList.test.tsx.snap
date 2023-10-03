@@ -1,0 +1,274 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Test JobPreviewList matches snapshot 1`] = `
+{
+  "asFragment": [Function],
+  "baseElement": <body>
+    <div>
+      <div
+        class="dev-post-preview-container"
+        style="padding: 2em;"
+      >
+        <ul
+          class="lister-container"
+        >
+          <li
+            class="dev-preview-item"
+          >
+            <a
+              href="/emphome/jobfullview"
+            >
+              <div
+                class="post-preview-container"
+              >
+                <img
+                  class="preview-icon"
+                  src=""
+                />
+                <div
+                  class="preview-content"
+                >
+                  <div
+                    class="title-font"
+                  >
+                    Senior Super Dev
+                  </div>
+                  <div
+                    class="sub-title-font"
+                  >
+                    Company A
+                  </div>
+                  <div
+                    class="normal-font"
+                  >
+                    Remote
+                  </div>
+                  <div
+                    class="normal-font preview-salary"
+                  >
+                    Base Salary: 
+                    <i>
+                      200000
+                    </i>
+                  </div>
+                  <div
+                    class="small-font preview-timestamp"
+                  >
+                    2022/01/03T22:21:02
+                  </div>
+                </div>
+              </div>
+            </a>
+          </li>
+          <li
+            class="dev-preview-item"
+          >
+            <a
+              href="/emphome/jobfullview"
+            >
+              <div
+                class="post-preview-container"
+              >
+                <img
+                  class="preview-icon"
+                  src=""
+                />
+                <div
+                  class="preview-content"
+                >
+                  <div
+                    class="title-font"
+                  >
+                    French Frie Dev
+                  </div>
+                  <div
+                    class="sub-title-font"
+                  >
+                    Company B
+                  </div>
+                  <div
+                    class="normal-font"
+                  >
+                    United States
+                  </div>
+                  <div
+                    class="normal-font preview-salary"
+                  >
+                    Base Salary: 
+                    <i>
+                      200000
+                    </i>
+                  </div>
+                  <div
+                    class="small-font preview-timestamp"
+                  >
+                    2022/01/03T22:21:02
+                  </div>
+                </div>
+              </div>
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </body>,
+  "container": <div>
+    <div
+      class="dev-post-preview-container"
+      style="padding: 2em;"
+    >
+      <ul
+        class="lister-container"
+      >
+        <li
+          class="dev-preview-item"
+        >
+          <a
+            href="/emphome/jobfullview"
+          >
+            <div
+              class="post-preview-container"
+            >
+              <img
+                class="preview-icon"
+                src=""
+              />
+              <div
+                class="preview-content"
+              >
+                <div
+                  class="title-font"
+                >
+                  Senior Super Dev
+                </div>
+                <div
+                  class="sub-title-font"
+                >
+                  Company A
+                </div>
+                <div
+                  class="normal-font"
+                >
+                  Remote
+                </div>
+                <div
+                  class="normal-font preview-salary"
+                >
+                  Base Salary: 
+                  <i>
+                    200000
+                  </i>
+                </div>
+                <div
+                  class="small-font preview-timestamp"
+                >
+                  2022/01/03T22:21:02
+                </div>
+              </div>
+            </div>
+          </a>
+        </li>
+        <li
+          class="dev-preview-item"
+        >
+          <a
+            href="/emphome/jobfullview"
+          >
+            <div
+              class="post-preview-container"
+            >
+              <img
+                class="preview-icon"
+                src=""
+              />
+              <div
+                class="preview-content"
+              >
+                <div
+                  class="title-font"
+                >
+                  French Frie Dev
+                </div>
+                <div
+                  class="sub-title-font"
+                >
+                  Company B
+                </div>
+                <div
+                  class="normal-font"
+                >
+                  United States
+                </div>
+                <div
+                  class="normal-font preview-salary"
+                >
+                  Base Salary: 
+                  <i>
+                    200000
+                  </i>
+                </div>
+                <div
+                  class="small-font preview-timestamp"
+                >
+                  2022/01/03T22:21:02
+                </div>
+              </div>
+            </div>
+          </a>
+        </li>
+      </ul>
+    </div>
+  </div>,
+  "debug": [Function],
+  "findAllByAltText": [Function],
+  "findAllByDisplayValue": [Function],
+  "findAllByLabelText": [Function],
+  "findAllByPlaceholderText": [Function],
+  "findAllByRole": [Function],
+  "findAllByTestId": [Function],
+  "findAllByText": [Function],
+  "findAllByTitle": [Function],
+  "findByAltText": [Function],
+  "findByDisplayValue": [Function],
+  "findByLabelText": [Function],
+  "findByPlaceholderText": [Function],
+  "findByRole": [Function],
+  "findByTestId": [Function],
+  "findByText": [Function],
+  "findByTitle": [Function],
+  "getAllByAltText": [Function],
+  "getAllByDisplayValue": [Function],
+  "getAllByLabelText": [Function],
+  "getAllByPlaceholderText": [Function],
+  "getAllByRole": [Function],
+  "getAllByTestId": [Function],
+  "getAllByText": [Function],
+  "getAllByTitle": [Function],
+  "getByAltText": [Function],
+  "getByDisplayValue": [Function],
+  "getByLabelText": [Function],
+  "getByPlaceholderText": [Function],
+  "getByRole": [Function],
+  "getByTestId": [Function],
+  "getByText": [Function],
+  "getByTitle": [Function],
+  "queryAllByAltText": [Function],
+  "queryAllByDisplayValue": [Function],
+  "queryAllByLabelText": [Function],
+  "queryAllByPlaceholderText": [Function],
+  "queryAllByRole": [Function],
+  "queryAllByTestId": [Function],
+  "queryAllByText": [Function],
+  "queryAllByTitle": [Function],
+  "queryByAltText": [Function],
+  "queryByDisplayValue": [Function],
+  "queryByLabelText": [Function],
+  "queryByPlaceholderText": [Function],
+  "queryByRole": [Function],
+  "queryByTestId": [Function],
+  "queryByText": [Function],
+  "queryByTitle": [Function],
+  "rerender": [Function],
+  "unmount": [Function],
+}
+`;

@@ -110,7 +110,6 @@ function reducer(state: FormState, action: FormAction): FormState {
       break;
     case FormActionTypes.Desc:
       // this makes no sense and shouldn't be needed and yet it does not work without it???
-      console.log("set Desc reducer");
       if (typeof action.payload === "string") {
         newState.description = action.payload
           ? JSON.parse(action.payload)
