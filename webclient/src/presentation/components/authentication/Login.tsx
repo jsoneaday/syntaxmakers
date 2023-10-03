@@ -3,7 +3,7 @@ import { getDeveloperByEmail } from "../../../domain/repository/DeveloperRepo";
 import { useProfile } from "../../common/redux/profile/ProfileHooks";
 import "../../theme/login.css";
 import { PrimaryButton } from "../controls/Buttons";
-import Modal from "../Modal";
+import Modal from "../modals/Modal";
 import { convert as convertDev } from "../../models/DevProfile";
 import { convert as convertEmp } from "../../models/EmpProfile";
 import Checkbox from "../controls/Checkbox";

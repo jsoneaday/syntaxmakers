@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 import * as ReactModal from "react-modal"; // needed to pass jest tests
-import "../theme/modal.css";
+import "../../theme/modal.css";
 
 interface ModalProps {
   isOpen: boolean;
