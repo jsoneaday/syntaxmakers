@@ -24,6 +24,7 @@ import {
 import { useProfile } from "../../common/redux/profile/ProfileHooks";
 import { Descendant } from "slate";
 import { formatDistanceToNow } from "date-fns";
+import { useInTextEditMode } from "../../common/redux/inTextEditMode/InTextEditModeHooks";
 
 type JobPostDisplayComponents = {
   title: JSX.Element;
@@ -110,7 +111,6 @@ function reducer(state: FormState, action: FormAction): FormState {
       break;
     case FormActionTypes.Desc:
       // this makes no sense and shouldn't be needed and yet it does not work without it???
-      console.log("set Desc reducer");
       if (typeof action.payload === "string") {
         newState.description = action.payload
           ? JSON.parse(action.payload)
@@ -186,6 +186,7 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
   const navigate = useNavigate();
   const [jobPostDisplayComponents, setJobPostDisplayComponents] =
     useState<JobPostDisplayComponents>();
+  const [_inTextEditMode, setInTextEditMode] = useInTextEditMode();
 
   /// currerntJobPost is used for component state
   const [currentJobPost, setCurrentJobPost] = useReducer<
@@ -561,6 +562,7 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
   };
 
   const onClickSaveCancel = () => {
+    setInTextEditMode(false);
     navigate(-1);
   };
 
@@ -570,7 +572,7 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
       type: FormActionTypes.IsRemote,
       payload: toggledIsRemote,
     });
-    setSubmitDisabled(false);
+
     if (toggledIsRemote) {
       setCurrentJobPost({
         type: FormActionTypes.CountryId,
@@ -582,6 +584,9 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
         payload: lastCountryId,
       });
     }
+
+    setSubmitDisabled(false);
+    setInTextEditMode(true);
   };
 
   const onChangeTitle = (e: ChangeEvent<HTMLInputElement>) => {
@@ -591,7 +596,9 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
       type: FormActionTypes.Title,
       payload: e.target.value,
     });
+
     setSubmitDisabled(false);
+    setInTextEditMode(true);
   };
 
   const onChangeCountry = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -601,8 +608,10 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
       type: FormActionTypes.CountryId,
       payload,
     });
+
     setSubmitDisabled(false);
     setLastCountryId(payload);
+    setInTextEditMode(true);
   };
 
   const onChangePrimaryLang = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -612,7 +621,9 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
       type: FormActionTypes.PrimaryLangId,
       payload: e.target.value ? Number(e.target.value) : 0,
     });
+
     setSubmitDisabled(false);
+    setInTextEditMode(true);
   };
 
   const onChangeSecondaryLang = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -622,7 +633,9 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
       type: FormActionTypes.SecondaryLangId,
       payload: e.target.value ? Number(e.target.value) : 0,
     });
+
     setSubmitDisabled(false);
+    setInTextEditMode(true);
   };
 
   const onChangeIndustry = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -632,7 +645,9 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
       type: FormActionTypes.IndustryId,
       payload: e.target.value ? Number(e.target.value) : 0,
     });
+
     setSubmitDisabled(false);
+    setInTextEditMode(true);
   };
 
   const onChangeSalary = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -642,29 +657,37 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
       type: FormActionTypes.SalaryId,
       payload: e.target.value ? Number(e.target.value) : 0,
     });
+
     setSubmitDisabled(false);
+    setInTextEditMode(true);
   };
 
   const onClickSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
-    setSubmitDisabled(true);
-    setFormValues();
 
-    if (!profile || !profile.accessToken) {
-      throw new Error(
-        `Access token is required to save a job record ${profile}`
-      );
+    try {
+      setSubmitDisabled(true);
+      setFormValues();
+
+      if (!profile || !profile.accessToken) {
+        throw new Error(
+          `Access token is required to save a job record ${profile}`
+        );
+      }
+
+      if (formValues.current.id === 0) {
+        await insertJobPost(formValues.current, profile.accessToken);
+      } else {
+        await updateJobPost(formValues.current, profile.accessToken);
+      }
+    } catch (e) {
+      console.log(e);
+    } finally {
+      const state = refreshUrlState();
+      navigate(".", { state, replace: true });
+      setSubmitDisabled(false);
+      setInTextEditMode(false);
     }
-
-    if (formValues.current.id === 0) {
-      await insertJobPost(formValues.current, profile.accessToken);
-    } else {
-      await updateJobPost(formValues.current, profile.accessToken);
-    }
-
-    const state = refreshUrlState();
-    navigate(".", { state, replace: true });
-    setSubmitDisabled(false);
   };
 
   const refreshUrlState = () => {
