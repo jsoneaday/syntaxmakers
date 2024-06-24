@@ -5,7 +5,6 @@ import "../../theme/job_full_view.css";
 import flag from "../../theme/assets/flag.png";
 import similar from "../../theme/assets/similar.png";
 import GoBack from "../navigation/GoBack";
-import TextEditor from "../textEditor/TextEditor";
 import DropDown from "../controls/DropDown";
 import Checkbox from "../controls/Checkbox";
 import { useDevOrEmployer } from "../../common/redux/devOrEmployer/DevOrEmployerHooks";
@@ -22,9 +21,10 @@ import {
   updateJobPost,
 } from "../../../domain/repository/JobRepo";
 import { useProfile } from "../../common/redux/profile/ProfileHooks";
-import { Descendant } from "slate";
 import { formatDistanceToNow } from "date-fns";
 import { useInTextEditMode } from "../../common/redux/inTextEditMode/InTextEditModeHooks";
+import { MarkdownEditor } from "../textEditor/MarkdownEditor";
+import { MDXEditorMethods } from "@mdxeditor/editor";
 
 type JobPostDisplayComponents = {
   title: JSX.Element;
@@ -43,7 +43,7 @@ interface FormState {
   id: number;
   updatedAt: string;
   title: string;
-  description: Descendant[] | null;
+  description: string | undefined | null;
   employerId: number;
   employerName: string;
   companyId: number;
@@ -110,14 +110,7 @@ function reducer(state: FormState, action: FormAction): FormState {
       newState.title = action.payload;
       break;
     case FormActionTypes.Desc:
-      // this makes no sense and shouldn't be needed and yet it does not work without it???
-      if (typeof action.payload === "string") {
-        newState.description = action.payload
-          ? JSON.parse(action.payload)
-          : emptyDescendant;
-      } else {
-        newState.description = action.payload;
-      }
+      newState.description = action.payload;
       break;
     case FormActionTypes.IsRemote:
       newState.isRemote = action.payload;
@@ -169,18 +162,12 @@ function reducer(state: FormState, action: FormAction): FormState {
 
 type Reducer<S, A> = (prevState: S, action: A) => S;
 
-const emptyDescendant: Descendant[] = [
-  {
-    type: "paragraph",
-    children: [{ text: "" }],
-  },
-];
-
 interface JobFullviewProps {
   readOnly: boolean;
 }
 
 export default function JobFullview({ readOnly }: JobFullviewProps) {
+  const mdRef = useRef<MDXEditorMethods>(null);
   const [profile, _] = useProfile();
   const { state: routeJobPost } = useLocation();
   const navigate = useNavigate();
@@ -247,7 +234,7 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
       });
       setCurrentJobPost({
         type: FormActionTypes.Desc,
-        payload: emptyDescendant,
+        payload: "",
       });
     }
   }, [profile]);
@@ -275,9 +262,7 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
     setCurrentJobPost({ type: FormActionTypes.Title, payload: jobPost.title });
     setCurrentJobPost({
       type: FormActionTypes.Desc,
-      payload: jobPost.description
-        ? JSON.parse(jobPost.description)
-        : emptyDescendant,
+      payload: jobPost.description,
     });
     setCurrentJobPost({
       type: FormActionTypes.EmployerId,
@@ -719,11 +704,6 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
     return state;
   };
 
-  const getCurrentDescValue = (text: Descendant[]) => {
-    setCurrentJobPost({ type: FormActionTypes.Desc, payload: text });
-    setSubmitDisabled(false);
-  };
-
   const setFormValues = () => {
     formValues.current = {
       id: currentJobPost.id,
@@ -818,10 +798,10 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
           Description
         </span>
         {currentJobPost.description ? (
-          <TextEditor
-            initialValue={currentJobPost.description}
+          <MarkdownEditor
+            mdRef={mdRef}
             readOnly={readOnly}
-            getCurrentValue={getCurrentDescValue}
+            markdown={currentJobPost.description}
           />
         ) : null}
       </div>
