@@ -9,9 +9,15 @@ pub struct CountResult {
     pub count: i64,
 }
 
-#[derive(FromRow, Clone)]
+#[derive(FromRow, Clone, Debug)]
 pub struct EntityId {
     pub id: i64
+}
+
+/// Migration version
+#[derive(FromRow, Clone, Debug)]
+pub struct Version {
+    pub version: i64
 }
 
 #[async_trait]
@@ -61,13 +67,33 @@ async fn get_conn_pool() -> Pool<Postgres> {
     info!("connection string {}", postgres_url);
 
     let conn = sqlx::postgres::PgPool::connect(&postgres_url).await.unwrap();
+    let result = sqlx::query_as::<_, Version>(r"
+        select version
+        from _sqlx_migrations
+        where version = $1
+    ")
+    .bind(20230623210040 as i64)
+    .fetch_optional(&conn)
+    .await;
+
+    if let Ok(version) = result {
+        if let Some(_) = version {
+            println!("migration was already completed");
+            info!("migration was already completed");
+            return conn;
+        }
+    }
+
+    info!("migration started");
     let migrate_result = migrate!("./migrations").run(&conn).await;
+    info!("end migration {:?}", migrate_result);
+    println!("end migration {:?}", migrate_result);
     match migrate_result {
         Ok(()) => {
             info!("migration complete");
         },
         Err(e) => error!("failed to migrate {}", e)
-    };
+    };    
 
     conn
 }

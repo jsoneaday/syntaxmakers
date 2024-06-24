@@ -333,11 +333,13 @@ mod internal {
     }
 
     pub async fn query_jobs_by_search_terms(conn: &Pool<Postgres>, search_terms: Vec<String>, page_size: i32, last_offset: i64) -> Result<Vec<Job>, Error> {
-        let mut first_param = String::from("ARRAY[");
+        let mut first_param: Vec<String> = vec![];
         for item in search_terms {
-            first_param = format!("{}, '%' || {} || '%'", first_param, item);
+            first_param.push(format!(
+                "%{}%",
+                item
+            ));
         }
-        first_param = format!("{}]", first_param);
 
         query_as::<_, Job>(
             r"
@@ -373,7 +375,13 @@ mod internal {
                     join prog_language spl on j.secondary_lang_id = spl.id
                     join industry i on j.industry_id = i.id
                     join salary s on j.salary_id = s.id
-            where e.name ILIKE ANY ($1)                
+            where e.full_name ILIKE ANY ($1)  
+                or j.title ILIKE ANY ($1)
+                or ppl.name ILIKE ANY($1)
+                or spl.name ILIKE ANY ($1)  
+                or co.name ILIKE ANY ($1)  
+                or cy.name ILIKE ANY ($1)  
+                or i.name ILIKE ANY ($1)  
             order by updated_at desc             
             limit $2
             offset $3
