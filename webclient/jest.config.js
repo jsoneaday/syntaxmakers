@@ -12,4 +12,6 @@ export default {
       "identity-obj-proxy",
   },
   testEnvironment: "jsdom",
+  setupFiles: ["whatwg-fetch"],
+  setupFilesAfterEnv: ["<rootDir>/setupTests.ts"],
 };

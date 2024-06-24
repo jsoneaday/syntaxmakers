@@ -1,65 +1,88 @@
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import JobPost from "../../models/JobPost";
-import {
-  ChangeEvent,
-  useEffect,
-  useReducer,
-  useState,
-  useTransition,
-} from "react";
+import { ChangeEvent, useEffect, useReducer, useRef, useState } from "react";
 import "../../theme/job_full_view.css";
-import { appendPlusLargeCurrency } from "../../common/CurrencyFormatter";
 import flag from "../../theme/assets/flag.png";
 import similar from "../../theme/assets/similar.png";
-import GoBack from "../../components/navigation/GoBack";
-import TextEditor from "../../components/textEditor/TextEditor";
-import DropDown, { OptionType } from "../controls/DropDown";
+import GoBack from "../navigation/GoBack";
+import TextEditor from "../textEditor/TextEditor";
+import DropDown from "../controls/DropDown";
 import Checkbox from "../controls/Checkbox";
-import { getCountries } from "../../../domain/repository/CountryRepo";
-import { convert as convertCountry } from "../../models/CountryModel";
-import { getCompanies } from "../../../domain/repository/CompanyRepo";
-import { convert as convertCompany } from "../../models/CompanyModel";
 import { useDevOrEmployer } from "../../common/redux/devOrEmployer/DevOrEmployerHooks";
 import { DevOrEmployer } from "../../models/DevOrEmployer";
-import { getLanguages } from "../../../domain/repository/LanguageRepo";
-import { convert as convertLang } from "../../models/LanguageModel";
-import { getIndustries } from "../../../domain/repository/IndustryRepo";
-import { convert as convertIndustry } from "../../models/IndustryModel";
-import { getSalaries } from "../../../domain/repository/SalaryRepo";
-import { convert as convertSalary } from "../../models/SalaryModel";
 /// @ts-ignore
 import { v4 as uuidv4 } from "uuid";
+import {
+  JobPostOptions,
+  getJobPostOptions,
+} from "../../models/JobFullviewModel";
+import {
+  JobFormState,
+  insertJobPost,
+  updateJobPost,
+} from "../../../domain/repository/JobRepo";
+import { useProfile } from "../../common/redux/profile/ProfileHooks";
+import { Descendant } from "slate";
+import { formatDistanceToNow } from "date-fns";
+import { useInTextEditMode } from "../../common/redux/inTextEditMode/InTextEditModeHooks";
+
+type JobPostDisplayComponents = {
+  title: JSX.Element;
+  companyName: JSX.Element;
+  isRemoteOrCountry: JSX.Element;
+  updatedAt: JSX.Element | null;
+  buttons: JSX.Element;
+  employerName: JSX.Element;
+  primaryLang: JSX.Element;
+  secondaryLang: JSX.Element | null;
+  industry: JSX.Element;
+  salary: JSX.Element;
+};
 
 interface FormState {
-  id: string;
+  id: number;
   updatedAt: string;
-  employerId: string;
-  employerFullName: string;
   title: string;
-  description: string;
+  description: Descendant[] | null;
+  employerId: number;
+  employerName: string;
+  companyId: number;
+  companyName: string;
   isRemote: boolean;
-  countryId: string;
-  companyId: string;
-  industryId: string;
-  salaryId: string;
-  primaryLangId: string;
-  secondaryLangId?: string;
+  primaryLangId: number;
+  primaryLangName: string;
+  secondaryLangId: number;
+  secondaryLangName: string;
+  industryId: number;
+  industryName: String;
+  salaryId: number;
+  salary: string;
+  companyLogo?: Blob;
+  countryId?: number;
+  countryName?: string;
 }
 
 enum FormActionTypes {
   Id = "id",
   UpdatedAt = "updatedAt",
   EmployerId = "employerId",
-  EmployerFullName = "employerFullName",
+  EmployerName = "employerName",
   Title = "title",
   Desc = "desc",
   IsRemote = "isRemote",
   CountryId = "countryId",
+  CountryName = "countryName",
   CompanyId = "companyId",
+  CompanyName = "companyName",
+  CompanyLogo = "companyLogo",
   IndustryId = "industryId",
+  IndustryName = "industryName",
   SalaryId = "salaryId",
+  Salary = "salary",
   PrimaryLangId = "primaryLangId",
+  PrimaryLangName = "primaryLangName",
   SecondaryLangId = "secondaryLangId",
+  SecondaryLangName = "secondaryLangName",
 }
 
 interface FormAction {
@@ -80,14 +103,21 @@ function reducer(state: FormState, action: FormAction): FormState {
     case FormActionTypes.EmployerId:
       newState.employerId = action.payload;
       break;
-    case FormActionTypes.EmployerFullName:
-      newState.employerFullName = action.payload;
+    case FormActionTypes.EmployerName:
+      newState.employerName = action.payload;
       break;
     case FormActionTypes.Title:
       newState.title = action.payload;
       break;
     case FormActionTypes.Desc:
-      newState.description = action.payload;
+      // this makes no sense and shouldn't be needed and yet it does not work without it???
+      if (typeof action.payload === "string") {
+        newState.description = action.payload
+          ? JSON.parse(action.payload)
+          : emptyDescendant;
+      } else {
+        newState.description = action.payload;
+      }
       break;
     case FormActionTypes.IsRemote:
       newState.isRemote = action.payload;
@@ -95,196 +125,629 @@ function reducer(state: FormState, action: FormAction): FormState {
     case FormActionTypes.CountryId:
       newState.countryId = action.payload;
       break;
+    case FormActionTypes.CountryName:
+      newState.countryName = action.payload;
+      break;
     case FormActionTypes.CompanyId:
       newState.companyId = action.payload;
+      break;
+    case FormActionTypes.CompanyName:
+      newState.companyName = action.payload;
+      break;
+    case FormActionTypes.CompanyLogo:
+      newState.companyLogo = action.payload;
       break;
     case FormActionTypes.IndustryId:
       newState.industryId = action.payload;
       break;
+    case FormActionTypes.IndustryName:
+      newState.industryName = action.payload;
+      break;
     case FormActionTypes.SalaryId:
       newState.salaryId = action.payload;
+      break;
+    case FormActionTypes.Salary:
+      newState.salary = action.payload;
       break;
     case FormActionTypes.PrimaryLangId:
       newState.primaryLangId = action.payload;
       break;
+    case FormActionTypes.PrimaryLangName:
+      newState.primaryLangName = action.payload;
+      break;
     case FormActionTypes.SecondaryLangId:
       newState.secondaryLangId = action.payload;
+      break;
+    case FormActionTypes.SecondaryLangName:
+      newState.secondaryLangName = action.payload;
       break;
     default:
       throw new Error(`Action type, ${action.type}, not found`);
   }
-
   return newState;
 }
 
 type Reducer<S, A> = (prevState: S, action: A) => S;
+
+const emptyDescendant: Descendant[] = [
+  {
+    type: "paragraph",
+    children: [{ text: "" }],
+  },
+];
 
 interface JobFullviewProps {
   readOnly: boolean;
 }
 
 export default function JobFullview({ readOnly }: JobFullviewProps) {
-  const { state } = useLocation();
-  const [readOnlyJobPost, setReadonlyJobPost] = useState<JobPost | null>(null);
-  const [formValues, setFormValues] = useReducer<
+  const [profile, _] = useProfile();
+  const { state: routeJobPost } = useLocation();
+  const navigate = useNavigate();
+  const [jobPostDisplayComponents, setJobPostDisplayComponents] =
+    useState<JobPostDisplayComponents>();
+  const [_inTextEditMode, setInTextEditMode] = useInTextEditMode();
+
+  /// currerntJobPost is used for component state
+  const [currentJobPost, setCurrentJobPost] = useReducer<
     Reducer<FormState, FormAction>
   >(reducer, {
-    id: "",
-    updatedAt: "",
-    employerId: "",
-    employerFullName: "",
+    id: 0,
+    updatedAt: formatDistanceToNow(new Date()),
+    title: "",
+    description: null,
+    employerId: 1,
+    employerName: "",
+    isRemote: false,
+    companyId: 1,
+    companyName: "",
+    countryId: 1,
+    countryName: "",
+    primaryLangId: 1,
+    primaryLangName: "",
+    secondaryLangId: 1,
+    secondaryLangName: "",
+    industryId: 1,
+    industryName: "",
+    salaryId: 1,
+    salary: "",
+    companyLogo: undefined,
+  });
+  const [lastCountryId, setLastCountryId] = useState<number>();
+  /// formValues used for form submission
+  const formValues = useRef<JobFormState>({
+    id: 0,
+    employerId: 0,
     title: "",
     description: "",
     isRemote: false,
-    countryId: "",
-    companyId: "",
-    industryId: "",
-    salaryId: "",
-    primaryLangId: "",
-    secondaryLangId: "",
+    countryId: 0,
+    industryId: 0,
+    salaryId: 0,
+    primaryLangId: 0,
+    secondaryLangId: 0,
   });
-  const [companies, setCompanies] = useState<OptionType[]>([]);
-  const [countries, setCountries] = useState<OptionType[]>([]);
-  const [languages, setLanguages] = useState<OptionType[]>([]);
-  const [industries, setIndustries] = useState<OptionType[]>([]);
-  const [salaries, setSalaries] = useState<OptionType[]>([]);
   const [devOrEmp] = useDevOrEmployer();
-  const [_isPending, startTransition] = useTransition();
+  const [submitDisabled, setSubmitDisabled] = useState(true);
 
   useEffect(() => {
-    const currentJobPost = state as JobPost;
-    setReadonlyJobPost(currentJobPost);
-    setAllFormValues(currentJobPost);
-  }, [state]);
+    let currentJobPost: JobPost | undefined = undefined;
+    if (routeJobPost) {
+      currentJobPost = routeJobPost as JobPost;
+      setJobPostStates(currentJobPost);
+    }
+  }, [routeJobPost]);
+
+  useEffect(() => {
+    // if there's an employer logged in and no route state, assume new job post
+    if (devOrEmp === DevOrEmployer.Employer && profile && !routeJobPost) {
+      setCurrentJobPost({
+        type: FormActionTypes.EmployerId,
+        payload: profile.id,
+      });
+      setCurrentJobPost({
+        type: FormActionTypes.Desc,
+        payload: emptyDescendant,
+      });
+    }
+  }, [profile]);
 
   useEffect(() => {
     if (!readOnly) {
-      getCompanies()
-        .then((companies) => {
-          setCompanies(
-            companies.map((company) => {
-              const model = convertCompany(company);
-              return { name: model.name, value: model.id };
-            })
-          );
-        })
-        .catch((err) => console.log("Failed to get companies", err));
-
-      getCountries()
-        .then((countries) => {
-          setCountries(
-            countries.map((country) => {
-              const model = convertCountry(country);
-              return { name: model.name, value: model.id };
-            })
-          );
-        })
-        .catch((err) => console.log("Failed to get countries", err));
-
-      getLanguages()
-        .then((languages) => {
-          setLanguages(
-            languages.map((language) => {
-              const model = convertLang(language);
-              return { name: model.name, value: model.id };
-            })
-          );
-        })
-        .catch((err) => console.log("Failed to get languages", err));
-
-      getIndustries()
-        .then((industries) => {
-          setIndustries(
-            industries.map((industry) => {
-              const model = convertIndustry(industry);
-              return { name: model.name, value: model.id };
-            })
-          );
-        })
-        .catch((err) => console.log("Failed to get industries", err));
-
-      getSalaries()
-        .then((salaries) => {
-          console.log("salaries", salaries);
-          setSalaries(
-            salaries.map((salary) => {
-              const model = convertSalary(salary);
-
-              return {
-                name: appendPlusLargeCurrency(model.base),
-                value: model.id,
-              };
-            })
-          );
-        })
-        .catch((err) => console.log("Failed to get salaries", err));
+      getJobPostOptions().then((jobPostOptions) => {
+        const jobPostDisplayComponentItems =
+          getJobPostDisplayComponents(jobPostOptions);
+        setJobPostDisplayComponents(jobPostDisplayComponentItems);
+      });
+    } else {
+      const jobPostDisplayComponentItems =
+        getJobPostDisplayComponents(undefined);
+      setJobPostDisplayComponents(jobPostDisplayComponentItems);
     }
-  }, [readOnly]);
+  }, [currentJobPost]);
 
-  const setAllFormValues = (jobPost: JobPost) => {
-    startTransition(() => {
-      setFormValues({ type: FormActionTypes.Id, payload: jobPost.id });
-      setFormValues({
-        type: FormActionTypes.UpdatedAt,
-        payload: jobPost.updatedAt,
-      });
-      setFormValues({
-        type: FormActionTypes.EmployerId,
-        payload: jobPost.employerId,
-      });
-      setFormValues({
-        type: FormActionTypes.EmployerFullName,
-        payload: jobPost.employerName,
-      });
-      setFormValues({ type: FormActionTypes.Title, payload: jobPost.title });
-      setFormValues({
-        type: FormActionTypes.Desc,
-        payload: jobPost.description,
-      });
-      setFormValues({
-        type: FormActionTypes.CountryId,
-        payload: jobPost.countryId,
-      });
-      setFormValues({
-        type: FormActionTypes.CompanyId,
-        payload: jobPost.companyId,
-      });
-      setFormValues({
-        type: FormActionTypes.IndustryId,
-        payload: jobPost.industryId,
-      });
-      setFormValues({
-        type: FormActionTypes.SalaryId,
-        payload: jobPost.salaryId,
-      });
-      setFormValues({
-        type: FormActionTypes.PrimaryLangId,
-        payload: jobPost.primaryLangId,
-      });
-      setFormValues({
-        type: FormActionTypes.SecondaryLangId,
-        payload: jobPost.secondaryLangId,
-      });
+  const setJobPostStates = (jobPost: JobPost) => {
+    setCurrentJobPost({ type: FormActionTypes.Id, payload: jobPost.id });
+    setCurrentJobPost({
+      type: FormActionTypes.UpdatedAt,
+      payload: jobPost.updatedAt,
     });
+    setCurrentJobPost({ type: FormActionTypes.Title, payload: jobPost.title });
+    setCurrentJobPost({
+      type: FormActionTypes.Desc,
+      payload: jobPost.description
+        ? JSON.parse(jobPost.description)
+        : emptyDescendant,
+    });
+    setCurrentJobPost({
+      type: FormActionTypes.EmployerId,
+      payload: jobPost.employerId,
+    });
+    setCurrentJobPost({
+      type: FormActionTypes.EmployerName,
+      payload: jobPost.employerName,
+    });
+    setCurrentJobPost({
+      type: FormActionTypes.IsRemote,
+      payload: jobPost.isRemote,
+    });
+    setCurrentJobPost({
+      type: FormActionTypes.CompanyLogo,
+      payload: jobPost.companyLogo,
+    });
+    setCurrentJobPost({
+      type: FormActionTypes.CompanyId,
+      payload: jobPost.companyId,
+    });
+    setCurrentJobPost({
+      type: FormActionTypes.CompanyName,
+      payload: jobPost.companyName,
+    });
+    setCurrentJobPost({
+      type: FormActionTypes.CountryId,
+      payload: jobPost.countryId,
+    });
+    // if no country selected just default to first on list, as there must be at least one
+    setLastCountryId(jobPost.countryId || 1);
+    setCurrentJobPost({
+      type: FormActionTypes.CountryName,
+      payload: jobPost.countryName,
+    });
+    setCurrentJobPost({
+      type: FormActionTypes.PrimaryLangId,
+      payload: jobPost.primaryLangId,
+    });
+    setCurrentJobPost({
+      type: FormActionTypes.PrimaryLangName,
+      payload: jobPost.primaryLangName,
+    });
+    setCurrentJobPost({
+      type: FormActionTypes.SecondaryLangId,
+      payload: jobPost.secondaryLangId,
+    });
+    setCurrentJobPost({
+      type: FormActionTypes.SecondaryLangName,
+      payload: jobPost.secondaryLangName,
+    });
+    setCurrentJobPost({
+      type: FormActionTypes.IndustryId,
+      payload: jobPost.industryId,
+    });
+    setCurrentJobPost({
+      type: FormActionTypes.IndustryName,
+      payload: jobPost.industryName,
+    });
+    setCurrentJobPost({
+      type: FormActionTypes.SalaryId,
+      payload: jobPost.salaryId,
+    });
+    setCurrentJobPost({
+      type: FormActionTypes.Salary,
+      payload: jobPost.salary,
+    });
+  };
+
+  const getJobPostDisplayComponents = (
+    jobPostOptions: JobPostOptions | undefined
+  ) => {
+    let _title: JSX.Element;
+    let _companyName: JSX.Element;
+    let _isRemoteOrCountry: JSX.Element;
+    let _updatedAt: JSX.Element | null;
+    let _buttons: JSX.Element;
+    let _employerName: JSX.Element;
+    let _primaryLang: JSX.Element;
+    let _secondaryLang: JSX.Element | null;
+    let _industry: JSX.Element;
+    let _salary: JSX.Element;
+
+    _employerName = (
+      <div className="job-full-view-subtitle-item-secondary">
+        {`Contact ${currentJobPost.employerName}`}
+      </div>
+    );
+
+    _companyName = (
+      <div className="sub-title-font job-full-view-subtitle-item-primary">
+        {currentJobPost.companyName}
+      </div>
+    );
+
+    if (readOnly) {
+      _title = <div className="title-font">{currentJobPost.title}</div>;
+      _isRemoteOrCountry = (
+        <div className="sub-title-font job-full-view-subtitle-item-primary">
+          {currentJobPost.isRemote ? "Remote" : currentJobPost.countryName}
+        </div>
+      );
+      _updatedAt = (
+        <div className="small-font job-full-view-subtitle-item-primary">
+          {currentJobPost.updatedAt}
+        </div>
+      );
+      _buttons = (
+        <>
+          <button
+            className="primary-btn small-btn"
+            style={{ marginBottom: ".5em" }}
+          >
+            apply
+          </button>
+          <button className="secondary-btn small-btn">save</button>
+          <img
+            src={flag}
+            className="job-icon"
+            style={{ marginTop: "1em" }}
+            title="inappropriate"
+          />
+          <img
+            src={similar}
+            className="job-icon"
+            style={{ marginTop: ".50em" }}
+            title="similar jobs"
+          />
+        </>
+      );
+
+      _primaryLang = (
+        <div className="job-full-view-subtitle-item-secondary">
+          {`Primary Language ${currentJobPost.primaryLangName}`}
+        </div>
+      );
+      _secondaryLang =
+        currentJobPost.secondaryLangName &&
+        currentJobPost.secondaryLangName != currentJobPost.primaryLangName ? (
+          <div className="job-full-view-subtitle-item-secondary">
+            {`Secondary Language ${currentJobPost.secondaryLangName}`}
+          </div>
+        ) : null;
+      _industry = (
+        <div className="job-full-view-subtitle-item-secondary">
+          {`Industry ${currentJobPost.industryName}`}
+        </div>
+      );
+      _salary = (
+        <div className="job-full-view-subtitle-item-secondary">
+          {`Base Salary ${currentJobPost.salary}`}
+        </div>
+      );
+    } else {
+      _title = (
+        <div className="left-align">
+          <label htmlFor="job-title-input" style={{ marginRight: "1em" }}>
+            Title
+          </label>
+          <input
+            id="job-title-input"
+            type="text"
+            value={currentJobPost.title}
+            onChange={onChangeTitle}
+            className="input normal-font"
+            name="title"
+            style={{ width: "20em", textAlign: "right" }}
+          />
+        </div>
+      );
+      _isRemoteOrCountry = (
+        <>
+          <div
+            className="sub-title-font job-full-view-subtitle-item-primary"
+            style={{ marginBottom: ".5em" }}
+          >
+            <Checkbox
+              isChecked={currentJobPost.isRemote || false}
+              toggleIsChecked={toggleIsRemote}
+              name="isRemote"
+            >
+              Remote
+            </Checkbox>
+          </div>
+          {!currentJobPost.isRemote ? (
+            <DropDown
+              keyName={`dd-country-id`}
+              label="Country"
+              name="countryId"
+              onChange={onChangeCountry}
+              value={currentJobPost.countryId || ""}
+              optionItems={jobPostOptions?.countries || []}
+            />
+          ) : null}
+        </>
+      );
+      _updatedAt = null;
+      _buttons = (
+        <>
+          <button
+            className="primary-btn small-btn"
+            style={{
+              marginBottom: ".5em",
+              cursor: submitDisabled ? "not-allowed" : "pointer",
+            }}
+            name="save"
+            onClick={onClickSubmit}
+            disabled={submitDisabled}
+          >
+            save
+          </button>
+          <button
+            className="secondary-btn small-btn"
+            onClick={onClickSaveCancel}
+          >
+            cancel
+          </button>
+        </>
+      );
+      _primaryLang = (
+        <div style={{ marginTop: ".75em" }}>
+          <DropDown
+            keyName={`dd-primary-lang`}
+            label="Primary Lang"
+            optionItems={jobPostOptions?.languages || []}
+            name="primaryLangId"
+            onChange={onChangePrimaryLang}
+            value={currentJobPost.primaryLangId}
+          />
+        </div>
+      );
+      _secondaryLang = (
+        <div style={{ marginTop: ".75em" }}>
+          <DropDown
+            keyName={`dd-secondary-lang`}
+            label="Secondary Lang"
+            optionItems={jobPostOptions?.languages || []}
+            name="secondaryLangId"
+            onChange={onChangeSecondaryLang}
+            value={currentJobPost.secondaryLangId}
+          />
+        </div>
+      );
+      _industry = (
+        <div style={{ marginTop: ".75em" }}>
+          <DropDown
+            keyName={`dd-industry-id`}
+            label="Industry"
+            optionItems={jobPostOptions?.industries || []}
+            name="industryId"
+            onChange={onChangeIndustry}
+            value={currentJobPost.industryId}
+          />
+        </div>
+      );
+      _salary = (
+        <div style={{ marginTop: ".75em" }}>
+          <DropDown
+            keyName={`dd-salary-id`}
+            label="Salary"
+            optionItems={jobPostOptions?.salaries || []}
+            name="salaryId"
+            onChange={onChangeSalary}
+            value={currentJobPost.salaryId}
+          />
+        </div>
+      );
+    }
+
+    return {
+      title: _title,
+      companyName: _companyName,
+      isRemoteOrCountry: _isRemoteOrCountry,
+      updatedAt: _updatedAt,
+      buttons: _buttons,
+      employerName: _employerName,
+      primaryLang: _primaryLang,
+      secondaryLang: _secondaryLang,
+      industry: _industry,
+      salary: _salary,
+    };
+  };
+
+  const onClickSaveCancel = () => {
+    setInTextEditMode(false);
+    navigate(-1);
+  };
+
+  const toggleIsRemote = () => {
+    const toggledIsRemote = !currentJobPost.isRemote;
+    setCurrentJobPost({
+      type: FormActionTypes.IsRemote,
+      payload: toggledIsRemote,
+    });
+
+    if (toggledIsRemote) {
+      setCurrentJobPost({
+        type: FormActionTypes.CountryId,
+        payload: undefined,
+      });
+    } else {
+      setCurrentJobPost({
+        type: FormActionTypes.CountryId,
+        payload: lastCountryId,
+      });
+    }
+
+    setSubmitDisabled(false);
+    setInTextEditMode(true);
   };
 
   const onChangeTitle = (e: ChangeEvent<HTMLInputElement>) => {
     e.preventDefault();
 
-    setFormValues({ type: FormActionTypes.Title, payload: e.target.value });
+    setCurrentJobPost({
+      type: FormActionTypes.Title,
+      payload: e.target.value,
+    });
+
+    setSubmitDisabled(false);
+    setInTextEditMode(true);
   };
 
-  const toggleIsRemote = () => {
-    setFormValues({
-      type: FormActionTypes.IsRemote,
-      payload: !formValues.isRemote,
+  const onChangeCountry = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    e.preventDefault();
+    const payload = e.target.value ? Number(e.target.value) : 0;
+    setCurrentJobPost({
+      type: FormActionTypes.CountryId,
+      payload,
     });
+
+    setSubmitDisabled(false);
+    setLastCountryId(payload);
+    setInTextEditMode(true);
+  };
+
+  const onChangePrimaryLang = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    e.preventDefault();
+
+    setCurrentJobPost({
+      type: FormActionTypes.PrimaryLangId,
+      payload: e.target.value ? Number(e.target.value) : 0,
+    });
+
+    setSubmitDisabled(false);
+    setInTextEditMode(true);
+  };
+
+  const onChangeSecondaryLang = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    e.preventDefault();
+
+    setCurrentJobPost({
+      type: FormActionTypes.SecondaryLangId,
+      payload: e.target.value ? Number(e.target.value) : 0,
+    });
+
+    setSubmitDisabled(false);
+    setInTextEditMode(true);
+  };
+
+  const onChangeIndustry = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    e.preventDefault();
+
+    setCurrentJobPost({
+      type: FormActionTypes.IndustryId,
+      payload: e.target.value ? Number(e.target.value) : 0,
+    });
+
+    setSubmitDisabled(false);
+    setInTextEditMode(true);
+  };
+
+  const onChangeSalary = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    e.preventDefault();
+
+    setCurrentJobPost({
+      type: FormActionTypes.SalaryId,
+      payload: e.target.value ? Number(e.target.value) : 0,
+    });
+
+    setSubmitDisabled(false);
+    setInTextEditMode(true);
+  };
+
+  const onClickSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+
+    try {
+      setSubmitDisabled(true);
+      setFormValues();
+
+      if (!profile || !profile.accessToken) {
+        throw new Error(
+          `Access token is required to save a job record ${profile}`
+        );
+      }
+
+      if (formValues.current.id === 0) {
+        await insertJobPost(formValues.current, profile.accessToken);
+      } else {
+        await updateJobPost(formValues.current, profile.accessToken);
+      }
+    } catch (e) {
+      console.log(e);
+    } finally {
+      const state = refreshUrlState();
+      navigate(".", { state, replace: true });
+      setSubmitDisabled(false);
+      setInTextEditMode(false);
+    }
+  };
+
+  const refreshUrlState = () => {
+    const state: JobPost = {
+      key: routeJobPost ? routeJobPost.key : uuidv4(),
+      id: currentJobPost.id,
+      updatedAt: currentJobPost.updatedAt,
+      employerId: currentJobPost.employerId,
+      employerName: currentJobPost.employerName,
+      title: currentJobPost.title,
+      description: currentJobPost.description
+        ? JSON.stringify(currentJobPost.description)
+        : "",
+      isRemote: currentJobPost.isRemote,
+      companyId: currentJobPost.companyId,
+      companyName: currentJobPost.companyName,
+      companyLogo: currentJobPost.companyLogo,
+      primaryLangId: currentJobPost.primaryLangId,
+      primaryLangName: currentJobPost.primaryLangName,
+      secondaryLangId: currentJobPost.secondaryLangId,
+      secondaryLangName: currentJobPost.secondaryLangName,
+      industryId: currentJobPost.industryId,
+      industryName: currentJobPost.industryName,
+      salaryId: currentJobPost.salaryId,
+      salary: currentJobPost.salary,
+      countryId: currentJobPost.countryId,
+      countryName: currentJobPost.countryName,
+    };
+    return state;
+  };
+
+  const getCurrentDescValue = (text: Descendant[]) => {
+    setCurrentJobPost({ type: FormActionTypes.Desc, payload: text });
+    setSubmitDisabled(false);
+  };
+
+  const setFormValues = () => {
+    formValues.current = {
+      id: currentJobPost.id,
+      employerId: currentJobPost.employerId,
+      title: currentJobPost.title,
+      description: JSON.stringify(currentJobPost.description || ""),
+      isRemote: currentJobPost.isRemote,
+      primaryLangId: currentJobPost.primaryLangId,
+      secondaryLangId: currentJobPost.secondaryLangId,
+      industryId: currentJobPost.industryId,
+      salaryId: currentJobPost.salaryId,
+      countryId: currentJobPost.isRemote ? undefined : currentJobPost.countryId,
+    };
   };
 
   return (
     <form className="userhome-main" style={{ margin: "auto" }}>
       <div
-        style={{ paddingTop: "2em", paddingLeft: "2em", paddingRight: "2em" }}
+        className="header-container job-full-view-header"
+        style={{
+          paddingTop: "2em",
+          paddingLeft: "2em",
+          paddingRight: "2em",
+        }}
       >
         <GoBack
           label={
@@ -303,22 +766,7 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
         }}
       >
         <div className="stack">
-          {readOnly ? (
-            <div className="title-font">{readOnlyJobPost?.title}</div>
-          ) : (
-            <div className="left-align">
-              <label htmlFor="job-title-input" style={{ marginRight: "1em" }}>
-                Title
-              </label>
-              <input
-                id="job-title-input"
-                type="text"
-                value={formValues.title}
-                onChange={onChangeTitle}
-                className="input"
-              />
-            </div>
-          )}
+          {jobPostDisplayComponents?.title}
 
           <div className="left-align">
             <div className="opposites">
@@ -326,50 +774,13 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
                 className="job-full-view-subtitle"
                 style={{
                   width: "100%",
-                  alignItems: readOnly ? "center" : "flex-end",
                 }}
               >
-                {readOnly ? (
-                  <div className="sub-title-font job-full-view-subtitle-item-primary">
-                    {readOnlyJobPost?.companyName}
-                  </div>
-                ) : (
-                  <DropDown
-                    key={`dd-${uuidv4()}`}
-                    label="Company"
-                    optionItems={companies}
-                  />
-                )}
-                {readOnly ? (
-                  <div className="sub-title-font job-full-view-subtitle-item-primary">
-                    {readOnlyJobPost?.isRemote
-                      ? "Remote"
-                      : readOnlyJobPost?.countryName}
-                  </div>
-                ) : (
-                  <>
-                    <div className="sub-title-font job-full-view-subtitle-item-primary">
-                      <Checkbox
-                        isChecked={formValues.isRemote}
-                        toggleIsChecked={toggleIsRemote}
-                      >
-                        Remote
-                      </Checkbox>
-                    </div>
-                    {!formValues.isRemote ? (
-                      <DropDown
-                        key={`dd-${uuidv4()}`}
-                        label="Country"
-                        optionItems={countries}
-                      />
-                    ) : null}
-                  </>
-                )}
-                {readOnly ? (
-                  <div className="small-font job-full-view-subtitle-item-primary">
-                    {readOnlyJobPost?.updatedAt}
-                  </div>
-                ) : null}
+                <div style={{ marginBottom: ".5em" }}>
+                  {jobPostDisplayComponents?.companyName}
+                </div>
+                {jobPostDisplayComponents?.isRemoteOrCountry}
+                {jobPostDisplayComponents?.updatedAt}
               </div>
             </div>
           </div>
@@ -379,117 +790,26 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
           className="stack"
           style={{ alignItems: "flex-end", textAlign: "right" }}
         >
-          {readOnly ? (
-            <>
-              <button
-                className="primary-btn small-btn"
-                style={{ marginBottom: ".5em" }}
-              >
-                apply
-              </button>
-              <button className="secondary-btn small-btn">save</button>
-              <img
-                src={flag}
-                className="job-icon"
-                style={{ marginTop: "1em" }}
-                title="inappropriate"
-              />
-              <img
-                src={similar}
-                className="job-icon"
-                style={{ marginTop: ".50em" }}
-                title="similar jobs"
-              />
-            </>
-          ) : (
-            <>
-              <button
-                className="primary-btn small-btn"
-                style={{ marginBottom: ".5em" }}
-              >
-                save
-              </button>
-              <button className="secondary-btn small-btn">cancel</button>
-            </>
-          )}
+          {jobPostDisplayComponents?.buttons}
         </div>
       </div>
 
       <div
+        className="job-full-view-section"
         style={{
-          paddingLeft: "2em",
-          paddingRight: "2em",
+          padding: "1.5em",
+          marginBottom: "1em",
         }}
       >
-        {readOnly ? (
-          <div className="job-full-view-subtitle-item-secondary">
-            {`Contact ${readOnlyJobPost?.employerName}`}
-          </div>
-        ) : (
-          <div className="job-full-view-subtitle-item-secondary">
-            {`Contact ${formValues.employerFullName}`}
-          </div>
-        )}
-        {readOnly ? (
-          <div className="job-full-view-subtitle-item-secondary">
-            {`Primary Language ${readOnlyJobPost?.primaryLangName}`}
-          </div>
-        ) : (
-          <div style={{ marginTop: ".75em" }}>
-            <DropDown
-              key={`dd-${uuidv4()}`}
-              label="Primary Lang"
-              optionItems={languages}
-            />
-          </div>
-        )}
-        {readOnly ? (
-          readOnlyJobPost?.secondaryLangName &&
-          readOnlyJobPost?.secondaryLangName !=
-            readOnlyJobPost?.primaryLangName ? (
-            <div className="job-full-view-subtitle-item-secondary">
-              {`Secondary Language ${readOnlyJobPost?.secondaryLangName}`}
-            </div>
-          ) : null
-        ) : (
-          <div style={{ marginTop: ".75em" }}>
-            <DropDown
-              key={`dd-${uuidv4()}`}
-              label="Secondary Lang"
-              optionItems={languages}
-            />
-          </div>
-        )}
-        {readOnly ? (
-          <div className="job-full-view-subtitle-item-secondary">
-            {`Industry ${readOnlyJobPost?.industryName}`}
-          </div>
-        ) : (
-          <div style={{ marginTop: ".75em" }}>
-            <DropDown
-              key={`dd-${uuidv4()}`}
-              label="Industry"
-              optionItems={industries}
-            />
-          </div>
-        )}
-        {readOnly ? (
-          <div className="job-full-view-subtitle-item-secondary">
-            {`Base Salary ${readOnlyJobPost?.salary}`}
-          </div>
-        ) : (
-          <div style={{ marginTop: ".75em" }}>
-            <DropDown
-              key={`dd-${uuidv4()}`}
-              label="Salary"
-              optionItems={salaries}
-            />
-          </div>
-        )}
+        {jobPostDisplayComponents?.employerName}
+        {jobPostDisplayComponents?.primaryLang}
+        {jobPostDisplayComponents?.secondaryLang}
+        {jobPostDisplayComponents?.industry}
+        {jobPostDisplayComponents?.salary}
       </div>
 
       <div
-        className="normal-font dev-post-preview-container"
+        className="normal-font dev-post-preview-container job-full-view-section"
         style={{
           padding: "2em",
         }}
@@ -497,15 +817,13 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
         <span className="title-font" style={{ marginBottom: "1em" }}>
           Description
         </span>
-        <TextEditor
-          initialValue={[
-            {
-              type: "paragraph",
-              children: [{ text: "A line of text in a paragraph." }],
-            },
-          ]}
-          readOnly={readOnly}
-        />
+        {currentJobPost.description ? (
+          <TextEditor
+            initialValue={currentJobPost.description}
+            readOnly={readOnly}
+            getCurrentValue={getCurrentDescValue}
+          />
+        ) : null}
       </div>
     </form>
   );

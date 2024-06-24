@@ -11,11 +11,13 @@ import { Toolbar } from "./TextEditorComponents";
 interface TextEditorProps {
   readOnly: boolean;
   initialValue: Descendant[];
+  getCurrentValue: (text: Descendant[]) => void;
 }
 
 export default function TextEditor({
   readOnly,
   initialValue,
+  getCurrentValue,
 }: TextEditorProps) {
   const [_value, _setValue] = useState<string | null>();
   const [editor] = useState(() => withReact(withHistory(createEditor())));
@@ -39,7 +41,7 @@ export default function TextEditor({
   );
 
   const onChange = (value: Descendant[]) => {
-    console.log("value", value);
+    getCurrentValue(value);
   };
 
   return (

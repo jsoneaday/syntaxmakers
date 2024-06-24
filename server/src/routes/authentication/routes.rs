@@ -5,6 +5,7 @@ use actix_web::{
     http::header::ContentType, HttpRequest
 };
 use chrono::Utc;
+use log::error;
 use crate::{
     app_state::AppState, 
     common::{
@@ -18,6 +19,7 @@ use crate::{
     routes::authentication::models::DeveloperOrEmployer as AuthDeveloperOrEmployer
 };
 use super::models::{LoginCredential, RefreshToken};
+
 
 pub async fn refresh_access_token<T: Repository, U: Authenticator>(app_data: Data<AppState<T, U>>, json: Json<RefreshToken>, req: HttpRequest) -> HttpResponse {
     let dev_or_emp = if json.dev_or_emp == AuthDeveloperOrEmployer::Developer {
@@ -47,7 +49,7 @@ pub async fn refresh_access_token<T: Repository, U: Authenticator>(app_data: Dat
             }            
         },
         None => {
-            println!("No refresh cookie found");
+            error!("No refresh cookie found");
             return HttpResponse::BadRequest()
                 .content_type(ContentType::json())
                 .body("Authentication failed. Your request is missing the refresh token")
@@ -58,8 +60,6 @@ pub async fn refresh_access_token<T: Repository, U: Authenticator>(app_data: Dat
 
 pub async fn login<T: AuthenticateDbFn + QueryDeveloperFn + QueryEmployerFn + Repository, U: Authenticator>(app_data: Data<AppState<T, U>>, json: Json<LoginCredential>) 
     -> HttpResponse {
-    println!("start login {}, {}", json.email, json.password);
-
     let dev_or_emp = if json.dev_or_emp == AuthDeveloperOrEmployer::Developer {
         UserDeveloperOrEmployer::Developer
     } else {
@@ -71,55 +71,55 @@ pub async fn login<T: AuthenticateDbFn + QueryDeveloperFn + QueryEmployerFn + Re
         Ok(result) => {
             match result {
                 AuthenticateResult::Success { id } => {
-                    let mut user_name = "".to_string();                    
-                    let mut http_response: Option<HttpResponse> = None;
+                    #[allow(unused)] let mut user_name = "".to_string();                    
+                    #[allow(unused)] let mut http_response: Option<HttpResponse> = None;
                     
                     if dev_or_emp == UserDeveloperOrEmployer::Developer {
-                        println!("Developer trying to login");
                         let developer = app_data.repo.query_developer(id).await;
                         match developer {
                             Ok(opt_dev) => {
                                 if let Some(dev) = opt_dev {
                                     user_name = dev.user_name;
                                     let (refresh_cookie, access_token) = get_refresh_and_access_token_response(app_data, user_name.as_str(), &dev_or_emp);
-                                    println!("Developer complete {} {}", refresh_cookie, access_token);
                                     http_response = Some(HttpResponse::Ok()
                                         .cookie(refresh_cookie)
                                         .body(access_token));
                                 } else {
+                                    error!("Authentication failed. Developer not found");
                                     http_response = Some(HttpResponse::Unauthorized()
                                         .content_type(ContentType::json())
-                                        .body("Authentication failed. User not found"));
+                                        .body("Authentication failed. Developer not found"));
                                 }
                             },
                             Err(_) => {
+                                error!("Authentication failed. Error occurred while trying to get developer");
                                 http_response = Some(HttpResponse::Unauthorized()
                                     .content_type(ContentType::json())
-                                    .body("Authentication failed. Error occurred while trying to get user"));
+                                    .body("Authentication failed. Error occurred while trying to get developer"));
                             }
                         }
                     } else {
-                        println!("Employer trying to login");
                         let employer = app_data.repo.query_employer(id).await;
                         match employer {
                             Ok(opt_emp) => {
                                 if let Some(emp) = opt_emp {
                                     user_name = emp.user_name;
                                     let (refresh_cookie, access_token) = get_refresh_and_access_token_response(app_data, user_name.as_str(), &dev_or_emp);
-                                    println!("Employer complete {} {}", refresh_cookie, access_token);
                                     http_response = Some(HttpResponse::Ok()
                                         .cookie(refresh_cookie)
                                         .body(access_token));
                                 } else {
+                                    error!("Authentication faild. Developer not found");
                                     http_response = Some(HttpResponse::Unauthorized()
                                         .content_type(ContentType::json())
-                                        .body("Authentication failed. User not found"));
+                                        .body("Authentication failed. Developer not found"));
                                 }
                             },
                             Err(_) => {
+                                error!("Authentication failed. Error occurred while trying to get developer");
                                 http_response = Some(HttpResponse::Unauthorized()
                                     .content_type(ContentType::json())
-                                    .body("Authentication failed. Error occurred while trying to get user"));
+                                    .body("Authentication failed. Error occurred while trying to get developer"));
                             }
                         }
                     }          
@@ -133,6 +133,7 @@ pub async fn login<T: AuthenticateDbFn + QueryDeveloperFn + QueryEmployerFn + Re
             }
         }
         Err(_) => {
+            error!("Authentication failed. Server error");
             HttpResponse::Unauthorized()
                 .content_type(ContentType::json())
                 .body("Authentication failed. Server error occurred while trying to authenticate")
@@ -163,16 +164,17 @@ mod tests {
     use async_trait::async_trait;
     use chrono::Utc;
     use fake::{faker::internet::en::FreeEmail, Fake};
-    use jsonwebtoken::{decode, Validation, DecodingKey};
+    use jsonwebtoken::DecodingKey;
     use crate::{
         common::{
             repository::{user::repo::AuthenticateDbFn, developers::models::Developer, employers::models::Employer}, 
-            authentication::auth_service::{Claims, STANDARD_REFRESH_TOKEN_EXPIRATION, AuthenticationError}
+            authentication::auth_service::{STANDARD_REFRESH_TOKEN_EXPIRATION, AuthenticationError}
         }, 
         common_test::fixtures::get_app_data
     };
 
     const DEV_USERNAME: &str = "tester";
+    const EMP_USERNAME: &str = "employer";
     struct MockDbRepo;
     struct MockAuthService;
     #[async_trait]
@@ -219,7 +221,7 @@ mod tests {
                 id: 1,
                 created_at: Utc::now(),
                 updated_at: Utc::now(),
-                user_name: DEV_USERNAME.to_string(),
+                user_name: EMP_USERNAME.to_string(),
                 full_name: "Tester Test".to_string(),
                 email: FreeEmail().fake::<String>(),
                 company_id: 1
@@ -238,10 +240,9 @@ mod tests {
         assert!(result.status() == StatusCode::OK);
         let cookie = result.cookies().last().unwrap();
         let refresh_token = cookie.value();
-        let claims = decode::<Claims>(refresh_token, &app_data.auth_keys.decoding_key, &Validation::new(jsonwebtoken::Algorithm::EdDSA)).unwrap().claims;
+        let claims = decode_token(refresh_token, &app_data.auth_keys.decoding_key);
         
         assert!(claims.exp >= STANDARD_REFRESH_TOKEN_EXPIRATION as usize);
         assert!(claims.sub == DEV_USERNAME.to_string());        
     }
-   
 }

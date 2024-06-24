@@ -2,53 +2,77 @@
 
 exports[`Test Developer page matches snapshot 1`] = `
 <div
-  class="dev-container"
+  class="userhome-container"
   data-testid="developer-page"
 >
   <nav
-    class="panel-col dev-menu-container"
-  >
-    <span
-      class="title-font left-menu-header"
-    >
-      @jonny
-    </span>
-    <a
-      class="sub-title-font dev-menu-item"
-    >
-      <img
-        class="dev-menu-icon"
-        src="default"
-      />
-      <span>
-        Saved jobs
-      </span>
-    </a>
-    <a
-      class="sub-title-font dev-menu-item"
-    >
-      <img
-        class="dev-menu-icon"
-        src="default"
-      />
-      <span>
-        Job alerts
-      </span>
-    </a>
-  </nav>
-  <div
-    class="dev-main"
+    class="leftmenu-container"
   >
     <div
-      class="dev-top"
+      class="leftmenu-body"
+    >
+      <span
+        class="title-font leftmenu-header"
+      >
+        @tester
+      </span>
+      <a
+        class="sub-title-font leftmenu-item"
+        href="/devhome/jobposts"
+      >
+        <img
+          class="leftmenu-icon"
+          src="default"
+        />
+        <span>
+          Developer jobs
+        </span>
+      </a>
+      <a
+        class="sub-title-font leftmenu-item"
+        href="/devhome/savedjobs"
+      >
+        <img
+          class="leftmenu-icon"
+          src="default"
+        />
+        <span>
+          Saved jobs
+        </span>
+      </a>
+      <a
+        class="sub-title-font leftmenu-item"
+        href="/devhome/jobalerts"
+      >
+        <img
+          class="leftmenu-icon"
+          src="default"
+        />
+        <span>
+          Job alerts
+        </span>
+      </a>
+    </div>
+    <button
+      class="secondary-btn small-btn"
+    >
+      logout
+    </button>
+  </nav>
+  <div
+    class="userhome-main"
+  >
+    <div
+      class="userhome-top"
+      style="padding: 2em;"
     >
       <div
-        class="title-font dev-header"
+        class="title-font userhome-header"
       >
         Developer job search
       </div>
       <div
-        class="sub-title-font dev-sub-header"
+        class="sub-title-font userhome-sub-header"
       >
         Enter your preferences to find your next job
       </div>
@@ -68,29 +92,17 @@ exports[`Test Developer page matches snapshot 1`] = `
       </div>
     </div>
     <div
-      class="info-band"
-    >
-      <img
-        class="dev-info-band-icon"
-        src="default"
-      />
-      Result count 231
-      <img
-        class="dev-info-band-icon"
-        src="default"
-        style="margin-left: 1.5em;"
-      />
-      Date jun 16, 2023
-    </div>
-    <div
       class="dev-post-preview-container"
+      style="padding: 2em;"
     >
-      <ul>
-        <ul
-          class="lister-container"
+      <ul
+        class="lister-container"
+      >
+        <li
+          class="dev-preview-item"
         >
-          <li
-            class="dev-preview-item"
+          <a
+            href="/emphome/jobfullview"
           >
             <div
               class="post-preview-container"
@@ -122,34 +134,20 @@ exports[`Test Developer page matches snapshot 1`] = `
                 >
                   Base Salary: 
                   <i>
-                    $200000
+                    $200,000
                   </i>
                 </div>
                 <div
                   class="small-font preview-timestamp"
                 >
-                  less than a minute ago
+                  3 m ago
                 </div>
               </div>
             </div>
-          </li>
-        </ul>
+          </a>
+        </li>
       </ul>
     </div>
-  </div>
-  <div
-    class="panel-col job-menu-container"
-  >
-    <div
-      class="title-font"
-    >
-      Promoted jobs
-    </div>
-    <ul>
-      <ul
-        class="lister-container"
-      />
-    </ul>
   </div>
 </div>
 `;

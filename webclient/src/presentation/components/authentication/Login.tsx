@@ -31,7 +31,7 @@ export default function Login({ isOpen, toggleOpen }: LoginProps) {
     if (devOrEmp === DevOrEmployer.Developer) {
       setEmail("jon@jon.com");
     } else {
-      setEmail("49fausto_molestias@yahoo.com");
+      setEmail("jon@acmecorp.com");
     }
   }, [devOrEmp]);
 
@@ -40,21 +40,20 @@ export default function Login({ isOpen, toggleOpen }: LoginProps) {
 
     login(devOrEmp, email, password)
       .then(({ message, status }: LoginResult) => {
-        console.log("token", message);
         if (status === 200) {
           if (devOrEmp === DevOrEmployer.Developer) {
             getDeveloperByEmail(email, message)
               .then((dev) => {
                 if (dev) {
+                  const profile = convertDev(dev, message);
+
                   startTransition(() => {
-                    setProfile(convertDev(dev, message));
+                    setProfile(profile);
                     toggleOpen();
                   });
                 } else {
-                  startTransition(() => {
-                    setProfile(null);
-                    setErrorMessage(`Failed to find user with email ${email}`);
-                  });
+                  setProfile(null);
+                  setErrorMessage(`Failed to find user with email ${email}`);
                 }
               })
               .catch((error) => {
@@ -64,15 +63,13 @@ export default function Login({ isOpen, toggleOpen }: LoginProps) {
             getEmployerByEmail(email, message)
               .then((emp) => {
                 if (emp) {
-                  startTransition(() => {
-                    setProfile(convertEmp(emp, message));
-                    toggleOpen();
-                  });
+                  const profile = convertEmp(emp, message);
+
+                  setProfile(profile);
+                  toggleOpen();
                 } else {
-                  startTransition(() => {
-                    setProfile(null);
-                    setErrorMessage(`Failed to find user with email ${email}`);
-                  });
+                  setProfile(null);
+                  setErrorMessage(`Failed to find user with email ${email}`);
                 }
               })
               .catch((error) => {

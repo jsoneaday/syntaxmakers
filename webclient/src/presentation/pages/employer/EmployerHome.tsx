@@ -11,7 +11,6 @@ interface EmployerHomeProps {
 }
 
 export default function EmployerHome({ children }: EmployerHomeProps) {
-  console.log("emphome");
   return (
     <Layout>
       <div className="userhome-container" data-testid="employer-page">

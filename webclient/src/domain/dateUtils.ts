@@ -1,6 +1,4 @@
 export function shortenFormattedDateStr(date: string) {
-  console.log("shortenFormattedDateStr", date);
-
   if (date.includes("seconds")) {
     return date.replace("seconds", "sec");
   } else if (date.includes("minutes")) {

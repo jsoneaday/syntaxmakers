@@ -1,13 +1,17 @@
 use async_trait::async_trait;
 use sqlx::error::Error;
-use sqlx::{Postgres, Pool, query_as};
+use sqlx::{Postgres, Pool, query_as, query};
 use crate::common::repository::base::{DbRepo, ConnGetter};
 use crate::common::repository::jobs::models::{NewJob, Job};
 use crate::common::repository::base::EntityId;
 use crate::common::repository::{error::SqlxError, developers::models::Developer, base::CountResult};
+use log::error;
 
-mod internal {
-    
+use super::models::UpdateJob;
+
+mod internal {    
+    use crate::common::repository::jobs::models::JobCountry;
+
     use super::*;    
 
     pub async fn insert_job(conn: &Pool<Postgres>, new_job: NewJob) -> Result<EntityId, Error> {
@@ -35,7 +39,7 @@ mod internal {
         let inserted_entity = match insert_result {
             Ok(row) => Ok(row.clone()),
             Err(e) => {
-                println!("insert job error: {:?}", e);
+                error!("insert job error: {:?}", e);
                 Err(e)
             }
         };
@@ -50,7 +54,7 @@ mod internal {
             }
         } else {
             if let Some(country_id) = new_job.country_id {
-                _ = query_as::<_, EntityId>(
+                let insert_jobs_countries = query_as::<_, EntityId>(
                     r"
                     insert into jobs_countries (
                         job_id, country_id
@@ -62,6 +66,14 @@ mod internal {
                 .bind(country_id)
                 .fetch_one(&mut *tx)
                 .await;
+
+                let jobs_countries_result = match insert_jobs_countries {
+                    Ok(row) => Ok(row),
+                    Err(e) => Err(e)
+                };
+                if let Err(e) = jobs_countries_result {
+                    return Err(e);
+                }
             } else {
                 return Err(sqlx::Error::Database(Box::new(SqlxError::IsRemoteContstraintError)));
             }
@@ -70,6 +82,113 @@ mod internal {
         _ = tx.commit().await;  
 
         Ok(EntityId { id: job_id })
+    }
+
+    pub async fn update_job(conn: &Pool<Postgres>, update_job: UpdateJob) -> Result<(), Error> {
+        let mut tx = conn.begin().await.unwrap();
+        let job_id = update_job.id;
+        let update_result = query::<_>(
+            r"
+            update job 
+            set employer_id = $1, 
+                title = $2, 
+                description = $3, 
+                is_remote = $4, 
+                primary_lang_id = $5, 
+                secondary_lang_id = $6, 
+                industry_id = $7, 
+                salary_id = $8
+            where id = $9   
+            ")
+            .bind(update_job.employer_id)
+            .bind(update_job.title)
+            .bind(update_job.description)
+            .bind(update_job.is_remote)
+            .bind(update_job.primary_lang_id)
+            .bind(update_job.secondary_lang_id)
+            .bind(update_job.industry_id)
+            .bind(update_job.salary_id)
+            .bind(job_id)
+            .execute(&mut *tx)
+            .await;
+        
+        if let Err(e) = update_result {
+            error!("update job error: {:?}", e);
+            return Err(e);
+        }
+        
+        if update_job.is_remote {
+            if let Some(_) = update_job.country_id {
+                return Err(sqlx::Error::Database(Box::new(SqlxError::IsRemoteContstraintError)));
+            } else {
+                let delete_job_country_result = query::<_>(
+                    r"
+                    delete from jobs_countries where job_id = $1
+                    "
+                )
+                .bind(job_id)
+                .execute(&mut *tx)
+                .await;
+                if let Err(e) = delete_job_country_result {
+                    error!("update job error: {:?}", e);
+                    return Err(e);
+                }
+            }
+        } else {
+            if let Some(country_id) = update_job.country_id {
+                let existing_jobs_countries = query_as::<_, JobCountry>(
+                    r"
+                    select * from jobs_countries where job_id = $1
+                    "
+                )
+                .bind(job_id)
+                .fetch_all(&mut *tx)
+                .await;
+
+                if let Ok(_) = existing_jobs_countries {
+                    let deleted_jobs_countries = query::<_>(
+                        r"
+                        delete from jobs_countries where job_id = $1
+                        "
+                    )
+                    .bind(job_id)
+                    .execute(&mut *tx)
+                    .await;
+                    if let Err(e) = deleted_jobs_countries {
+                        error!("update job error: {:?}", e);
+                        return Err(e);
+                    }
+
+                    let insert_jobs_countries = query_as::<_, EntityId>(
+                        r"
+                        insert into jobs_countries (
+                            job_id, country_id
+                        ) values (
+                            $1, $2
+                        ) returning id
+                        ")
+                    .bind(job_id)
+                    .bind(country_id)
+                    .fetch_one(&mut *tx)
+                    .await;
+    
+                    if let Err(e) = insert_jobs_countries {
+                        error!("update job error: {:?}", e);
+                        return Err(e);
+                    }
+                } else {
+                    error!("update job error: could not find existing jobs_countries");
+                    return Err(existing_jobs_countries.err().unwrap());
+                }
+            } else {
+                error!("update job error: countryid not provided when remote is false");
+                return Err(sqlx::Error::Database(Box::new(SqlxError::IsRemoteContstraintError)));
+            }
+        }
+
+        _ = tx.commit().await;  
+
+        Ok(())
     }
 
     pub async fn query_job(conn: &Pool<Postgres>, id: i64) -> Result<Option<Job>, Error> {
@@ -290,6 +409,18 @@ pub trait InsertJobFn {
 impl InsertJobFn for DbRepo {
     async fn insert_job(&self, new_job: NewJob) -> Result<EntityId, Error> {
         internal::insert_job(self.get_conn(), new_job).await
+    }
+}
+
+#[async_trait]
+pub trait UpdateJobFn {
+    async fn update_job(&self, new_job: UpdateJob) -> Result<(), Error>;
+}
+
+#[async_trait]
+impl UpdateJobFn for DbRepo {
+    async fn update_job(&self, new_job: UpdateJob) -> Result<(), Error> {
+        internal::update_job(self.get_conn(), new_job).await
     }
 }
 

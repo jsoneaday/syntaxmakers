@@ -3,8 +3,6 @@ import JobPost from "../../models/JobPost";
 import { useProfile } from "../../common/redux/profile/ProfileHooks";
 import { getJobsByDeveloper } from "../../../domain/repository/JobRepo";
 import { convert as convertJob } from "../../models/JobPost";
-import clipboard from "../../theme/assets/clipboard.png";
-import clock from "../../theme/assets/wall-clock.png";
 import JobPreviewList from "../jobs/JobPreviewList";
 
 export default function DevJobPreviewList() {
@@ -50,16 +48,6 @@ export default function DevJobPreviewList() {
           />
           <button className="primary-btn">search</button>
         </div>
-      </div>
-      <div className="info-band">
-        <img className="dev-info-band-icon" src={clipboard} />
-        Result count 231
-        <img
-          className="dev-info-band-icon"
-          style={{ marginLeft: "1.5em" }}
-          src={clock}
-        />
-        Date jun 16, 2023
       </div>
       <JobPreviewList jobPosts={jobData} />
     </div>
