@@ -20,7 +20,7 @@ export default function LeftMenuDev() {
             className="sub-title-font leftmenu-item"
           >
             <img className="leftmenu-icon" src={search} />
-            <span>Developer jobs</span>
+            <span>Search jobs</span>
           </Link>
           <Link
             to={RoutePaths.DevSavedJobs}

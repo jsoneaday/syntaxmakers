@@ -332,6 +332,58 @@ mod internal {
             .fetch_all(conn).await
     }
 
+    pub async fn query_jobs_by_search_terms(conn: &Pool<Postgres>, search_terms: Vec<String>, page_size: i32, last_offset: i64) -> Result<Vec<Job>, Error> {
+        let mut first_param = String::from("ARRAY[");
+        for item in search_terms {
+            first_param = format!("{}, '%' || {} || '%'", first_param, item);
+        }
+        first_param = format!("{}]", first_param);
+
+        query_as::<_, Job>(
+            r"
+            select 
+                j.id, 
+                j.created_at, 
+                j.updated_at, 
+                j.employer_id, 
+                e.full_name as employer_name,
+                co.id as company_id,
+                co.name as company_name,
+                co.logo as company_logo,
+                j.title, 
+                j.description, 
+                j.is_remote, 
+                jc.country_id,
+                cy.name as country_name,
+                j.primary_lang_id,
+                ppl.name as primary_lang_name,
+                j.secondary_lang_id,
+                spl.name as secondary_lang_name,
+                j.industry_id,
+                i.name as industry_name,
+                j.salary_id,
+                s.base as salary
+            from 
+                job j 
+                    join employer e on j.employer_id = e.id
+                    join company co on e.company_id = co.id
+                    left join jobs_countries jc on j.id = jc.job_id 
+                    full outer join country cy on jc.country_id = cy.id
+                    join prog_language ppl on j.primary_lang_id = ppl.id
+                    join prog_language spl on j.secondary_lang_id = spl.id
+                    join industry i on j.industry_id = i.id
+                    join salary s on j.salary_id = s.id
+            where e.name ILIKE ANY ($1)                
+            order by updated_at desc             
+            limit $2
+            offset $3
+            ")
+            .bind(first_param)
+            .bind(page_size)
+            .bind(last_offset)
+            .fetch_all(conn).await
+    }
+
     pub async fn query_jobs_by_developer(conn: &Pool<Postgres>, dev_id: i64, page_size: i32, last_offset: i64) -> Result<Vec<Job>, Error> {
         let developer_result = query_as::<_, Developer>(
             r"
@@ -469,6 +521,18 @@ pub trait QueryJobsByEmployerFn {
 impl QueryJobsByEmployerFn for DbRepo {
     async fn query_jobs_by_employer(&self, emp_id: i64, page_size: i32, last_offset: i64) -> Result<Vec<Job>, Error> {
         internal::query_jobs_by_employer(self.get_conn(), emp_id, page_size, last_offset).await
+    }
+}
+
+#[async_trait]
+pub trait QueryJobsBySearchTerms {
+    async fn query_jobs_by_search_terms(&self, search_terms: Vec<String>, page_size: i32, last_offset: i64) -> Result<Vec<Job>, Error>;
+}
+
+#[async_trait]
+impl QueryJobsBySearchTerms for DbRepo {
+    async fn query_jobs_by_search_terms(&self, search_terms: Vec<String>, page_size: i32, last_offset: i64) -> Result<Vec<Job>, Error> {
+        internal::query_jobs_by_search_terms(self.get_conn(), search_terms, page_size, last_offset).await
     }
 }
 

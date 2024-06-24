@@ -1,4 +1,4 @@
-import { ChangeEvent, useEffect, useState } from "react";
+import { ChangeEvent, MouseEvent, useEffect, useState } from "react";
 import JobPost from "../../models/JobPost";
 import { useProfile } from "../../common/redux/profile/ProfileHooks";
 import { getJobsByDeveloper } from "../../../domain/repository/JobRepo";
@@ -32,6 +32,10 @@ export default function DevJobPreviewList() {
     setSearchInput(e.target.value);
   };
 
+  const searchJobs = (e: MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+  };
+
   return (
     <div className="userhome-main">
       <div className="userhome-top" style={{ padding: "2em" }}>
@@ -46,7 +50,9 @@ export default function DevJobPreviewList() {
             value={searchInput}
             onChange={onSearchTxtChanged}
           />
-          <button className="primary-btn">search</button>
+          <button className="primary-btn" onClick={searchJobs}>
+            search
+          </button>
         </div>
       </div>
       <JobPreviewList jobPosts={jobData} />

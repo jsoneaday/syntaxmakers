@@ -1,9 +1,22 @@
 .home {
-  display: grid;
-  grid-template-columns: 50% 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
   max-width: 50%;
   height: 100vh;
   margin: auto;
+}
+
+.home-header {
+  margin-top: 2rem;
+  margin-bottom: 8rem;
+}
+
+.home-chooser {
+  display: grid;
+  grid-template-columns: 50% 50%;
+  gap: 4rem;
 }
 
 .home-item-dev {
