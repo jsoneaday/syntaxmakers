@@ -318,24 +318,33 @@ async fn test_update_job_that_is_remote_and_get_back() {
 async fn test_create_two_distinct_jobs_and_run_search_on_them_to_get_correct_results() {
     let repo = DbRepo::init().await;
     init_fixtures().await;
-    let user_name = Username().fake::<String>();
-    let full_name = get_fake_fullname();
-    let email = SafeEmail().fake::<String>();
     let logo = get_company_logo_randomly();
     let languages_result = LANGUAGES.get().unwrap();
     let industry_result = INDUSTRIES.get().unwrap();
     let countries = COUNTRIES.get().unwrap();
     
     // setup needed data    
-    let company_create_result = repo.insert_company(NewCompany{ name: CompanyName().fake::<String>(), logo: Some(logo), headquarters_country_id: 1 }).await.unwrap();
-    let company_id = company_create_result.id;
-    let create_employer_result = repo.insert_employer(NewEmployer {
-        user_name: user_name.clone(),
-        full_name: full_name.clone(),
-        email: email.clone(),
+    let company_name1 = CompanyName().fake::<String>();
+    let company_create_result1 = repo.insert_company(NewCompany{ name: company_name1.clone(), logo: Some(logo.clone()), headquarters_country_id: 1 }).await.unwrap();
+    let company_id1 = company_create_result1.id;
+    let create_employer_result1 = repo.insert_employer(NewEmployer {
+        user_name: Username().fake::<String>(),
+        full_name: get_fake_fullname(),
+        email: SafeEmail().fake::<String>(),
         password: "test123".to_string(),
-        company_id
+        company_id: company_id1
     }).await.unwrap();
+    let company_name2 = CompanyName().fake::<String>();
+    let company_create_result2 = repo.insert_company(NewCompany{ name: company_name2, logo: Some(logo), headquarters_country_id: 1 }).await.unwrap();
+    let company_id2 = company_create_result2.id;
+    let create_employer_result2 = repo.insert_employer(NewEmployer {
+        user_name: Username().fake::<String>(),
+        full_name: get_fake_fullname(),
+        email: SafeEmail().fake::<String>(),
+        password: "test123".to_string(),
+        company_id: company_id2
+    }).await.unwrap();
+    
     
     let _developer = repo.insert_developer(NewDeveloper {
         user_name: Username().fake::<String>(),
@@ -346,29 +355,31 @@ async fn test_create_two_distinct_jobs_and_run_search_on_them_to_get_correct_res
         secondary_lang_id: Some(languages_result.get(1).unwrap().id)
     }).await.unwrap();
 
-    let country1 = countries.get(0).unwrap();
+    let title1 = get_fake_title().to_string();    
     let primary_lang1 = languages_result.get(0).unwrap();
     let secondary_lang1 = languages_result.get(1).unwrap();
-    let industry1 = industry_result.get(0).unwrap();
+    let country1 = countries.get(0).unwrap();
+    let industry1 = industry_result.get(0).unwrap();    
     let create_job1 = repo.insert_job(NewJob {
-        employer_id: create_employer_result.id,
-        title: get_fake_title().to_string(),
+        employer_id: create_employer_result1.id,
+        title: title1.clone(),
         description: get_fake_desc().to_string(),
         is_remote: false,
         country_id: Some(country1.id),
-        primary_lang_id: primary_lang1.id,
+        primary_lang_id: primary_lang1.clone().id,
         secondary_lang_id: Some(secondary_lang1.id),
         industry_id: industry1.id,
         salary_id: get_random_salary().await.id
     }).await.unwrap();
 
-    let country2 = countries.get(0).unwrap();
+    let title2 = get_fake_title().to_string();    
     let primary_lang2 = languages_result.get(2).unwrap();
     let secondary_lang2 = languages_result.get(3).unwrap();
-    let industry2 = industry_result.get(1).unwrap();
-    let create_job2 = repo.insert_job(NewJob {
-        employer_id: create_employer_result.id,
-        title: get_fake_title().to_string(),
+    let country2 = countries.get(0).unwrap();
+    let industry2 = industry_result.get(1).unwrap();    
+    let _create_job2 = repo.insert_job(NewJob {
+        employer_id: create_employer_result2.id,
+        title: title2,
         description: get_fake_desc().to_string(),
         is_remote: false,
         country_id: Some(country2.id),
@@ -379,6 +390,16 @@ async fn test_create_two_distinct_jobs_and_run_search_on_them_to_get_correct_res
     }).await.unwrap();
 
     // get only jobs that match dev's profile
+    let search_by_title1 = repo.query_jobs_by_search_terms(vec![title1], 10, 0).await;    
+    assert!(search_by_title1.unwrap().iter().find(|job| {job.id == create_job1.id}).is_some());
+    let search_by_primary_lang1 = repo.query_jobs_by_search_terms(vec![primary_lang1.name.clone()], 10, 0).await;    
+    assert!(search_by_primary_lang1.unwrap().iter().find(|job| {job.id == create_job1.id}).is_some());
+    let search_by_secondary_lang1 = repo.query_jobs_by_search_terms(vec![secondary_lang1.name.clone()], 10, 0).await;    
+    assert!(search_by_secondary_lang1.unwrap().iter().find(|job| {job.id == create_job1.id}).is_some());
+    let search_by_company1 = repo.query_jobs_by_search_terms(vec![company_name1], 10, 0).await;    
+    assert!(search_by_company1.unwrap().iter().find(|job| {job.id == create_job1.id}).is_some());
     let search_by_country1 = repo.query_jobs_by_search_terms(vec![country1.name.clone()], 10, 0).await;    
     assert!(search_by_country1.unwrap().iter().find(|job| {job.id == create_job1.id}).is_some());
+    let search_by_industry1 = repo.query_jobs_by_search_terms(vec![industry1.name.clone()], 10, 0).await;    
+    assert!(search_by_industry1.unwrap().iter().find(|job| {job.id == create_job1.id}).is_some());
 }

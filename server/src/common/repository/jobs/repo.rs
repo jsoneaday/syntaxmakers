@@ -375,8 +375,7 @@ mod internal {
                     join prog_language spl on j.secondary_lang_id = spl.id
                     join industry i on j.industry_id = i.id
                     join salary s on j.salary_id = s.id
-            where e.full_name ILIKE ANY ($1)  
-                or j.title ILIKE ANY ($1)
+            where j.title ILIKE ANY ($1)
                 or ppl.name ILIKE ANY($1)
                 or spl.name ILIKE ANY ($1)  
                 or co.name ILIKE ANY ($1)  
