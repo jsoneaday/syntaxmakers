@@ -2,6 +2,7 @@ import { ChangeEvent, MouseEvent, useEffect, useMemo, useState } from "react";
 import JobPost from "../../models/JobPost";
 import { useProfile } from "../../common/redux/profile/ProfileHooks";
 import {
+  Job,
   getJobsByDeveloper,
   getJobsBySearchTerms,
 } from "../../../domain/repository/JobRepo";
@@ -10,52 +11,83 @@ import JobPreviewList from "../jobs/JobPreviewList";
 import { useNavigationType } from "react-router-dom";
 import { PrimaryButton } from "../controls/Buttons";
 import { PAGE_SIZE } from "../../common/Paging";
+import { Paging } from "../controls/Paging";
 
 export default function DevJobPreviewList() {
   const [jobData, setJobsData] = useState<JobPost[]>([]);
   const [searchInput, setSearchInput] = useState("");
   const [profile, _setProfile] = useProfile();
   const navType = useNavigationType();
-  // an offset is equivalent to skip
-  const [offset, setOffset] = useState(0);
+  const [pagingInit, setPagingInit] = useState<string | undefined>();
 
   useEffect(() => {
+    queryUserJobs(0, true);
+  }, [profile]);
+
+  async function queryUserJobs(
+    newOffset: number,
+    setData: boolean
+  ): Promise<Job[]> {
+    console.log("profile", profile);
+    let returnJobs: Job[] = [];
+    if (!profile) return returnJobs;
+
     if (navType !== "POP") {
-      setJobsData([]);
+      setData && setJobsData([]);
       if (profile) {
-        getJobsByDeveloper(profile.id, PAGE_SIZE, offset)
-          .then((jobs) => {
-            const jobsData = jobs.map((job) => {
-              return convertJob(job);
-            });
-            setJobsData(jobsData);
-            window.history.replaceState(jobsData, "");
-          })
-          .catch((error) => {
-            console.log("failed to get jobs for current profile", error);
+        try {
+          const jobs = await getJobsByDeveloper(
+            profile.id,
+            PAGE_SIZE,
+            newOffset
+          );
+          const jobsData = jobs.map((job) => {
+            return convertJob(job);
           });
+          setData && setJobsData(jobsData);
+          window.history.replaceState(jobsData, "");
+
+          returnJobs = jobs;
+        } catch (e) {
+          console.log("failed to get jobs for current profile", e);
+        }
       }
     } else {
-      setJobsData(window.history.state);
+      setData && setJobsData(window.history.state);
     }
-  }, [profile]);
+
+    console.log("pagingInit", pagingInit);
+    if (!pagingInit) {
+      setPagingInit(window.crypto.randomUUID());
+    }
+    return returnJobs;
+  }
 
   const onSearchTxtChanged = (e: ChangeEvent<HTMLInputElement>) => {
     e.preventDefault();
     setSearchInput(e.target.value);
   };
 
-  const searchJobs = async (e: MouseEvent<HTMLButtonElement>) => {
+  const onSearchJobs = async (e: MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
 
+    searchJobs(0, true);
+  };
+
+  async function searchJobs(
+    newOffset: number,
+    setData: boolean
+  ): Promise<Job[]> {
     const searchTerms = searchInput.split(" ");
-    const jobs = await getJobsBySearchTerms(searchTerms, PAGE_SIZE, offset);
+    const jobs = await getJobsBySearchTerms(searchTerms, PAGE_SIZE, newOffset);
     const jobsData = jobs.map((job) => {
       return convertJob(job);
     });
-    setJobsData(jobsData);
+    setData && setJobsData(jobsData);
+
     window.history.replaceState(jobsData, "");
-  };
+    return jobs;
+  }
 
   const searchBtnDisabled = useMemo(() => {
     return searchInput.length > 2 ? false : true;
@@ -75,12 +107,16 @@ export default function DevJobPreviewList() {
             value={searchInput}
             onChange={onSearchTxtChanged}
           />
-          <PrimaryButton onClick={searchJobs} disabled={searchBtnDisabled}>
+          <PrimaryButton onClick={onSearchJobs} disabled={searchBtnDisabled}>
             search
           </PrimaryButton>
         </div>
       </div>
       <JobPreviewList jobPosts={jobData} />
+      <Paging
+        triggerInit={pagingInit}
+        dataQuery={searchInput ? searchJobs : queryUserJobs}
+      />
     </div>
   );
 }

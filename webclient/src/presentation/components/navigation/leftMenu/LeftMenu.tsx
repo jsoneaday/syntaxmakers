@@ -3,6 +3,7 @@ import { useProfile } from "../../../common/redux/profile/ProfileHooks";
 import { startViewTransition } from "../../../common/transitions/ViewTransition";
 import { ReactNode, useEffect } from "react";
 import { useLoginOpen } from "../../../common/redux/loginOpen/LoginOpenHooks";
+import { SecondaryButton } from "../../controls/Buttons";
 
 interface LeftMenuProps {
   children: ReactNode;
@@ -28,9 +29,7 @@ export default function LeftMenu({ children }: LeftMenuProps) {
     return (
       <nav className="leftmenu-container">
         {children}
-        <button className="secondary-btn small-btn" onClick={onClickLogout}>
-          logout
-        </button>
+        <SecondaryButton onClick={onClickLogout}>logout</SecondaryButton>
       </nav>
     );
   } else {

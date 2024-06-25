@@ -91,8 +91,13 @@ pub async fn get_all_jobs<T: QueryAllJobsFn + Repository, U: Authenticator>(app_
 #[allow(unused)]
 pub async fn get_jobs_by_developer<T: QueryJobsByDeveloper + Repository, U: Authenticator>(app_data: Data<AppState<T, U>>, json: Json<IdAndPagingModel>) -> Result<JobResponders, UserError> {
     let result = app_data.repo.query_jobs_by_developer(json.id, json.page_size, json.last_offset).await;
-    
-    return_jobs_result(result)
+    match result {
+        Ok(jobs) => {
+            println!("jobs before convert: {:?}", jobs.clone().iter().map(|job| { job.title.clone() }).collect::<Vec<String>>());
+            return_jobs_result(Ok(jobs))
+        },
+        Err(e) => Err(e.into())
+    }    
 }
 
 #[allow(unused)]
@@ -118,6 +123,7 @@ fn return_jobs_result(result: Result<Vec<Job>, sqlx::error::Error>) -> Result<Jo
                 convert(job)
             })
             .collect::<Vec<JobResponder>>();
+            println!("jobs after convert: {:?}", responders.clone().iter().map(|job| { job.title.clone() }).collect::<Vec<String>>());
             Ok(JobResponders(responders))
         },
         Err(e) => Err(e.into())

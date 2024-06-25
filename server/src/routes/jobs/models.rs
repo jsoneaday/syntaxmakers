@@ -32,7 +32,7 @@ pub struct UpdateJobForRoute {
     pub salary_id: i64
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct JobResponder {
     pub id: i64,

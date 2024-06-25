@@ -87,6 +87,7 @@ export async function getJobsByDeveloper(
 
   if (result.ok) {
     const jobs: Job[] = await result.json();
+
     return jobs;
   }
   return [];

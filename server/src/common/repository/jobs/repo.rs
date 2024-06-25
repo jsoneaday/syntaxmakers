@@ -333,7 +333,7 @@ mod internal {
     }
 
     pub async fn query_jobs_by_search_terms(conn: &Pool<Postgres>, search_terms: Vec<String>, page_size: i32, last_offset: i64) -> Result<Vec<Job>, Error> {
-        println!("search_terms {:?}", search_terms);
+        println!("search_terms {:?}, offset {}", search_terms, last_offset);
         let mut first_param: Vec<String> = vec![];
         for item in search_terms {
             first_param.push(format!(
@@ -394,6 +394,7 @@ mod internal {
     }
 
     pub async fn query_jobs_by_developer(conn: &Pool<Postgres>, dev_id: i64, page_size: i32, last_offset: i64) -> Result<Vec<Job>, Error> {
+        println!("params id {} {} {}", dev_id, page_size, last_offset);
         let developer_result = query_as::<_, Developer>(
             r"
             select d.id, d.created_at, d.updated_at, d.user_name, d.full_name, d.email, d.primary_lang_id, dsl.secondary_lang_id
@@ -413,8 +414,9 @@ mod internal {
             return Err(developer_result.err().unwrap());
         }
         let developer = developer.unwrap();
+        println!("dev languages {} {:?}", developer.primary_lang_id, developer.secondary_lang_id);
 
-        query_as::<_, Job>(
+        let jobs = query_as::<_, Job>(
             r"
             select 
                 j.id, 
@@ -449,7 +451,7 @@ mod internal {
                     join industry i on j.industry_id = i.id
                     join salary s on j.salary_id = s.id
             where j.primary_lang_id = $1 or j.secondary_lang_id = $2
-            order by updated_at desc 
+            order by j.updated_at desc 
             limit $3
             offset $4
             ")
@@ -457,7 +459,15 @@ mod internal {
             .bind(developer.secondary_lang_id)
             .bind(page_size)
             .bind(last_offset)
-            .fetch_all(conn).await
+            .fetch_all(conn).await;
+        
+        match jobs {
+            Ok(jobs) => {
+                println!("jobs from repo: {:?}", jobs.clone().iter().map(|job| { job.title.clone() }).collect::<Vec<String>>());
+                Ok(jobs)
+            },
+            Err(e) => Err(e)
+        }
     }
 }
 
