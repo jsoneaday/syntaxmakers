@@ -1,29 +1,38 @@
 import { ChangeEvent, MouseEvent, useEffect, useState } from "react";
 import JobPost from "../../models/JobPost";
 import { useProfile } from "../../common/redux/profile/ProfileHooks";
-import { getJobsByDeveloper } from "../../../domain/repository/JobRepo";
+import {
+  getJobsByDeveloper,
+  getJobsBySearchTerms,
+} from "../../../domain/repository/JobRepo";
 import { convert as convertJob } from "../../models/JobPost";
 import JobPreviewList from "../jobs/JobPreviewList";
+import { useNavigationType } from "react-router-dom";
 
 export default function DevJobPreviewList() {
   const [jobData, setJobsData] = useState<JobPost[]>([]);
   const [searchInput, setSearchInput] = useState("");
   const [profile, _setProfile] = useProfile();
+  const navType = useNavigationType();
 
   useEffect(() => {
-    setJobsData([]);
-    if (profile) {
-      getJobsByDeveloper(profile.id)
-        .then((jobs) => {
-          setJobsData(
-            jobs.map((job) => {
+    if (navType !== "POP") {
+      setJobsData([]);
+      if (profile) {
+        getJobsByDeveloper(profile.id)
+          .then((jobs) => {
+            const jobsData = jobs.map((job) => {
               return convertJob(job);
-            })
-          );
-        })
-        .catch((error) => {
-          console.log("failed to get jobs for current profile", error);
-        });
+            });
+            setJobsData(jobsData);
+            window.history.replaceState(jobsData, "");
+          })
+          .catch((error) => {
+            console.log("failed to get jobs for current profile", error);
+          });
+      }
+    } else {
+      setJobsData(window.history.state);
     }
   }, [profile]);
 
@@ -32,8 +41,15 @@ export default function DevJobPreviewList() {
     setSearchInput(e.target.value);
   };
 
-  const searchJobs = (e: MouseEvent<HTMLButtonElement>) => {
+  const searchJobs = async (e: MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
+
+    const searchTerms = searchInput.split(" ");
+    const jobs = await getJobsBySearchTerms(searchTerms);
+    const jobsData = jobs.map((job) => {
+      return convertJob(job);
+    });
+    setJobsData(jobsData);
   };
 
   return (

@@ -100,7 +100,7 @@ use common::repository::base::{DbRepo, Repository};
 use routes::authentication::routes::{login, refresh_access_token};
 use routes::developers::routes::get_developer_by_email;
 use routes::employers::routes::get_employer_by_email;
-use routes::jobs::routes::{get_jobs_by_employer, update_job};
+use routes::jobs::routes::{get_jobs_by_employer, get_jobs_by_search_terms, update_job};
 use routes::{
     salaries::routes::get_all_salaries, 
     languages::routes::get_all_languages, 
@@ -176,6 +176,8 @@ pub async fn run() -> std::io::Result<()> {
                         .route(web::post().to(get_jobs_by_developer::<DbRepo, AuthService>)))
                     .service(web::resource("/jobs_emp")
                         .route(web::post().to(get_jobs_by_employer::<DbRepo, AuthService>)))
+                    .service(web::resource("/jobs_search")
+                        .route(web::post().to(get_jobs_by_search_terms::<DbRepo, AuthService>)))
                     .service(web::resource("/industries")
                         .route(web::get().to(get_all_industries::<DbRepo, AuthService>)))
                     .service(web::resource("/employer/{id}")

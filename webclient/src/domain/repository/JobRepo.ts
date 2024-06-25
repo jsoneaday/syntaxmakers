@@ -1,4 +1,10 @@
-import { JOBS_DEV_URL, JOBS_EMP_URL, JOB_UPDATE_URL, JOB_URL } from "./Api";
+import {
+  JOBS_DEV_URL,
+  JOBS_EMP_URL,
+  JOBS_SEARCH_URL,
+  JOB_UPDATE_URL,
+  JOB_URL,
+} from "./Api";
 
 export class Job {
   constructor(
@@ -36,6 +42,30 @@ export interface JobFormState {
   primaryLangId: number;
   secondaryLangId?: number;
   countryId?: number;
+}
+
+export async function getJobsBySearchTerms(
+  searchTerms: string[],
+  pageSize: number = 20,
+  lastOffset: number = 0
+) {
+  const result = await fetch(JOBS_SEARCH_URL, {
+    method: "post",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      searchTerms,
+      pageSize,
+      lastOffset,
+    }),
+  });
+
+  if (result.ok) {
+    const jobs: Job[] = await result.json();
+    return jobs;
+  }
+  return [];
 }
 
 export async function getJobsByDeveloper(

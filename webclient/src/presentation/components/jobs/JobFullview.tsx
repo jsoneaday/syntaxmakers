@@ -359,7 +359,12 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
     );
 
     if (readOnly) {
-      _title = <div className="title-font">{currentJobPost.title}</div>;
+      _title = (
+        <div className="title-font">
+          {currentJobPost.id}
+          {currentJobPost.title}
+        </div>
+      );
       _isRemoteOrCountry = (
         <div className="sub-title-font job-full-view-subtitle-item-primary">
           {currentJobPost.isRemote ? "Remote" : currentJobPost.countryName}

@@ -333,6 +333,7 @@ mod internal {
     }
 
     pub async fn query_jobs_by_search_terms(conn: &Pool<Postgres>, search_terms: Vec<String>, page_size: i32, last_offset: i64) -> Result<Vec<Job>, Error> {
+        println!("search_terms {:?}", search_terms);
         let mut first_param: Vec<String> = vec![];
         for item in search_terms {
             first_param.push(format!(
@@ -341,7 +342,7 @@ mod internal {
             ));
         }
 
-        query_as::<_, Job>(
+        let jobs = query_as::<_, Job>(
             r"
             select 
                 j.id, 
@@ -388,7 +389,8 @@ mod internal {
             .bind(first_param)
             .bind(page_size)
             .bind(last_offset)
-            .fetch_all(conn).await
+            .fetch_all(conn).await;
+        jobs
     }
 
     pub async fn query_jobs_by_developer(conn: &Pool<Postgres>, dev_id: i64, page_size: i32, last_offset: i64) -> Result<Vec<Job>, Error> {
