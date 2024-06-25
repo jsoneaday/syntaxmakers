@@ -1,4 +1,4 @@
-import { ChangeEvent, MouseEvent, useEffect, useState } from "react";
+import { ChangeEvent, MouseEvent, useEffect, useMemo, useState } from "react";
 import JobPost from "../../models/JobPost";
 import { useProfile } from "../../common/redux/profile/ProfileHooks";
 import {
@@ -8,18 +8,22 @@ import {
 import { convert as convertJob } from "../../models/JobPost";
 import JobPreviewList from "../jobs/JobPreviewList";
 import { useNavigationType } from "react-router-dom";
+import { PrimaryButton } from "../controls/Buttons";
+import { PAGE_SIZE } from "../../common/Paging";
 
 export default function DevJobPreviewList() {
   const [jobData, setJobsData] = useState<JobPost[]>([]);
   const [searchInput, setSearchInput] = useState("");
   const [profile, _setProfile] = useProfile();
   const navType = useNavigationType();
+  // an offset is equivalent to skip
+  const [offset, setOffset] = useState(0);
 
   useEffect(() => {
     if (navType !== "POP") {
       setJobsData([]);
       if (profile) {
-        getJobsByDeveloper(profile.id)
+        getJobsByDeveloper(profile.id, PAGE_SIZE, offset)
           .then((jobs) => {
             const jobsData = jobs.map((job) => {
               return convertJob(job);
@@ -45,12 +49,17 @@ export default function DevJobPreviewList() {
     e.preventDefault();
 
     const searchTerms = searchInput.split(" ");
-    const jobs = await getJobsBySearchTerms(searchTerms);
+    const jobs = await getJobsBySearchTerms(searchTerms, PAGE_SIZE, offset);
     const jobsData = jobs.map((job) => {
       return convertJob(job);
     });
     setJobsData(jobsData);
+    window.history.replaceState(jobsData, "");
   };
+
+  const searchBtnDisabled = useMemo(() => {
+    return searchInput.length > 2 ? false : true;
+  }, [searchInput]);
 
   return (
     <div className="userhome-main">
@@ -66,9 +75,9 @@ export default function DevJobPreviewList() {
             value={searchInput}
             onChange={onSearchTxtChanged}
           />
-          <button className="primary-btn" onClick={searchJobs}>
+          <PrimaryButton onClick={searchJobs} disabled={searchBtnDisabled}>
             search
-          </button>
+          </PrimaryButton>
         </div>
       </div>
       <JobPreviewList jobPosts={jobData} />
