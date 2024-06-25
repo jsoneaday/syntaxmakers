@@ -1,15 +1,12 @@
 use actix_web::{web::{Data, Json, Path}, HttpResponse, HttpRequest};
 use log::{error, info};
 use crate::{
-    common::{
-        repository::{
-            jobs::{repo::{InsertJobFn, QueryJobFn, QueryAllJobsFn, QueryJobsByDeveloper, QueryJobsByEmployerFn, UpdateJobFn}, models::{NewJob, Job, UpdateJob}}, 
-            base::Repository, employers::repo::QueryEmployerFn, developers::repo::QueryDeveloperFn
-        }, 
-        authentication::auth_service::Authenticator
-    }, 
-    app_state::AppState, routes::{
-        base_model::{OutputId, PagingModel, IdAndPagingModel}, user_error::UserError, auth_helper::check_is_authenticated
+    app_state::AppState, common::{
+        authentication::auth_service::Authenticator, repository::{
+            base::Repository, developers::repo::QueryDeveloperFn, employers::repo::QueryEmployerFn, jobs::{models::{Job, NewJob, UpdateJob}, repo::{InsertJobFn, QueryAllJobsFn, QueryJobFn, QueryJobsByDeveloper, QueryJobsByEmployerFn, QueryJobsBySearchTermsFn, UpdateJobFn}}
+        }
+    }, routes::{
+        auth_helper::check_is_authenticated, base_model::{IdAndPagingModel, OutputId, PagingModel, SearchAndPagingModel}, user_error::UserError
     }
 };
 use super::models::{NewJobForRoute, JobResponders, JobResponder, UpdateJobForRoute};
@@ -88,38 +85,33 @@ pub async fn get_job<T: QueryJobFn + Repository, U: Authenticator>(app_data: Dat
 pub async fn get_all_jobs<T: QueryAllJobsFn + Repository, U: Authenticator>(app_data: Data<AppState<T, U>>, json: Json<PagingModel>) -> Result<JobResponders, UserError> {
     let result = app_data.repo.query_all_jobs(json.page_size, json.last_offset).await;
     
-    match result {
-        Ok(jobs) => {
-            let responders = jobs.iter().map(|job| {
-                convert(job)
-            })
-            .collect::<Vec<JobResponder>>();
-            Ok(JobResponders(responders))
-        },
-        Err(e) => Err(e.into())
-    }
+    return_jobs_result(result)
 }
 
 #[allow(unused)]
 pub async fn get_jobs_by_developer<T: QueryJobsByDeveloper + Repository, U: Authenticator>(app_data: Data<AppState<T, U>>, json: Json<IdAndPagingModel>) -> Result<JobResponders, UserError> {
     let result = app_data.repo.query_jobs_by_developer(json.id, json.page_size, json.last_offset).await;
     
-    match result {
-        Ok(jobs) => {
-            let responders = jobs.iter().map(|job| {
-                convert(job)
-            })
-            .collect::<Vec<JobResponder>>();
-            Ok(JobResponders(responders))
-        },
-        Err(e) => Err(e.into())
-    }
+    return_jobs_result(result)
 }
 
 #[allow(unused)]
-pub async fn get_jobs_by_employer<T: QueryJobsByEmployerFn + Repository, U: Authenticator>(app_data: Data<AppState<T, U>>, json: Json<IdAndPagingModel>) -> Result<JobResponders, UserError> {
+pub async fn get_jobs_by_employer<T: QueryJobsByEmployerFn + Repository, U: Authenticator>(app_data: Data<AppState<T, U>>, json: Json<IdAndPagingModel>) 
+    -> Result<JobResponders, UserError> {
     let result = app_data.repo.query_jobs_by_employer(json.id, json.page_size, json.last_offset).await;
     
+    return_jobs_result(result)
+}
+
+#[allow(unused)]
+pub async fn get_jobs_by_search_terms<T: QueryJobsBySearchTermsFn + Repository, U: Authenticator>(app_data: Data<AppState<T, U>>, json: Json<SearchAndPagingModel>) 
+    -> Result<JobResponders, UserError> {
+    let result = app_data.repo.query_jobs_by_search_terms(json.search_terms.clone(), json.page_size, json.last_offset).await;
+    
+    return_jobs_result(result)
+}
+
+fn return_jobs_result(result: Result<Vec<Job>, sqlx::error::Error>) -> Result<JobResponders, UserError> {
     match result {
         Ok(jobs) => {
             let responders = jobs.iter().map(|job| {
@@ -313,6 +305,15 @@ mod tests {
     }
 
     #[async_trait]
+    impl QueryJobsBySearchTermsFn for MockDbRepo {
+        async fn query_jobs_by_search_terms(&self, _: Vec<String>, _: i32, _: i64) -> Result<Vec<Job>, sqlx::Error> {
+            Ok(vec![
+                get_test_job(1).await
+            ])
+        }
+    }
+
+    #[async_trait]
     impl QueryJobsByDeveloper for MockDbRepo {
         async fn query_jobs_by_developer(&self, _: i64, _: i32, _: i64) -> Result<Vec<Job>, sqlx::Error> {
             Ok(vec![
@@ -405,6 +406,18 @@ mod tests {
         let app_data = get_app_data(repo, auth_service).await;
 
         let result = get_jobs_by_employer(app_data, Json(IdAndPagingModel { id: 1, page_size: 10, last_offset: 1 })).await.unwrap();
+
+        assert!(result.0.get(0).unwrap().id == 1);
+    }
+
+    #[tokio::test]
+    async fn test_get_jobs_by_search_terms_route() {
+        init_fixtures().await;
+        let repo = MockDbRepo::init().await;
+        let auth_service = MockAuthService;
+        let app_data = get_app_data(repo, auth_service).await;
+
+        let result = get_jobs_by_search_terms(app_data, Json(SearchAndPagingModel { search_terms: vec![], page_size: 10, last_offset: 1 })).await.unwrap();
 
         assert!(result.0.get(0).unwrap().id == 1);
     }

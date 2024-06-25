@@ -10,7 +10,7 @@ use syntaxmakers_server::common::repository::employers::models::NewEmployer;
 use syntaxmakers_server::common::repository::employers::repo::InsertEmployerFn;
 use syntaxmakers_server::common::repository::jobs::models::{NewJob, Job, UpdateJob};
 use syntaxmakers_server::common::repository::jobs::repo::{
-    QueryJobFn, QueryAllJobsFn, QueryJobsByEmployerFn, InsertJobFn, UpdateJobFn, QueryJobsByDeveloper, QueryJobsBySearchTerms
+    QueryJobFn, QueryAllJobsFn, QueryJobsByEmployerFn, InsertJobFn, UpdateJobFn, QueryJobsByDeveloper, QueryJobsBySearchTermsFn
 };
 use syntaxmakers_server::common::repository::industries::repo::QueryAllIndustriesFn;
 use syntaxmakers_server::common::repository::languages::repo::QueryAllLanguagesFn;

@@ -39,3 +39,11 @@ pub struct IdAndPagingModel {
     pub page_size: i32,
     pub last_offset: i64
 }
+
+#[derive(Deserialize, Serialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct SearchAndPagingModel {
+    pub search_terms: Vec<String>,
+    pub page_size: i32,
+    pub last_offset: i64
+}

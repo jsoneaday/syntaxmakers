@@ -532,12 +532,12 @@ impl QueryJobsByEmployerFn for DbRepo {
 }
 
 #[async_trait]
-pub trait QueryJobsBySearchTerms {
+pub trait QueryJobsBySearchTermsFn {
     async fn query_jobs_by_search_terms(&self, search_terms: Vec<String>, page_size: i32, last_offset: i64) -> Result<Vec<Job>, Error>;
 }
 
 #[async_trait]
-impl QueryJobsBySearchTerms for DbRepo {
+impl QueryJobsBySearchTermsFn for DbRepo {
     async fn query_jobs_by_search_terms(&self, search_terms: Vec<String>, page_size: i32, last_offset: i64) -> Result<Vec<Job>, Error> {
         internal::query_jobs_by_search_terms(self.get_conn(), search_terms, page_size, last_offset).await
     }
