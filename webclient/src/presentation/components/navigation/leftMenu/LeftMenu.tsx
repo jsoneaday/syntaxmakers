@@ -29,7 +29,12 @@ export default function LeftMenu({ children }: LeftMenuProps) {
     return (
       <nav className="leftmenu-container">
         {children}
-        <SecondaryButton onClick={onClickLogout}>logout</SecondaryButton>
+        <SecondaryButton
+          style={{ margin: "1em", marginLeft: "2em" }}
+          onClick={onClickLogout}
+        >
+          logout
+        </SecondaryButton>
       </nav>
     );
   } else {

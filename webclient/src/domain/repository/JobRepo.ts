@@ -125,8 +125,6 @@ export async function insertJobPost(
   jobFormState: JobFormState,
   access_token: string
 ) {
-  console.log("jobFormState", jobFormState);
-
   const result = await fetch(JOB_URL, {
     method: "post",
     credentials: "include",

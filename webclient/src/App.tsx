@@ -3,7 +3,7 @@ import Home from "./presentation/pages/Home";
 import EmpJobPosts from "./presentation/pages/employer/EmpJobPosts";
 import EmpJobApplicants from "./presentation/pages/employer/EmpJobApplicants";
 import DevJobPosts from "./presentation/pages/developer/DevJobPosts";
-import DevSavedJobs from "./presentation/pages/developer/DevSavedJobs";
+import DevAppliedJobs from "./presentation/pages/developer/DevAppliedJobs";
 import DevJobAlerts from "./presentation/pages/developer/DevJobAlerts";
 import DevJobFullview from "./presentation/pages/developer/DevJobFullview";
 import EmpJobFullview from "./presentation/pages/employer/EmpJobFullview";
@@ -34,7 +34,7 @@ const router = createBrowserRouter([
   },
   {
     path: RoutePaths.DevSavedJobs,
-    element: <DevSavedJobs />,
+    element: <DevAppliedJobs />,
   },
   {
     path: RoutePaths.DevJobAlerts,

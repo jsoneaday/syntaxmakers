@@ -9,7 +9,6 @@ import {
   MouseEvent,
 } from "react";
 import "../../theme/job_full_view.css";
-import flag from "../../theme/assets/flag.png";
 import similar from "../../theme/assets/similar.png";
 import GoBack from "../navigation/GoBack";
 import DropDown from "../controls/DropDown";
@@ -32,6 +31,9 @@ import { formatDistanceToNow } from "date-fns";
 import { useInTextEditMode } from "../../common/redux/inTextEditMode/InTextEditModeHooks";
 import { MarkdownEditor } from "../textEditor/MarkdownEditor";
 import { MDXEditorMethods } from "@mdxeditor/editor";
+import { useLoginOpen } from "../../common/redux/loginOpen/LoginOpenHooks";
+import { PrimaryButton } from "../controls/Buttons";
+import { applyJob } from "../../../domain/repository/JobApplicationRepo";
 
 type JobPostDisplayComponents = {
   title: JSX.Element;
@@ -181,7 +183,7 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
   const [jobPostDisplayComponents, setJobPostDisplayComponents] =
     useState<JobPostDisplayComponents>();
   const [_inTextEditMode, setInTextEditMode] = useInTextEditMode();
-
+  const [loginOpen, setLoginOpen] = useLoginOpen();
   /// currerntJobPost is used for component state
   const [currentJobPost, setCurrentJobPost] = useReducer<
     Reducer<FormState, FormAction>
@@ -258,12 +260,23 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
         getJobPostDisplayComponents(undefined);
       setJobPostDisplayComponents(jobPostDisplayComponentItems);
     }
-  }, [currentJobPost]);
+  }, [currentJobPost, profile]);
 
-  const onJobApply = (e: MouseEvent<HTMLButtonElement>) => {
+  const onJobApply = async (e: MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
+    // show login or register if not logged in
+    if (!profile || !profile.accessToken) {
+      console.log("access token is empty");
+      setLoginOpen(!loginOpen);
+      return;
+    }
     // email employer of application
     // update db that user applied
+    await applyJob(
+      Number(currentJobPost.id),
+      Number(profile.id),
+      profile.accessToken
+    );
   };
 
   const setJobPostStates = (jobPost: JobPost) => {
@@ -385,20 +398,14 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
       );
       _buttons = (
         <>
-          <button
-            className="primary-btn small-btn"
-            style={{ marginBottom: ".5em" }}
+          <PrimaryButton
+            containerStyle={{ marginBottom: ".5em" }}
             onClick={onJobApply}
+            disabled={!profile ? true : false}
           >
             apply
-          </button>
-          <button className="secondary-btn small-btn">save</button>
-          <img
-            src={flag}
-            className="job-icon"
-            style={{ marginTop: "1em" }}
-            title="inappropriate"
-          />
+          </PrimaryButton>
+
           <img
             src={similar}
             className="job-icon"

@@ -12,7 +12,7 @@ use crate::routes::authentication::models::DeveloperOrEmployer as AuthDeveloperO
 
 pub async fn create_application<T: InsertApplicationFn + Repository + QueryEmployerFn + QueryDeveloperFn, U: Authenticator>
     (app_data: Data<AppState<T, U>>, new_application: Json<NewApplicationForRoute>, req: HttpRequest) -> Result<OutputId, UserError> {
-    info!("start create_application");
+    println!("start create_application");
     let is_auth = check_is_authenticated(app_data.clone(), new_application.developer_id, AuthDeveloperOrEmployer::Developer, req).await;
     if !is_auth {
         error!("Authorization failed");

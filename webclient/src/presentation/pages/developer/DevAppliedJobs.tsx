@@ -4,6 +4,6 @@ import "../../theme/userhome.css";
 import { v4 as uuidv4 } from "uuid";
 import DeveloperHome from "./DeveloperHome";
 
-export default function DevSavedJobs() {
+export default function DevAppliedJobs() {
   return <DeveloperHome>Saved Jobs</DeveloperHome>;
 }

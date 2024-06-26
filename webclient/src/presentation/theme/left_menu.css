@@ -4,10 +4,9 @@
   flex-direction: column;
   align-items: flex-start;
   justify-content: space-between;
-  padding: 2em;
   border: 1px solid var(--border-cl);
   border-radius: var(--border-rad);
-  height: 245px;
+  height: 325px;
 }
 
 .leftmenu-body {
@@ -15,6 +14,19 @@
   flex-direction: column;
   align-items: flex-start;
   justify-content: flex-start;
+  width: 100%;
+  padding: 2em;
+  padding-top: 0.5em;
+  padding-bottom: 0.5em;
+}
+
+.leftmenu-header {
+  font-size: 1.5em;
+  margin-bottom: 0.5em;
+  border-bottom: solid 1px var(--header-border-cl);
+  width: 100%;
+  padding: 1.25em;
+  padding-bottom: 0.5em;
 }
 
 .leftmenu-item {
@@ -29,8 +41,4 @@
 .leftmenu-icon {
   width: 1.25em;
   margin-right: 1em;
-}
-
-.leftmenu-header {
-  margin-bottom: 1em;
 }

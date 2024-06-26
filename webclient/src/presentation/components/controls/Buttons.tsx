@@ -1,4 +1,4 @@
-import { ReactNode, MouseEvent } from "react";
+import { ReactNode, MouseEvent, CSSProperties } from "react";
 import "../../theme/buttons.css";
 
 export interface ButtonProps {
@@ -31,14 +31,21 @@ export interface SecondaryButtonProps {
   children: ReactNode;
   onClick: (e: MouseEvent<HTMLButtonElement>) => void;
   disabled?: boolean;
+  style?: CSSProperties;
 }
 export function SecondaryButton({
   children,
   onClick,
   disabled = false,
+  style = {},
 }: SecondaryButtonProps) {
   return (
-    <button className="secondary-btn" disabled={disabled} onClick={onClick}>
+    <button
+      className="secondary-btn"
+      style={{ ...style }}
+      disabled={disabled}
+      onClick={onClick}
+    >
       {children}
     </button>
   );
