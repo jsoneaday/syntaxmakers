@@ -3,13 +3,13 @@ use log::{error, info};
 use crate::{
     app_state::AppState, common::{
         authentication::auth_service::Authenticator, repository::{
-            base::Repository, developers::repo::QueryDeveloperFn, employers::repo::QueryEmployerFn, jobs::{models::{Job, NewJob, UpdateJob}, repo::{InsertJobFn, QueryAllJobsFn, QueryJobFn, QueryJobsByDeveloper, QueryJobsByEmployerFn, QueryJobsBySearchTermsFn, UpdateJobFn}}
+            base::Repository, developers::repo::QueryDeveloperFn, employers::repo::QueryEmployerFn, jobs::{models::{Job, JobApplied, NewJob, UpdateJob}, repo::{InsertJobFn, QueryAllJobsFn, QueryJobFn, QueryJobsByApplierFn, QueryJobsByDeveloperFn, QueryJobsByEmployerFn, QueryJobsBySearchTermsFn, UpdateJobFn}}
         }
     }, routes::{
         auth_helper::check_is_authenticated, base_model::{IdAndPagingModel, OutputId, PagingModel, SearchAndPagingModel}, user_error::UserError
     }
 };
-use super::models::{NewJobForRoute, JobResponders, JobResponder, UpdateJobForRoute};
+use super::models::{JobAppliedResponders, JobAppliedResponder, JobResponder, JobResponders, NewJobForRoute, UpdateJobForRoute};
 use crate::routes::authentication::models::DeveloperOrEmployer as AuthDeveloperOrEmployer;
 
 #[allow(unused)]
@@ -89,8 +89,9 @@ pub async fn get_all_jobs<T: QueryAllJobsFn + Repository, U: Authenticator>(app_
 }
 
 #[allow(unused)]
-pub async fn get_jobs_by_developer<T: QueryJobsByDeveloper + Repository, U: Authenticator>(app_data: Data<AppState<T, U>>, json: Json<IdAndPagingModel>) -> Result<JobResponders, UserError> {
+pub async fn get_jobs_by_developer<T: QueryJobsByDeveloperFn + Repository, U: Authenticator>(app_data: Data<AppState<T, U>>, json: Json<IdAndPagingModel>) -> Result<JobResponders, UserError> {
     let result = app_data.repo.query_jobs_by_developer(json.id, json.page_size, json.last_offset).await;
+    // remove unneeded match
     match result {
         Ok(jobs) => {
             println!("jobs before convert: {:?}", jobs.clone().iter().map(|job| { job.title.clone() }).collect::<Vec<String>>());
@@ -116,6 +117,19 @@ pub async fn get_jobs_by_search_terms<T: QueryJobsBySearchTermsFn + Repository, 
     return_jobs_result(result)
 }
 
+#[allow(unused)]
+pub async fn get_jobs_by_applier<T: QueryJobsByApplierFn + Repository, U: Authenticator>(app_data: Data<AppState<T, U>>, json: Json<IdAndPagingModel>) -> Result<JobAppliedResponders, UserError> {
+    let result = app_data.repo.query_jobs_by_applier(json.id, json.page_size, json.last_offset).await;
+    // remove unneeded match
+    match result {
+        Ok(jobs) => {
+            println!("jobs before convert: {:?}", jobs.clone().iter().map(|job| { job.title.clone() }).collect::<Vec<String>>());
+            return_job_applied_result(Ok(jobs))
+        },
+        Err(e) => Err(e.into())
+    }    
+}
+
 fn return_jobs_result(result: Result<Vec<Job>, sqlx::error::Error>) -> Result<JobResponders, UserError> {
     match result {
         Ok(jobs) => {
@@ -130,10 +144,54 @@ fn return_jobs_result(result: Result<Vec<Job>, sqlx::error::Error>) -> Result<Jo
     }
 }
 
+fn return_job_applied_result(result: Result<Vec<JobApplied>, sqlx::error::Error>) -> Result<JobAppliedResponders, UserError> {
+    match result {
+        Ok(jobs) => {
+            let responders = jobs.iter().map(|job| {
+                convert_job_applied(job)
+            })
+            .collect::<Vec<JobAppliedResponder>>();
+            println!("jobs after convert: {:?}", responders.clone().iter().map(|job| { job.title.clone() }).collect::<Vec<String>>());
+            Ok(JobAppliedResponders(responders))
+        },
+        Err(e) => Err(e.into())
+    }
+}
+
 fn convert(job: &Job) -> JobResponder {
     JobResponder {
         id: job.id, 
         updated_at: job.updated_at, 
+        employer_id: job.employer_id, 
+        employer_name: job.employer_name.to_string(),
+        company_id: job.company_id,
+        company_name: job.company_name.to_string(),
+        company_logo: job.company_logo.clone(),
+        title: job.title.to_string(), 
+        description: job.description.to_string(), 
+        is_remote: job.is_remote, 
+        country_id: job.country_id, 
+        country_name: if let Some(country_name) = job.country_name.to_owned() {
+            Some(country_name)
+        } else {
+            None
+        },
+        primary_lang_id: job.primary_lang_id, 
+        primary_lang_name: job.primary_lang_name.to_string(),
+        secondary_lang_id: job.secondary_lang_id,
+        secondary_lang_name: job.secondary_lang_name.clone(), 
+        industry_id: job.industry_id, 
+        industry_name: job.industry_name.to_string(),
+        salary_id: job.salary_id,
+        salary: job.salary
+    }
+}
+
+fn convert_job_applied(job: &JobApplied) -> JobAppliedResponder {
+    JobAppliedResponder {
+        id: job.id, 
+        updated_at: job.updated_at, 
+        dev_applied_at: job.dev_applied_at,
         employer_id: job.employer_id, 
         employer_name: job.employer_name.to_string(),
         company_id: job.company_id,
@@ -320,7 +378,7 @@ mod tests {
     }
 
     #[async_trait]
-    impl QueryJobsByDeveloper for MockDbRepo {
+    impl QueryJobsByDeveloperFn for MockDbRepo {
         async fn query_jobs_by_developer(&self, _: i64, _: i32, _: i64) -> Result<Vec<Job>, sqlx::Error> {
             Ok(vec![
                 get_test_job(1).await

@@ -2,16 +2,12 @@ use async_trait::async_trait;
 use sqlx::error::Error;
 use sqlx::{Postgres, Pool, query_as, query};
 use crate::common::repository::base::{DbRepo, ConnGetter};
-use crate::common::repository::jobs::models::{NewJob, Job};
+use crate::common::repository::jobs::models::{NewJob, Job, UpdateJob, JobApplied, JobCountry};
 use crate::common::repository::base::EntityId;
 use crate::common::repository::{error::SqlxError, developers::models::Developer, base::CountResult};
 use log::error;
 
-use super::models::UpdateJob;
-
 mod internal {    
-    use crate::common::repository::jobs::models::JobCountry;
-
     use super::*;    
 
     pub async fn insert_job(conn: &Pool<Postgres>, new_job: NewJob) -> Result<EntityId, Error> {
@@ -333,7 +329,6 @@ mod internal {
     }
 
     pub async fn query_jobs_by_search_terms(conn: &Pool<Postgres>, search_terms: Vec<String>, page_size: i32, last_offset: i64) -> Result<Vec<Job>, Error> {
-        println!("search_terms {:?}, offset {}", search_terms, last_offset);
         let mut first_param: Vec<String> = vec![];
         for item in search_terms {
             first_param.push(format!(
@@ -394,7 +389,6 @@ mod internal {
     }
 
     pub async fn query_jobs_by_developer(conn: &Pool<Postgres>, dev_id: i64, page_size: i32, last_offset: i64) -> Result<Vec<Job>, Error> {
-        println!("params id {} {} {}", dev_id, page_size, last_offset);
         let developer_result = query_as::<_, Developer>(
             r"
             select d.id, d.created_at, d.updated_at, d.user_name, d.full_name, d.email, d.primary_lang_id, dsl.secondary_lang_id
@@ -414,7 +408,6 @@ mod internal {
             return Err(developer_result.err().unwrap());
         }
         let developer = developer.unwrap();
-        println!("dev languages {} {:?}", developer.primary_lang_id, developer.secondary_lang_id);
 
         let jobs = query_as::<_, Job>(
             r"
@@ -468,6 +461,56 @@ mod internal {
             },
             Err(e) => Err(e)
         }
+    }
+
+    pub async fn query_jobs_by_applier(conn: &Pool<Postgres>, dev_id: i64, page_size: i32, last_offset: i64) -> Result<Vec<JobApplied>, Error> { 
+        let jobs = query_as::<_, JobApplied>(
+            r"
+            select 
+                j.id, 
+                j.created_at, 
+                j.updated_at, 
+                a.created_at as dev_applied_at,
+                j.employer_id, 
+                e.full_name as employer_name,
+                co.id as company_id,
+                co.name as company_name,
+                co.logo as company_logo,
+                j.title, 
+                j.description, 
+                j.is_remote, 
+                jc.country_id,
+                cy.name as country_name,
+                j.primary_lang_id,
+                ppl.name as primary_lang_name,
+                j.secondary_lang_id,
+                spl.name as secondary_lang_name,
+                j.industry_id,
+                i.name as industry_name,
+                j.salary_id,
+                s.base as salary
+            from 
+                job j 
+                    join employer e on j.employer_id = e.id
+                    join company co on e.company_id = co.id
+                    left join jobs_countries jc on j.id = jc.job_id 
+                    full outer join country cy on jc.country_id = cy.id
+                    join prog_language ppl on j.primary_lang_id = ppl.id
+                    join prog_language spl on j.secondary_lang_id = spl.id
+                    join industry i on j.industry_id = i.id
+                    join salary s on j.salary_id = s.id
+                    join application a on j.id = a.job_id
+                    join developer d on a.developer_id = d.id
+            where d.id = $1 
+            order by a.created_at desc             
+            limit $2
+            offset $3
+            ")
+            .bind(dev_id)
+            .bind(page_size)
+            .bind(last_offset)
+            .fetch_all(conn).await;
+        jobs
     }
 }
 
@@ -556,13 +599,25 @@ impl QueryJobsBySearchTermsFn for DbRepo {
 }
 
 #[async_trait]
-pub trait QueryJobsByDeveloper {
+pub trait QueryJobsByDeveloperFn {
     async fn query_jobs_by_developer(&self, dev_id: i64, page_size: i32, last_offset: i64) -> Result<Vec<Job>, Error>;
 }
 
 #[async_trait]
-impl QueryJobsByDeveloper for DbRepo {
+impl QueryJobsByDeveloperFn for DbRepo {
     async fn query_jobs_by_developer(&self, dev_id: i64, page_size: i32, last_offset: i64) -> Result<Vec<Job>, Error> {
         internal::query_jobs_by_developer(self.get_conn(), dev_id, page_size, last_offset).await
+    }
+}
+
+#[async_trait]
+pub trait QueryJobsByApplierFn {
+    async fn query_jobs_by_applier(&self, dev_id: i64, page_size: i32, last_offset: i64) -> Result<Vec<JobApplied>, Error>;
+}
+
+#[async_trait]
+impl QueryJobsByApplierFn for DbRepo {
+    async fn query_jobs_by_applier(&self, dev_id: i64, page_size: i32, last_offset: i64) -> Result<Vec<JobApplied>, Error> {
+        internal::query_jobs_by_applier(self.get_conn(), dev_id, page_size, last_offset).await
     }
 }

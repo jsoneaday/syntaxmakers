@@ -103,3 +103,14 @@ create table jobs_countries (
     constraint fk_job foreign key(job_id) references job(id),
     constraint fk_country foreign key(country_id) references country(id)
 );
+
+create table application (
+    "id" bigserial primary key,
+    "created_at" timestamptz(3) not null default current_timestamp,
+    "updated_at" timestamptz(3) not null default current_timestamp, 
+    "job_id" bigserial not null,
+    "developer_id" bigserial not null,
+
+    constraint fk_job foreign key(job_id) references job(id),
+    constraint fk_developer foreign key(developer_id) references developer(id)
+);

@@ -1,6 +1,8 @@
 use fake::Fake;
 use fake::faker::company::en::CompanyName;
 use fake::faker::internet::en::{Username, SafeEmail, FreeEmail};
+use syntaxmakers_server::common::repository::application::models::NewApplication;
+use syntaxmakers_server::common::repository::application::repo::InsertApplicationFn;
 use syntaxmakers_server::common::repository::base::{Repository, DbRepo};
 use syntaxmakers_server::common::repository::companies::models::NewCompany;
 use syntaxmakers_server::common::repository::countries::repo::QueryAllCountriesFn;
@@ -10,7 +12,7 @@ use syntaxmakers_server::common::repository::employers::models::NewEmployer;
 use syntaxmakers_server::common::repository::employers::repo::InsertEmployerFn;
 use syntaxmakers_server::common::repository::jobs::models::{NewJob, Job, UpdateJob};
 use syntaxmakers_server::common::repository::jobs::repo::{
-    QueryJobFn, QueryAllJobsFn, QueryJobsByEmployerFn, InsertJobFn, UpdateJobFn, QueryJobsByDeveloper, QueryJobsBySearchTermsFn
+    InsertJobFn, QueryAllJobsFn, QueryJobFn, QueryJobsByApplierFn, QueryJobsByDeveloperFn, QueryJobsByEmployerFn, QueryJobsBySearchTermsFn, UpdateJobFn
 };
 use syntaxmakers_server::common::repository::industries::repo::QueryAllIndustriesFn;
 use syntaxmakers_server::common::repository::languages::repo::QueryAllLanguagesFn;
@@ -402,4 +404,94 @@ async fn test_create_two_distinct_jobs_and_run_search_on_them_to_get_correct_res
     assert!(search_by_country1.unwrap().iter().find(|job| {job.id == create_job1.id}).is_some());
     let search_by_industry1 = repo.query_jobs_by_search_terms(vec![industry1.name.clone()], 10, 0).await;    
     assert!(search_by_industry1.unwrap().iter().find(|job| {job.id == create_job1.id}).is_some());
+}
+
+#[tokio::test]
+async fn test_create_two_distinct_jobs_and_have_same_dev_apply_both_then_get_back_devs_applied_jobs() {
+    let repo = DbRepo::init().await;
+    init_fixtures().await;
+    let logo = get_company_logo_randomly();
+    let languages_result = LANGUAGES.get().unwrap();
+    let industry_result = INDUSTRIES.get().unwrap();
+    let countries = COUNTRIES.get().unwrap();
+    
+    // setup needed data    
+    let company_name1 = CompanyName().fake::<String>();
+    let company_create_result1 = repo.insert_company(NewCompany{ name: company_name1.clone(), logo: Some(logo.clone()), headquarters_country_id: 1 }).await.unwrap();
+    let company_id1 = company_create_result1.id;
+    let create_employer_result1 = repo.insert_employer(NewEmployer {
+        user_name: Username().fake::<String>(),
+        full_name: get_fake_fullname(),
+        email: SafeEmail().fake::<String>(),
+        password: "test123".to_string(),
+        company_id: company_id1
+    }).await.unwrap();
+    let company_name2 = CompanyName().fake::<String>();
+    let company_create_result2 = repo.insert_company(NewCompany{ name: company_name2, logo: Some(logo), headquarters_country_id: 1 }).await.unwrap();
+    let company_id2 = company_create_result2.id;
+    let create_employer_result2 = repo.insert_employer(NewEmployer {
+        user_name: Username().fake::<String>(),
+        full_name: get_fake_fullname(),
+        email: SafeEmail().fake::<String>(),
+        password: "test123".to_string(),
+        company_id: company_id2
+    }).await.unwrap();    
+    
+    let developer = repo.insert_developer(NewDeveloper {
+        user_name: Username().fake::<String>(),
+        full_name: get_fake_fullname(),
+        email: FreeEmail().fake::<String>(),
+        password: "test123".to_string(),
+        primary_lang_id: languages_result.get(0).unwrap().id,
+        secondary_lang_id: Some(languages_result.get(1).unwrap().id)
+    }).await.unwrap();
+
+    let title1 = get_fake_title().to_string();    
+    let primary_lang1 = languages_result.get(0).unwrap();
+    let secondary_lang1 = languages_result.get(1).unwrap();
+    let country1 = countries.get(0).unwrap();
+    let industry1 = industry_result.get(0).unwrap();    
+    let create_job1 = repo.insert_job(NewJob {
+        employer_id: create_employer_result1.id,
+        title: title1.clone(),
+        description: get_fake_desc().to_string(),
+        is_remote: false,
+        country_id: Some(country1.id),
+        primary_lang_id: primary_lang1.clone().id,
+        secondary_lang_id: Some(secondary_lang1.id),
+        industry_id: industry1.id,
+        salary_id: get_random_salary().await.id
+    }).await.unwrap();
+
+    let title2 = get_fake_title().to_string();    
+    let primary_lang2 = languages_result.get(2).unwrap();
+    let secondary_lang2 = languages_result.get(3).unwrap();
+    let country2 = countries.get(0).unwrap();
+    let industry2 = industry_result.get(1).unwrap();    
+    let create_job2 = repo.insert_job(NewJob {
+        employer_id: create_employer_result2.id,
+        title: title2,
+        description: get_fake_desc().to_string(),
+        is_remote: false,
+        country_id: Some(country2.id),
+        primary_lang_id: primary_lang2.id,
+        secondary_lang_id: Some(secondary_lang2.id),
+        industry_id: industry2.id,
+        salary_id: get_random_salary().await.id
+    }).await.unwrap();
+
+    _ = repo.insert_application(NewApplication {
+        job_id: create_job1.id,
+        developer_id: developer.id
+    }).await;
+    _ = repo.insert_application(NewApplication {
+        job_id: create_job2.id,
+        developer_id: developer.id
+    }).await;
+
+    let applied_jobs = repo.query_jobs_by_applier(developer.id, 20, 0).await;
+    let applied_jobs = applied_jobs.unwrap().clone();
+    assert!(applied_jobs.len() == 2);
+    assert!(applied_jobs[0].id == create_job2.id);
+    assert!(applied_jobs[1].id == create_job1.id);
 }
