@@ -1,6 +1,13 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import JobPost from "../../models/JobPost";
-import { ChangeEvent, useEffect, useReducer, useRef, useState } from "react";
+import {
+  ChangeEvent,
+  useEffect,
+  useReducer,
+  useRef,
+  useState,
+  MouseEvent,
+} from "react";
 import "../../theme/job_full_view.css";
 import flag from "../../theme/assets/flag.png";
 import similar from "../../theme/assets/similar.png";
@@ -253,6 +260,12 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
     }
   }, [currentJobPost]);
 
+  const onJobApply = (e: MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    // email employer of application
+    // update db that user applied
+  };
+
   const setJobPostStates = (jobPost: JobPost) => {
     setCurrentJobPost({ type: FormActionTypes.Id, payload: jobPost.id });
     setCurrentJobPost({
@@ -359,12 +372,7 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
     );
 
     if (readOnly) {
-      _title = (
-        <div className="title-font">
-          {currentJobPost.id}
-          {currentJobPost.title}
-        </div>
-      );
+      _title = <div className="title-font">{currentJobPost.title}</div>;
       _isRemoteOrCountry = (
         <div className="sub-title-font job-full-view-subtitle-item-primary">
           {currentJobPost.isRemote ? "Remote" : currentJobPost.countryName}
@@ -380,6 +388,7 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
           <button
             className="primary-btn small-btn"
             style={{ marginBottom: ".5em" }}
+            onClick={onJobApply}
           >
             apply
           </button>
