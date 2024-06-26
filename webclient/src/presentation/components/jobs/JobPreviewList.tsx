@@ -19,7 +19,7 @@ export default function JobPreviewList({ jobPosts }: JobPreviewListProps) {
   };
 
   return (
-    <div className="dev-post-preview-container" style={{ padding: "2em" }}>
+    <div className="dev-post-preview-container">
       {jobPosts.length === 0 ? (
         <strong>No jobs found</strong>
       ) : (

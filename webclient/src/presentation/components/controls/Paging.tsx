@@ -34,7 +34,6 @@ export function Paging<T>({ triggerInit, dataQuery }: PagingProps<T>) {
       // check if next load has any data
       dataQuery(PAGE_SIZE, false) //
         .then((moreData) => {
-          console.log("moreData", moreData);
           if (moreData.length > 0) {
             setHasMoreNextData(true);
           } else {
@@ -58,6 +57,7 @@ export function Paging<T>({ triggerInit, dataQuery }: PagingProps<T>) {
     } else {
       setHasMoreNextData(false);
     }
+    setHasMorePreviousData(true);
   };
 
   const getPreviousData = async (e: MouseEvent<HTMLButtonElement>) => {
@@ -66,12 +66,21 @@ export function Paging<T>({ triggerInit, dataQuery }: PagingProps<T>) {
     const nextOffset = setPagingDirection(PagingDirection.Previous);
     await dataQuery(nextOffset, true);
 
-    const moreDataOffset = getNextOffset(nextOffset, PagingDirection.Previous);
-    const moreData = await dataQuery(moreDataOffset, false);
-    if (moreData.length > 0) {
-      setHasMorePreviousData(true);
-    } else {
+    if (nextOffset === 0) {
       setHasMorePreviousData(false);
+      setHasMoreNextData(true);
+    } else {
+      const moreDataOffset = getNextOffset(
+        nextOffset,
+        PagingDirection.Previous
+      );
+      const moreData = await dataQuery(moreDataOffset, false);
+      if (moreData.length > 0) {
+        setHasMorePreviousData(true);
+      } else {
+        setHasMorePreviousData(false);
+      }
+      setHasMoreNextData(true);
     }
   };
 

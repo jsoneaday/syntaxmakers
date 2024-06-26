@@ -29,9 +29,7 @@ export function MarkdownEditor({
   markdown,
   readOnly,
 }: MarkdownEditorProps) {
-  const setEditorValue = useCallback((markdownStr: string) => {
-    console.log("MDXEditor updated value:", markdownStr);
-  }, []);
+  const setEditorValue = useCallback((_markdownStr: string) => {}, []);
 
   return (
     <MDXEditor

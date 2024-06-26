@@ -38,11 +38,7 @@ export function SecondaryButton({
   disabled = false,
 }: SecondaryButtonProps) {
   return (
-    <button
-      className="secondary-btn small-btn"
-      disabled={disabled}
-      onClick={onClick}
-    >
+    <button className="secondary-btn" disabled={disabled} onClick={onClick}>
       {children}
     </button>
   );

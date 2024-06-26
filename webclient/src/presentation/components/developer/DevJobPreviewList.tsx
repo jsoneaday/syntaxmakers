@@ -16,6 +16,7 @@ import { Paging } from "../controls/Paging";
 export default function DevJobPreviewList() {
   const [jobData, setJobsData] = useState<JobPost[]>([]);
   const [searchInput, setSearchInput] = useState("");
+  const [searchResultsMessage, setSearchResultsMessage] = useState("");
   const [profile, _setProfile] = useProfile();
   const navType = useNavigationType();
   const [pagingInit, setPagingInit] = useState<string | undefined>();
@@ -28,7 +29,6 @@ export default function DevJobPreviewList() {
     newOffset: number,
     setData: boolean
   ): Promise<Job[]> {
-    console.log("profile", profile);
     let returnJobs: Job[] = [];
     if (!profile) return returnJobs;
 
@@ -53,13 +53,13 @@ export default function DevJobPreviewList() {
         }
       }
     } else {
-      setData && setJobsData(window.history.state);
+      setJobsData(window.history.state);
     }
 
-    console.log("pagingInit", pagingInit);
     if (!pagingInit) {
       setPagingInit(window.crypto.randomUUID());
     }
+    setSearchResultsMessage("Your recommended jobs");
     return returnJobs;
   }
 
@@ -71,7 +71,7 @@ export default function DevJobPreviewList() {
   const onSearchJobs = async (e: MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
 
-    searchJobs(0, true);
+    await searchJobs(0, true);
   };
 
   async function searchJobs(
@@ -86,6 +86,7 @@ export default function DevJobPreviewList() {
     setData && setJobsData(jobsData);
 
     window.history.replaceState(jobsData, "");
+    setSearchResultsMessage(`Search results for terms: ${searchInput}`);
     return jobs;
   }
 
@@ -112,11 +113,16 @@ export default function DevJobPreviewList() {
           </PrimaryButton>
         </div>
       </div>
-      <JobPreviewList jobPosts={jobData} />
-      <Paging
-        triggerInit={pagingInit}
-        dataQuery={searchInput ? searchJobs : queryUserJobs}
-      />
+      <div style={{ padding: "2em", width: "100%" }}>
+        <div style={{ marginBottom: ".8em" }}>
+          <strong>{searchResultsMessage}</strong>
+        </div>
+        <JobPreviewList jobPosts={jobData} />
+        <Paging
+          triggerInit={pagingInit}
+          dataQuery={searchInput ? searchJobs : queryUserJobs}
+        />
+      </div>
     </div>
   );
 }
