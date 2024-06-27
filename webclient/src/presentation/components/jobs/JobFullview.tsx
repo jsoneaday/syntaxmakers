@@ -770,14 +770,7 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
         </div>
       </Popup>
       <form className="userhome-main" style={{ margin: "auto" }}>
-        <div
-          className="header-container job-full-view-header"
-          style={{
-            paddingTop: "2em",
-            paddingLeft: "2em",
-            paddingRight: "2em",
-          }}
-        >
+        <div className="header-container job-full-view-header">
           <GoBack
             label={
               devOrEmp === DevOrEmployer.Developer

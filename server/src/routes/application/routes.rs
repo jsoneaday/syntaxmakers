@@ -1,5 +1,5 @@
 use actix_web::{web::{Data, Json}, HttpRequest};
-use log::{error, info};
+use log::error;
 use crate::{
     app_state::AppState, common::{
         authentication::auth_service::Authenticator, 

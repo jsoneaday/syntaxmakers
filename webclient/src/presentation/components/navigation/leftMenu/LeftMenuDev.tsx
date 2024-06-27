@@ -14,13 +14,13 @@ export default function LeftMenuDev() {
     <LeftMenu>
       {profile ? (
         <>
-          <header className="leftmenu-header">
+          <header className="header-container job-full-view-header">
             <strong>FreeAuth</strong>
           </header>
           <div className="leftmenu-body">
             <span className="title-font leftmenu-item">{`@${profile?.userName}`}</span>
             <Link
-              to={RoutePaths.DevJobPosts}
+              to={RoutePaths.DevJobSearch}
               className="sub-title-font leftmenu-item"
             >
               <img className="leftmenu-icon" src={search} />

@@ -2,13 +2,13 @@ import "../../theme/devhome.css";
 import "../../theme/userhome.css";
 /// @ts-ignore
 import { v4 as uuidv4 } from "uuid";
-import DevJobPreviewList from "../../components/developer/DevJobPreviewList";
+import DevJobSearchList from "../../components/developer/DevJobSearchList";
 import DeveloperHome from "./DeveloperHome";
 
-export default function DevJobPosts() {
+export default function DevJobSearch() {
   return (
     <DeveloperHome>
-      <DevJobPreviewList />
+      <DevJobSearchList />
     </DeveloperHome>
   );
 }

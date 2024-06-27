@@ -13,7 +13,7 @@ import { PrimaryButton } from "../controls/Buttons";
 import { PAGE_SIZE } from "../../common/Paging";
 import { Paging } from "../controls/Paging";
 
-export default function DevJobPreviewList() {
+export default function DevJobSearchList() {
   const [jobData, setJobsData] = useState<JobPost[]>([]);
   const [searchInput, setSearchInput] = useState("");
   const [searchResultsMessage, setSearchResultsMessage] = useState("");
@@ -96,8 +96,10 @@ export default function DevJobPreviewList() {
 
   return (
     <div className="userhome-main">
+      <header className="header-container job-full-view-header">
+        <strong>Developer Job Search</strong>
+      </header>
       <div className="userhome-top" style={{ padding: "2em" }}>
-        <div className="title-font userhome-header">Developer job search</div>
         <div className="sub-title-font userhome-sub-header">
           Enter your preferences to find your next job
         </div>

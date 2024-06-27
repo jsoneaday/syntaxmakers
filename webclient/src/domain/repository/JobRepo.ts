@@ -1,4 +1,5 @@
 import {
+  JOBS_APPLIED_URL,
   JOBS_DEV_URL,
   JOBS_EMP_URL,
   JOBS_SEARCH_URL,
@@ -42,6 +43,30 @@ export interface JobFormState {
   primaryLangId: number;
   secondaryLangId?: number;
   countryId?: number;
+}
+
+export async function getJobsByApplier(
+  developerId: number,
+  pageSize: number = 20,
+  lastOffset: number = 0
+) {
+  const result = await fetch(JOBS_APPLIED_URL, {
+    method: "post",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      id: developerId,
+      pageSize,
+      lastOffset,
+    }),
+  });
+
+  if (result.ok) {
+    const jobs: Job[] = await result.json();
+    return jobs;
+  }
+  return [];
 }
 
 export async function getJobsBySearchTerms(

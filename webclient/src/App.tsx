@@ -2,7 +2,7 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import Home from "./presentation/pages/Home";
 import EmpJobPosts from "./presentation/pages/employer/EmpJobPosts";
 import EmpJobApplicants from "./presentation/pages/employer/EmpJobApplicants";
-import DevJobPosts from "./presentation/pages/developer/DevJobPosts";
+import DevJobSearch from "./presentation/pages/developer/DevJobSearch";
 import DevAppliedJobs from "./presentation/pages/developer/DevAppliedJobs";
 import DevJobAlerts from "./presentation/pages/developer/DevJobAlerts";
 import DevJobFullview from "./presentation/pages/developer/DevJobFullview";
@@ -13,7 +13,7 @@ export const EMP_ROUTE_PREFIX = "emphome";
 
 export enum RoutePaths {
   Root = "/",
-  DevJobPosts = `/${DEV_ROUTE_PREFIX}/jobposts`,
+  DevJobSearch = `/${DEV_ROUTE_PREFIX}/searchjobs`,
   DevAppliedJobs = `/${DEV_ROUTE_PREFIX}/appliedjobs`,
   DevJobAlerts = `/${DEV_ROUTE_PREFIX}/jobalerts`,
   DevJobFullView = `/${DEV_ROUTE_PREFIX}/jobfullview`,
@@ -29,8 +29,8 @@ const router = createBrowserRouter([
     element: <Home />,
   },
   {
-    path: RoutePaths.DevJobPosts,
-    element: <DevJobPosts />,
+    path: RoutePaths.DevJobSearch,
+    element: <DevJobSearch />,
   },
   {
     path: RoutePaths.DevAppliedJobs,
