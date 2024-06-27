@@ -62,12 +62,12 @@
 }
 
 .title-font {
-  font-size: 1.2em;
+  font-size: 1.25em;
   font-weight: var(--bold-font);
 }
 
 .sub-title-font {
-  font-size: 1em;
+  font-size: 1.1em;
   font-weight: var(--secondary-font-font);
   color: var(--band-cl);
 }

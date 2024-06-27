@@ -24,21 +24,21 @@ export default function LeftMenuDev() {
               className="sub-title-font leftmenu-item"
             >
               <img className="leftmenu-icon" src={search} />
-              <span>Search jobs</span>
+              <span>Search Jobs</span>
             </Link>
             <Link
-              to={RoutePaths.DevSavedJobs}
+              to={RoutePaths.DevAppliedJobs}
               className="sub-title-font leftmenu-item"
             >
               <img className="leftmenu-icon" src={safebox} />
-              <span>Applied jobs</span>
+              <span>Applied Jobs</span>
             </Link>
             <Link
               to={RoutePaths.DevJobAlerts}
               className="sub-title-font leftmenu-item"
             >
               <img className="leftmenu-icon" src={notification} />
-              <span>Job alerts</span>
+              <span>Job Alerts</span>
             </Link>
           </div>
         </>

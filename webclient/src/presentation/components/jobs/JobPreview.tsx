@@ -35,14 +35,26 @@ export default function JobPreview({ jobPost, isSmall }: JobPreviewProps) {
       {icon}
       <div className="preview-content">
         <div className={smallTitleFont}>{jobPost.title}</div>
-        <div className={smallSubTitleFont}>{jobPost.companyName}</div>
-        <div className={smallNormalFont}>
+
+        <div style={{ marginBottom: ".25em" }} className={smallSubTitleFont}>
+          {jobPost.companyName}
+        </div>
+        <div style={{ padding: ".25em" }} className={smallNormalFont}>
           {jobPost.isRemote ? "Remote" : jobPost.countryName}
         </div>
-        <div className={"normal-font preview-salary"}>
-          Base Salary: <i>{`${jobPost.salary}`}</i>
+
+        <div style={{ padding: ".25em" }}>
+          <div className={"normal-font preview-item"}>
+            Primary Language: <i>{`${jobPost.primaryLangName}`}</i>
+          </div>
+          <div className={"normal-font preview-item"}>
+            Secondary Language: <i>{`${jobPost.secondaryLangName}`}</i>
+          </div>
+          <div className={"normal-font preview-item"}>
+            Base Salary: <i>{`${jobPost.salary}`}</i>
+          </div>
         </div>
-        {timestamp}
+        <div style={{ paddingLeft: ".25em" }}>{timestamp}</div>
       </div>
     </div>
   );

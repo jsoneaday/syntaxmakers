@@ -14,7 +14,7 @@ export const EMP_ROUTE_PREFIX = "emphome";
 export enum RoutePaths {
   Root = "/",
   DevJobPosts = `/${DEV_ROUTE_PREFIX}/jobposts`,
-  DevSavedJobs = `/${DEV_ROUTE_PREFIX}/savedjobs`,
+  DevAppliedJobs = `/${DEV_ROUTE_PREFIX}/appliedjobs`,
   DevJobAlerts = `/${DEV_ROUTE_PREFIX}/jobalerts`,
   DevJobFullView = `/${DEV_ROUTE_PREFIX}/jobfullview`,
   EmpPostNewJob = `/${EMP_ROUTE_PREFIX}/postnewjob`,
@@ -33,7 +33,7 @@ const router = createBrowserRouter([
     element: <DevJobPosts />,
   },
   {
-    path: RoutePaths.DevSavedJobs,
+    path: RoutePaths.DevAppliedJobs,
     element: <DevAppliedJobs />,
   },
   {
