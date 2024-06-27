@@ -7,6 +7,7 @@ interface ModalProps {
   toggleOpen: () => void;
   children: ReactNode;
   overlayClickClose?: boolean;
+  style?: ReactModal.Styles;
 }
 
 export default function Modal({
@@ -14,9 +15,11 @@ export default function Modal({
   toggleOpen,
   children,
   overlayClickClose = false,
+  style = {},
 }: ModalProps) {
   return (
     <ReactModal
+      style={style}
       className="modal-container"
       isOpen={isOpen}
       onRequestClose={toggleOpen}

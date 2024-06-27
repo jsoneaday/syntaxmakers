@@ -1,4 +1,4 @@
-import { APPLY_JOB_URL } from "./Api";
+import { APPLY_JOB_URL, EntityId } from "./Api";
 
 export class JobApplied {
   constructor(
@@ -45,16 +45,9 @@ export async function applyJob(
     }),
   });
 
-  if (!result.ok) {
-    const errorData = await result.text();
-    console.error("Error:", result.status, errorData);
-  }
   if (result.ok) {
-    console.log("job applied", result);
-    if (result.status === 204) {
-      return "";
-    }
-    return await result.json();
+    const entity: EntityId = await result.json();
+    return entity;
   }
   throw new Error("Failed to apply for job");
 }

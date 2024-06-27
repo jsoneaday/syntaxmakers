@@ -34,6 +34,7 @@ import { MDXEditorMethods } from "@mdxeditor/editor";
 import { useLoginOpen } from "../../common/redux/loginOpen/LoginOpenHooks";
 import { PrimaryButton } from "../controls/Buttons";
 import { applyJob } from "../../../domain/repository/JobApplicationRepo";
+import { Popup } from "../controls/Popup";
 
 type JobPostDisplayComponents = {
   title: JSX.Element;
@@ -171,11 +172,17 @@ function reducer(state: FormState, action: FormAction): FormState {
 
 type Reducer<S, A> = (prevState: S, action: A) => S;
 
+const ApplicationSuccessMsg = "Your application has been sent";
+const ApplicationFailedMsg = "Your application attempt has failed";
+
 interface JobFullviewProps {
   readOnly: boolean;
 }
 
 export default function JobFullview({ readOnly }: JobFullviewProps) {
+  const [applicationMsg, setApplicationMsg] = useState(ApplicationSuccessMsg);
+  const [isPopupOpen, setIsPopupOpen] = useState(false);
+  const toggleIsPopupOpen = () => setIsPopupOpen(!isPopupOpen);
   const mdRef = useRef<MDXEditorMethods>(null);
   const [profile, _] = useProfile();
   const { state: routeJobPost } = useLocation();
@@ -272,11 +279,18 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
     }
     // email employer of application
     // update db that user applied
-    await applyJob(
-      Number(currentJobPost.id),
-      Number(profile.id),
-      profile.accessToken
-    );
+    try {
+      await applyJob(
+        Number(currentJobPost.id),
+        Number(profile.id),
+        profile.accessToken
+      );
+      setApplicationMsg(ApplicationSuccessMsg);
+    } catch (e) {
+      setApplicationMsg(ApplicationFailedMsg);
+    } finally {
+      toggleIsPopupOpen();
+    }
   };
 
   const setJobPostStates = (jobPost: JobPost) => {
@@ -741,91 +755,106 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
   };
 
   return (
-    <form className="userhome-main" style={{ margin: "auto" }}>
-      <div
-        className="header-container job-full-view-header"
-        style={{
-          paddingTop: "2em",
-          paddingLeft: "2em",
-          paddingRight: "2em",
-        }}
-      >
-        <GoBack
-          label={
-            devOrEmp === DevOrEmployer.Developer
-              ? "developer home"
-              : "employer home"
-          }
-        />
-      </div>
-      <div
-        className="opposites"
-        style={{
-          paddingTop: "2em",
-          paddingLeft: "2em",
-          paddingRight: "2em",
-        }}
-      >
-        <div className="stack">
-          {jobPostDisplayComponents?.title}
+    <>
+      <Popup isOpen={isPopupOpen} toggleOpen={toggleIsPopupOpen}>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center",
+            padding: "0.5em",
+            borderBottom: "solid 1px var(--border-cl)",
+          }}
+        >
+          {applicationMsg}
+        </div>
+      </Popup>
+      <form className="userhome-main" style={{ margin: "auto" }}>
+        <div
+          className="header-container job-full-view-header"
+          style={{
+            paddingTop: "2em",
+            paddingLeft: "2em",
+            paddingRight: "2em",
+          }}
+        >
+          <GoBack
+            label={
+              devOrEmp === DevOrEmployer.Developer
+                ? "developer home"
+                : "employer home"
+            }
+          />
+        </div>
+        <div
+          className="opposites"
+          style={{
+            paddingTop: "2em",
+            paddingLeft: "2em",
+            paddingRight: "2em",
+          }}
+        >
+          <div className="stack">
+            {jobPostDisplayComponents?.title}
 
-          <div className="left-align">
-            <div className="opposites">
-              <div
-                className="job-full-view-subtitle"
-                style={{
-                  width: "100%",
-                }}
-              >
-                <div style={{ marginBottom: ".5em" }}>
-                  {jobPostDisplayComponents?.companyName}
+            <div className="left-align">
+              <div className="opposites">
+                <div
+                  className="job-full-view-subtitle"
+                  style={{
+                    width: "100%",
+                  }}
+                >
+                  <div style={{ marginBottom: ".5em" }}>
+                    {jobPostDisplayComponents?.companyName}
+                  </div>
+                  {jobPostDisplayComponents?.isRemoteOrCountry}
+                  {jobPostDisplayComponents?.updatedAt}
                 </div>
-                {jobPostDisplayComponents?.isRemoteOrCountry}
-                {jobPostDisplayComponents?.updatedAt}
               </div>
             </div>
+          </div>
+
+          <div
+            className="stack"
+            style={{ alignItems: "flex-end", textAlign: "right" }}
+          >
+            {jobPostDisplayComponents?.buttons}
           </div>
         </div>
 
         <div
-          className="stack"
-          style={{ alignItems: "flex-end", textAlign: "right" }}
+          className="job-full-view-section"
+          style={{
+            padding: "1.5em",
+            marginBottom: "1em",
+          }}
         >
-          {jobPostDisplayComponents?.buttons}
+          {jobPostDisplayComponents?.employerName}
+          {jobPostDisplayComponents?.primaryLang}
+          {jobPostDisplayComponents?.secondaryLang}
+          {jobPostDisplayComponents?.industry}
+          {jobPostDisplayComponents?.salary}
         </div>
-      </div>
 
-      <div
-        className="job-full-view-section"
-        style={{
-          padding: "1.5em",
-          marginBottom: "1em",
-        }}
-      >
-        {jobPostDisplayComponents?.employerName}
-        {jobPostDisplayComponents?.primaryLang}
-        {jobPostDisplayComponents?.secondaryLang}
-        {jobPostDisplayComponents?.industry}
-        {jobPostDisplayComponents?.salary}
-      </div>
-
-      <div
-        className="normal-font dev-post-preview-container job-full-view-section"
-        style={{
-          padding: "2em",
-        }}
-      >
-        <span className="title-font" style={{ marginBottom: "1em" }}>
-          Description
-        </span>
-        {currentJobPost.description ? (
-          <MarkdownEditor
-            mdRef={mdRef}
-            readOnly={readOnly}
-            markdown={currentJobPost.description}
-          />
-        ) : null}
-      </div>
-    </form>
+        <div
+          className="normal-font dev-post-preview-container job-full-view-section"
+          style={{
+            padding: "2em",
+          }}
+        >
+          <span className="title-font" style={{ marginBottom: "1em" }}>
+            Description
+          </span>
+          {currentJobPost.description ? (
+            <MarkdownEditor
+              mdRef={mdRef}
+              readOnly={readOnly}
+              markdown={currentJobPost.description}
+            />
+          ) : null}
+        </div>
+      </form>
+    </>
   );
 }
