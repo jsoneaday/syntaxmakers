@@ -433,13 +433,6 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
           >
             apply
           </PrimaryButton>
-
-          <img
-            src={similar}
-            className="job-icon"
-            style={{ marginTop: ".50em" }}
-            title="similar jobs"
-          />
         </>
       );
 

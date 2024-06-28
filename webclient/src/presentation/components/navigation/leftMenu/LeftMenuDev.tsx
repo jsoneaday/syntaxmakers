@@ -35,13 +35,6 @@ export default function LeftMenuDev() {
               <img className="leftmenu-icon" src={safebox} />
               <span>Applied Jobs</span>
             </Link>
-            <Link
-              to={RoutePaths.DevJobAlerts}
-              className="sub-title-font leftmenu-item"
-            >
-              <img className="leftmenu-icon" src={notification} />
-              <span>Job Alerts</span>
-            </Link>
           </div>
         </>
       ) : null}
