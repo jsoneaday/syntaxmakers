@@ -1,4 +1,4 @@
-import { ChangeEvent, MouseEvent, useEffect, useMemo, useState } from "react";
+import { ChangeEvent, useMemo, useState } from "react";
 import JobPost from "../../models/JobPost";
 import { useProfile } from "../../common/redux/profile/ProfileHooks";
 import {
@@ -7,24 +7,18 @@ import {
 } from "../../../domain/repository/JobRepo";
 import { convert as convertJob } from "../../models/JobPost";
 import JobPreviewList from "../jobs/JobPreviewList";
-import { useNavigationType } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { PrimaryButton } from "../controls/Buttons";
 import { PAGE_SIZE } from "../../common/Paging";
 import { Paging } from "../controls/Paging";
+import { RoutePaths } from "../../../App";
 
 export default function DevJobSearchList() {
+  const { search } = useParams();
   const [jobData, setJobsData] = useState<JobPost[]>([]);
-  const [searchInput, setSearchInput] = useState("");
+  const [searchInput, setSearchInput] = useState(search || "");
   const [searchResultsMessage, setSearchResultsMessage] = useState("");
   const [profile, _setProfile] = useProfile();
-  const navType = useNavigationType();
-  const [pagingInit, setPagingInit] = useState<string | undefined>();
-
-  useEffect(() => {
-    if (profile) {
-      setPagingInit(window.crypto.randomUUID());
-    }
-  }, [profile]);
 
   async function queryUserJobs(
     newOffset: number,
@@ -41,13 +35,7 @@ export default function DevJobSearchList() {
           return convertJob(job);
         });
         setData && setJobsData(jobsData);
-        console.log(
-          "queryUserJobs replaceState:",
-          newOffset,
-          navType,
-          setData,
-          jobsData
-        );
+        console.log("queryUserJobs:", newOffset, setData, jobsData);
 
         returnJobs = jobsData;
       } catch (e) {
@@ -64,30 +52,26 @@ export default function DevJobSearchList() {
     setSearchInput(e.target.value);
   };
 
-  const onSearchJobs = async (e: MouseEvent<HTMLButtonElement>) => {
-    e.preventDefault();
-
-    await searchJobs(0, true);
-  };
-
   async function searchJobs(
     newOffset: number,
     setData: boolean
   ): Promise<JobPost[]> {
-    const searchTerms = searchInput.split(" ");
+    const searchTerms = search?.split(" ");
+    if (!searchTerms) throw new Error("Search terms are missing");
+
     const jobs = await getJobsBySearchTerms(searchTerms, PAGE_SIZE, newOffset);
     const jobsData = jobs.map((job) => {
       return convertJob(job);
     });
     setData && setJobsData(jobsData);
 
-    console.log("searchJobs replaceState", jobsData);
-    setSearchResultsMessage(`Search results for terms: ${searchInput}`);
+    console.log("searchJobs", newOffset, setData, jobsData);
+    setSearchResultsMessage(`Search results for terms: ${search}`);
     return jobsData;
   }
 
   const searchBtnDisabled = useMemo(() => {
-    return searchInput.length > 2 ? false : true;
+    return searchInput.length > 1 ? false : true;
   }, [searchInput]);
 
   return (
@@ -106,8 +90,8 @@ export default function DevJobSearchList() {
             value={searchInput}
             onChange={onSearchTxtChanged}
           />
-          <PrimaryButton onClick={onSearchJobs} disabled={searchBtnDisabled}>
-            search
+          <PrimaryButton disabled={searchBtnDisabled}>
+            <Link to={`${RoutePaths.DevJobSearch}/${searchInput}`}>search</Link>
           </PrimaryButton>
         </div>
       </div>
@@ -116,10 +100,7 @@ export default function DevJobSearchList() {
           <strong>{searchResultsMessage}</strong>
         </div>
         <JobPreviewList jobPosts={jobData} />
-        <Paging
-          triggerInit={pagingInit}
-          dataQuery={searchInput ? searchJobs : queryUserJobs}
-        />
+        <Paging dataQuery={search ? searchJobs : queryUserJobs} />
       </div>
     </div>
   );

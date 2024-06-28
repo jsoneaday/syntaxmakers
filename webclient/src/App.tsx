@@ -33,6 +33,10 @@ const router = createBrowserRouter([
     element: <DevJobSearch />,
   },
   {
+    path: `${RoutePaths.DevJobSearch}/:search`,
+    element: <DevJobSearch />,
+  },
+  {
     path: RoutePaths.DevAppliedJobs,
     element: <DevAppliedJobs />,
   },

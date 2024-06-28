@@ -2,6 +2,8 @@ import { MouseEvent, useEffect, useState } from "react";
 import { SecondaryButton } from "./Buttons";
 import { PAGE_SIZE } from "../../common/Paging";
 import "../../theme/paging.css";
+import { useParams } from "react-router-dom";
+import { useProfile } from "../../common/redux/profile/ProfileHooks";
 
 enum PagingDirection {
   Next,
@@ -14,24 +16,30 @@ export type DataQuery<T> = (
 ) => Promise<T[]>;
 
 interface PagingProps<T> {
-  triggerInit: string | undefined;
   /// this function should run your data call
   dataQuery: DataQuery<T>;
 }
 
-export function Paging<T>({ triggerInit, dataQuery }: PagingProps<T>) {
+export function Paging<T>({ dataQuery }: PagingProps<T>) {
   const [offset, setOffset] = useState(0);
   const [hasMorePreviousData, setHasMorePreviousData] = useState(false);
   const [hasMoreNextData, setHasMoreNextData] = useState(false);
   const [priorDisabled, setPriorDisabled] = useState(false);
   const [nextDisabled, setNextDisabled] = useState(false);
+  const { search } = useParams();
+  const [lastSearch, setLastSearch] = useState<string | undefined>(
+    Date.now().toString()
+  );
+  const [profile] = useProfile();
 
   useEffect(() => {
-    if (triggerInit) {
-      console.log("init");
-      getNextData(true);
-    }
-  }, [triggerInit]);
+    console.log("init", search != lastSearch);
+    getNextData(search != lastSearch).then(() => {
+      if (profile) {
+        setLastSearch(search);
+      }
+    });
+  }, [search, profile]);
 
   const onGetNextData = async (e: MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
