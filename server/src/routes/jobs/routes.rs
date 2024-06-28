@@ -137,7 +137,7 @@ fn return_jobs_result(result: Result<Vec<Job>, sqlx::error::Error>) -> Result<Jo
                 convert(job)
             })
             .collect::<Vec<JobResponder>>();
-            println!("jobs after convert: {:?}", responders.clone().iter().map(|job| { job.title.clone() }).collect::<Vec<String>>());
+            
             Ok(JobResponders(responders))
         },
         Err(e) => Err(e.into())

@@ -42,7 +42,7 @@ export function SecondaryButton({
   return (
     <button
       className="secondary-btn"
-      style={{ ...style }}
+      style={{ ...style, opacity: !disabled ? 1 : 0.5 }}
       disabled={disabled}
       onClick={onClick}
     >

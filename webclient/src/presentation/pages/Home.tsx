@@ -24,7 +24,7 @@ export default function Home() {
         <div className="home-chooser">
           <div className="panel-col home-item-dev">
             <Link
-              to={RoutePaths.DevJobSearch}
+              to={`${RoutePaths.DevJobSearch}`}
               className="home-item-link"
               data-testid="dev-link"
             >

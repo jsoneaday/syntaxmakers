@@ -20,34 +20,31 @@ interface PagingProps<T> {
 }
 
 export function Paging<T>({ triggerInit, dataQuery }: PagingProps<T>) {
-  // an offset is equivalent to skip
   const [offset, setOffset] = useState(0);
   const [hasMorePreviousData, setHasMorePreviousData] = useState(false);
   const [hasMoreNextData, setHasMoreNextData] = useState(false);
-  const [lastTriggerInit, setLastTriggerInit] = useState<string | undefined>();
+  const [priorDisabled, setPriorDisabled] = useState(false);
+  const [nextDisabled, setNextDisabled] = useState(false);
 
   useEffect(() => {
-    if (triggerInit && triggerInit != lastTriggerInit) {
-      console.log("triggered");
-      setLastTriggerInit(triggerInit);
-      // since this is first load of data,
-      // check if next load has any data
-      dataQuery(PAGE_SIZE, false) //
-        .then((moreData) => {
-          if (moreData.length > 0) {
-            setHasMoreNextData(true);
-          } else {
-            setHasMoreNextData(false);
-          }
-        })
-        .catch((e) => console.log(e));
+    if (triggerInit) {
+      console.log("init");
+      getNextData(true);
     }
   }, [triggerInit]);
 
-  const getNextData = async (e: MouseEvent<HTMLButtonElement>) => {
+  const onGetNextData = async (e: MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
 
-    const nextOffset = setPagingDirection(PagingDirection.Next);
+    await getNextData(false);
+  };
+
+  const getNextData = async (init: boolean) => {
+    setNextDisabled(true);
+    let nextOffset = offset;
+    if (!init) {
+      nextOffset = setOffsetByDirection(offset, PagingDirection.Next);
+    }
     await dataQuery(nextOffset, true);
 
     const moreDataOffset = getNextOffset(nextOffset, PagingDirection.Next);
@@ -57,13 +54,19 @@ export function Paging<T>({ triggerInit, dataQuery }: PagingProps<T>) {
     } else {
       setHasMoreNextData(false);
     }
-    setHasMorePreviousData(true);
+
+    if (init) {
+      setHasMorePreviousData(false);
+    } else {
+      setHasMorePreviousData(true);
+    }
+    setNextDisabled(false);
   };
 
-  const getPreviousData = async (e: MouseEvent<HTMLButtonElement>) => {
+  const onGetPreviousData = async (e: MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
 
-    const nextOffset = setPagingDirection(PagingDirection.Previous);
+    let nextOffset = setOffsetByDirection(offset, PagingDirection.Previous);
     await dataQuery(nextOffset, true);
 
     if (nextOffset === 0) {
@@ -82,9 +85,13 @@ export function Paging<T>({ triggerInit, dataQuery }: PagingProps<T>) {
       }
       setHasMoreNextData(true);
     }
+    setPriorDisabled(false);
   };
 
-  const setPagingDirection = (newDirection: PagingDirection) => {
+  const setOffsetByDirection = (
+    offset: number,
+    newDirection: PagingDirection
+  ) => {
     let newOffset = getNextOffset(offset, newDirection);
     setOffset(newOffset);
     return newOffset;
@@ -93,12 +100,16 @@ export function Paging<T>({ triggerInit, dataQuery }: PagingProps<T>) {
   return (
     <div className="paging-container">
       {hasMorePreviousData ? (
-        <SecondaryButton onClick={getPreviousData}>previous</SecondaryButton>
+        <SecondaryButton onClick={onGetPreviousData} disabled={priorDisabled}>
+          previous
+        </SecondaryButton>
       ) : (
         <div style={{ width: "50%" }}></div>
       )}
       {hasMoreNextData ? (
-        <SecondaryButton onClick={getNextData}>next</SecondaryButton>
+        <SecondaryButton onClick={onGetNextData} disabled={nextDisabled}>
+          next
+        </SecondaryButton>
       ) : null}
     </div>
   );

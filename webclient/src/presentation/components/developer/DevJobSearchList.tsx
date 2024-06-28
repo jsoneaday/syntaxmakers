@@ -2,7 +2,6 @@ import { ChangeEvent, MouseEvent, useEffect, useMemo, useState } from "react";
 import JobPost from "../../models/JobPost";
 import { useProfile } from "../../common/redux/profile/ProfileHooks";
 import {
-  Job,
   getJobsByDeveloper,
   getJobsBySearchTerms,
 } from "../../../domain/repository/JobRepo";
@@ -22,43 +21,41 @@ export default function DevJobSearchList() {
   const [pagingInit, setPagingInit] = useState<string | undefined>();
 
   useEffect(() => {
-    queryUserJobs(0, true);
+    if (profile) {
+      setPagingInit(window.crypto.randomUUID());
+    }
   }, [profile]);
 
   async function queryUserJobs(
     newOffset: number,
     setData: boolean
-  ): Promise<Job[]> {
-    let returnJobs: Job[] = [];
+  ): Promise<JobPost[]> {
+    let returnJobs: JobPost[] = [];
     if (!profile) return returnJobs;
 
-    if (navType !== "POP") {
-      setData && setJobsData([]);
-      if (profile) {
-        try {
-          const jobs = await getJobsByDeveloper(
-            profile.id,
-            PAGE_SIZE,
-            newOffset
-          );
-          const jobsData = jobs.map((job) => {
-            return convertJob(job);
-          });
-          setData && setJobsData(jobsData);
-          window.history.replaceState(jobsData, "");
+    setData && setJobsData([]);
+    if (profile) {
+      try {
+        const jobs = await getJobsByDeveloper(profile.id, PAGE_SIZE, newOffset);
+        const jobsData = jobs.map((job) => {
+          return convertJob(job);
+        });
+        setData && setJobsData(jobsData);
+        console.log(
+          "queryUserJobs replaceState:",
+          newOffset,
+          navType,
+          setData,
+          jobsData
+        );
+        setData && window.history.replaceState(jobsData, "");
 
-          returnJobs = jobs;
-        } catch (e) {
-          console.log("failed to get jobs for current profile", e);
-        }
+        returnJobs = jobsData;
+      } catch (e) {
+        console.log("failed to get jobs for current profile", e);
       }
-    } else {
-      setJobsData(window.history.state);
     }
 
-    if (!pagingInit) {
-      setPagingInit(window.crypto.randomUUID());
-    }
     setSearchResultsMessage("Your recommended jobs");
     return returnJobs;
   }
@@ -77,7 +74,7 @@ export default function DevJobSearchList() {
   async function searchJobs(
     newOffset: number,
     setData: boolean
-  ): Promise<Job[]> {
+  ): Promise<JobPost[]> {
     const searchTerms = searchInput.split(" ");
     const jobs = await getJobsBySearchTerms(searchTerms, PAGE_SIZE, newOffset);
     const jobsData = jobs.map((job) => {
@@ -85,9 +82,10 @@ export default function DevJobSearchList() {
     });
     setData && setJobsData(jobsData);
 
+    console.log("searchJobs replaceState", jobsData);
     window.history.replaceState(jobsData, "");
     setSearchResultsMessage(`Search results for terms: ${searchInput}`);
-    return jobs;
+    return jobsData;
   }
 
   const searchBtnDisabled = useMemo(() => {

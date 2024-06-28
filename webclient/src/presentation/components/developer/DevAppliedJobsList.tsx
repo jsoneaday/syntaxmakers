@@ -5,15 +5,11 @@ import JobPost from "../../models/JobPost";
 import { useProfile } from "../../common/redux/profile/ProfileHooks";
 import { getJobsByApplier } from "../../../domain/repository/JobRepo";
 import { convert as convertJob } from "../../../presentation/models/JobPost";
-import GoBack from "../navigation/GoBack";
-import { useDevOrEmployer } from "../../common/redux/devOrEmployer/DevOrEmployerHooks";
-import { DevOrEmployer } from "../../models/DevOrEmployer";
 
 export function DevAppliedJobsList() {
   const [pagingInit, setPagingInit] = useState<string | undefined>();
   const [jobData, setJobsData] = useState<JobPost[]>([]);
   const [profile, _setProfile] = useProfile();
-  const [devOrEmp] = useDevOrEmployer();
 
   useEffect(() => {
     getAppliedJobs();

@@ -15,7 +15,9 @@ export default function LeftMenuDev() {
       {profile ? (
         <>
           <header className="header-container job-full-view-header">
-            <strong>FreeAuth</strong>
+            <Link to="/">
+              <strong>FreeAuth</strong>
+            </Link>
           </header>
           <div className="leftmenu-body">
             <span className="title-font leftmenu-item">{`@${profile?.userName}`}</span>
