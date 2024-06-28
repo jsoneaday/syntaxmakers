@@ -4,7 +4,8 @@ use std::marker::Send;
 #[derive(Error, Display, Debug)]
 pub enum SqlxError {
     #[display(fmt = "When is_remote is true country_id must be None")]
-    IsRemoteContstraintError
+    IsRemoteContstraintError,
+    QueryFailed
 }
 
 impl sqlx::error::DatabaseError for SqlxError {

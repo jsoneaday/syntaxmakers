@@ -172,8 +172,16 @@ pub async fn get_app_data<T: Repository, U: Authenticator>(repo: T, auth_service
     actix_web::web::Data::new(AppState { repo, auth_service, auth_keys: init_auth_keys().await })
 }
 
+pub fn get_fake_user_name() -> String {
+    fake::faker::internet::en::Username().fake::<String>()
+}
+
 pub fn get_fake_fullname() -> String {
     format!("{} {}", FirstName().fake::<String>(), LastName().fake::<String>())
+}
+
+pub fn get_fake_email() -> String {
+    SafeEmail().fake::<String>()
 }
 
 pub fn get_fake_title() -> &'static str {

@@ -6,22 +6,45 @@ use super::models::NewApplication;
 
 
 mod internal {
+    use crate::common::repository::error::SqlxError;
+
     use super::*;
 
-    pub async fn insert_application(conn: &Pool<Postgres>, new_application: NewApplication) -> Result<EntityId, Error> {
-        query_as::<_, EntityId> (
-            r"
-                insert into application(
-                    job_id, developer_id
-                ) values (
-                    $1, $2
-                ) returning id
-            "
-        )
+    pub async fn insert_application(conn: &Pool<Postgres>, new_application: NewApplication) -> Result<EntityId, Error> {        
+        let applied = query_as::<_, EntityId>(r"
+            select a.id
+            from job j join application a on j.id = a.job_id
+            where a.job_id = $1 and a.developer_id = $2
+        ")
         .bind(new_application.job_id)
         .bind(new_application.developer_id)
-        .fetch_one(conn)
-        .await
+        .fetch_optional(conn)
+        .await;
+
+        match applied {
+            Ok(entity) => {
+                if let None = entity {
+                    return query_as::<_, EntityId> (
+                        r"
+                            insert into application(
+                                job_id, developer_id
+                            ) values (
+                                $1, $2
+                            ) returning id
+                        "
+                    )
+                    .bind(new_application.job_id)
+                    .bind(new_application.developer_id)
+                    .fetch_one(conn)
+                    .await;
+                }
+            },
+            Err(e) => {
+                return Err(e);
+            }
+        }
+    
+        Err(SqlxError::QueryFailed.into())
     }
 
     pub async fn dev_has_applied(conn: &Pool<Postgres>, job_id: i64, dev_id: i64) -> Result<bool, Error> {
@@ -36,7 +59,7 @@ mod internal {
         .await;
 
         match result {
-            Ok(entity) => {
+            Ok(_) => {
                 println!("user {} already applied to job {}", dev_id, job_id);
                 Ok(true)
             },

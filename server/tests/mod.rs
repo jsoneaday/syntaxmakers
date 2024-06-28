@@ -3,6 +3,9 @@ pub mod common {
         pub mod test_auth_service;
     }
     pub mod repository {
+        pub mod application {
+            pub mod test_application;
+        }
         pub mod companies {
             pub mod test_companies;
         }
