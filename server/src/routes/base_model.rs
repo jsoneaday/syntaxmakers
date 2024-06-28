@@ -24,6 +24,27 @@ impl Responder for OutputId {
     }
 }
 
+#[derive(Serialize)]
+pub struct OutputBool {
+    pub result: bool
+}
+
+impl Responder for OutputBool {
+    type Body = BoxBody;
+
+    fn respond_to(self, _: &actix_web::HttpRequest) -> actix_web::HttpResponse<Self::Body> {
+        let json_result = serde_json::to_string(&self);
+        match json_result {
+            Ok(body) => HttpResponse::Ok()
+            .content_type(ContentType::json())
+            .body(body),
+            Err(_) => HttpResponse::InternalServerError()
+            .content_type(ContentType::json())
+            .body("Failed to serialize OutputBool")
+        }
+    }
+}
+
 #[derive(Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PagingModel {

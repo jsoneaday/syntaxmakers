@@ -33,7 +33,10 @@ import { MarkdownEditor } from "../textEditor/MarkdownEditor";
 import { MDXEditorMethods } from "@mdxeditor/editor";
 import { useLoginOpen } from "../../common/redux/loginOpen/LoginOpenHooks";
 import { PrimaryButton } from "../controls/Buttons";
-import { applyJob } from "../../../domain/repository/JobApplicationRepo";
+import {
+  applyJob,
+  developerAppliedToJob,
+} from "../../../domain/repository/JobApplicationRepo";
 import { Popup } from "../controls/Popup";
 
 type JobPostDisplayComponents = {
@@ -258,14 +261,16 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
   useEffect(() => {
     if (!readOnly) {
       getJobPostOptions().then((jobPostOptions) => {
-        const jobPostDisplayComponentItems =
-          getJobPostDisplayComponents(jobPostOptions);
-        setJobPostDisplayComponents(jobPostDisplayComponentItems);
+        getJobPostDisplayComponents(jobPostOptions).then(
+          (jobPostDisplayComponentItems) =>
+            setJobPostDisplayComponents(jobPostDisplayComponentItems)
+        );
       });
     } else {
-      const jobPostDisplayComponentItems =
-        getJobPostDisplayComponents(undefined);
-      setJobPostDisplayComponents(jobPostDisplayComponentItems);
+      getJobPostDisplayComponents(undefined).then(
+        (jobPostDisplayComponentItems) =>
+          setJobPostDisplayComponents(jobPostDisplayComponentItems)
+      );
     }
   }, [currentJobPost, profile]);
 
@@ -372,9 +377,18 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
     });
   };
 
-  const getJobPostDisplayComponents = (
+  const getJobPostDisplayComponents = async (
     jobPostOptions: JobPostOptions | undefined
   ) => {
+    let disableApplyBtn = true;
+    if (profile) {
+      disableApplyBtn = await developerAppliedToJob(
+        currentJobPost.id,
+        Number(profile.id)
+      );
+    }
+    console.log("disableApplyBtn", disableApplyBtn);
+
     let _title: JSX.Element;
     let _companyName: JSX.Element;
     let _isRemoteOrCountry: JSX.Element;
@@ -415,7 +429,7 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
           <PrimaryButton
             containerStyle={{ marginBottom: ".5em" }}
             onClick={onJobApply}
-            disabled={!profile ? true : false}
+            disabled={!profile || disableApplyBtn ? true : false}
           >
             apply
           </PrimaryButton>

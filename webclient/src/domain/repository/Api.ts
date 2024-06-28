@@ -1,6 +1,7 @@
 export const API_ROOT_URL = "http://localhost:4003/v1/";
 export const SALARIES_URL = `${API_ROOT_URL}salaries`;
 export const APPLY_JOB_URL = `${API_ROOT_URL}apply_job`;
+export const DEV_APPLIED_JOB_URL = `${API_ROOT_URL}developer_applied`;
 export const LANGS_URL = `${API_ROOT_URL}languages`;
 export const JOB_URL = `${API_ROOT_URL}job`;
 export const JOB_UPDATE_URL = `${API_ROOT_URL}job_update`;
@@ -21,6 +22,10 @@ export const COMPANIES_URL = `${API_ROOT_URL}companies`;
 export const LOGIN_URL = `${API_ROOT_URL}login`;
 export const REFRESH_TOKEN_URL = `${API_ROOT_URL}refreshtoken`;
 
-export type EntityId = {
+export type OutputId = {
   id: number;
+};
+
+export type OutputBool = {
+  result: boolean;
 };

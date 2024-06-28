@@ -94,7 +94,6 @@ pub async fn get_jobs_by_developer<T: QueryJobsByDeveloperFn + Repository, U: Au
     // remove unneeded match
     match result {
         Ok(jobs) => {
-            println!("jobs before convert: {:?}", jobs.clone().iter().map(|job| { job.title.clone() }).collect::<Vec<String>>());
             return_jobs_result(Ok(jobs))
         },
         Err(e) => Err(e.into())
@@ -123,7 +122,6 @@ pub async fn get_jobs_by_applier<T: QueryJobsByApplierFn + Repository, U: Authen
     // remove unneeded match
     match result {
         Ok(jobs) => {
-            println!("jobs before convert: {:?}", jobs.clone().iter().map(|job| { job.title.clone() }).collect::<Vec<String>>());
             return_job_applied_result(Ok(jobs))
         },
         Err(e) => Err(e.into())

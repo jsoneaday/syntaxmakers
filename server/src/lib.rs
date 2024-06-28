@@ -105,7 +105,7 @@ use actix_cors::Cors;
 use actix_web::{HttpServer, http::header, App, middleware::Logger, web};
 use common::authentication::auth_service::{init_auth_keys, AuthService};
 use common::repository::base::{DbRepo, Repository};
-use routes::application::routes::create_application;
+use routes::application::routes::{create_application, developer_applied};
 use routes::authentication::routes::{login, refresh_access_token};
 use routes::developers::routes::get_developer_by_email;
 use routes::employers::routes::get_employer_by_email;
@@ -171,6 +171,8 @@ pub async fn run() -> std::io::Result<()> {
                         .route(web::post().to(login::<DbRepo, AuthService>)))
                     .service(web::resource("/apply_job")
                         .route(web::post().to(create_application::<DbRepo, AuthService>)))
+                    .service(web::resource("/developer_applied")
+                        .route(web::post().to(developer_applied::<DbRepo, AuthService>)))
                     .service(web::resource("/refreshtoken")
                         .route(web::post().to(refresh_access_token::<DbRepo, AuthService>)))
                     .service(web::resource("/salaries")

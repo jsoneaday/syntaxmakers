@@ -19,7 +19,11 @@ export function PrimaryButton({
     <button
       onClick={onClick}
       className="primary-btn"
-      style={{ ...containerStyle, opacity: !disabled ? 1 : 0.5 }}
+      style={{
+        ...containerStyle,
+        opacity: !disabled ? 1 : 0.5,
+        cursor: disabled ? "not-allowed" : "pointer",
+      }}
       disabled={disabled}
     >
       {children}
@@ -42,7 +46,11 @@ export function SecondaryButton({
   return (
     <button
       className="secondary-btn"
-      style={{ ...style, opacity: !disabled ? 1 : 0.5 }}
+      style={{
+        ...style,
+        opacity: !disabled ? 1 : 0.5,
+        cursor: disabled ? "not-allowed" : "pointer",
+      }}
       disabled={disabled}
       onClick={onClick}
     >

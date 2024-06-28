@@ -456,7 +456,6 @@ mod internal {
         
         match jobs {
             Ok(jobs) => {
-                println!("jobs from repo: {:?}", jobs.clone().iter().map(|job| { job.title.clone() }).collect::<Vec<String>>());
                 Ok(jobs)
             },
             Err(e) => Err(e)

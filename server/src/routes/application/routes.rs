@@ -3,9 +3,9 @@ use log::error;
 use crate::{
     app_state::AppState, common::{
         authentication::auth_service::Authenticator, 
-        repository::{application::{models::NewApplication, repo::InsertApplicationFn}, base::Repository, developers::repo::QueryDeveloperFn, employers::repo::QueryEmployerFn}
+        repository::{application::{models::NewApplication, repo::{DevHasAppliedFn, InsertApplicationFn}}, base::Repository, developers::repo::QueryDeveloperFn, employers::repo::QueryEmployerFn}
     }, 
-    routes::{auth_helper::check_is_authenticated, base_model::OutputId, user_error::UserError}
+    routes::{auth_helper::check_is_authenticated, base_model::{OutputBool, OutputId}, user_error::UserError}
 };
 use super::models::NewApplicationForRoute;
 use crate::routes::authentication::models::DeveloperOrEmployer as AuthDeveloperOrEmployer;
@@ -21,6 +21,13 @@ pub async fn create_application<T: InsertApplicationFn + Repository + QueryEmplo
 
     match app_data.repo.insert_application(NewApplication { job_id: new_application.job_id, developer_id: new_application.developer_id }).await {
         Ok(entity) => Ok(OutputId { id: entity.id }),
+        Err(e) => Err(e.into())
+    }
+}
+
+pub async fn developer_applied<T: DevHasAppliedFn + Repository, U: Authenticator>(app_data: Data<AppState<T, U>>, json: Json<NewApplicationForRoute>) -> Result<OutputBool, UserError> {
+    match app_data.repo.dev_has_applied(json.job_id, json.developer_id).await {
+        Ok(applied) => Ok(OutputBool { result: applied }),
         Err(e) => Err(e.into())
     }
 }
@@ -134,6 +141,13 @@ mod tests {
         }
     }    
 
+    #[async_trait]
+    impl DevHasAppliedFn for MockDbRepo {
+        async fn dev_has_applied(&self, _: i64, _:i64) -> Result<bool, sqlx::Error> {
+            Ok(true)
+        }
+    }   
+
     #[tokio::test]
     async fn test_create_job_application_route() {
         init_fixtures().await;
@@ -156,5 +170,17 @@ mod tests {
         }), req).await;
 
         assert!(result.unwrap().id == 1);
+    }
+
+    #[tokio::test]
+    async fn test_developer_applied() {
+        init_fixtures().await;
+        let repo = MockDbRepo::init().await;
+        let auth_service = MockAuthService;
+        let app_data = get_app_data(repo, auth_service).await;
+
+        let response = developer_applied(app_data, Json(NewApplicationForRoute { job_id: 1, developer_id: 1 })).await.unwrap();
+
+        assert!(response.result == true);
     }
 }
