@@ -48,7 +48,6 @@ export default function DevJobSearchList() {
           setData,
           jobsData
         );
-        setData && window.history.replaceState(jobsData, "");
 
         returnJobs = jobsData;
       } catch (e) {
@@ -83,7 +82,6 @@ export default function DevJobSearchList() {
     setData && setJobsData(jobsData);
 
     console.log("searchJobs replaceState", jobsData);
-    window.history.replaceState(jobsData, "");
     setSearchResultsMessage(`Search results for terms: ${searchInput}`);
     return jobsData;
   }
