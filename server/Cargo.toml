@@ -14,7 +14,7 @@ name = "syntaxmakers-server"
 [dependencies]
 actix-cors = "0.6.4"
 actix-http = "3.3.1"
-actix-web = "4.3.1"
+actix-web = { version = "4.3.1", features = ["openssl"] }
 actix-multipart = "0.6.0"
 argon2 = "0.5.1"
 async_once = "0.2.6"

@@ -220,6 +220,9 @@ pub async fn run() -> std::io::Result<()> {
             )            
     })
     .bind((host, port)).expect("")
+    // note: cannot use this for dev as client must also be on https,
+    // enable at production
+    // .bind_openssl((host, port), ssl_builder()).expect("SSL not working") 
     .run()
     .await
 }
