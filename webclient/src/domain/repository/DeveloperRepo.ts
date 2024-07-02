@@ -18,7 +18,7 @@ export async function createDeveloper(newDev: {
   email: string;
   password: string;
   primaryLangId: number;
-  secondaryLangId?: number | undefined;
+  secondaryLangId?: number | null;
 }) {
   const response = await fetch(DEVELOPER_URL, {
     method: "POST",

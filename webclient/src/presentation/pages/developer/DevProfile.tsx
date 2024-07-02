@@ -13,6 +13,7 @@ export default function DevProfile() {
   return (
     <DeveloperHome>
       <ProfileForm
+        isModalMode={false}
         editMode={ProfileFormEditMode.Edit}
         userType={DevOrEmployer.Developer}
       />

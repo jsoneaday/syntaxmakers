@@ -6,16 +6,31 @@ import { useDevOrEmployer } from "../common/redux/devOrEmployer/DevOrEmployerHoo
 import { DevOrEmployer } from "../models/DevOrEmployer";
 import { DEV_ROUTE_PREFIX } from "../../App";
 import { AuthModal } from "./authentication/AuthModal";
+import { useProfile } from "../common/redux/profile/ProfileHooks";
 
 interface LayoutProps {
   children: ReactNode;
+  userType?: DevOrEmployer;
   includeLogin?: boolean;
 }
 
-export default function Layout({ children, includeLogin = true }: LayoutProps) {
+export default function Layout({
+  children,
+  userType,
+  includeLogin = true,
+}: LayoutProps) {
+  const [profile] = useProfile();
   const [loginOpen, setLoginOpen] = useLoginOpen();
   const [_devOrEmp, setDevOrEmp] = useDevOrEmployer();
   const location = useLocation();
+
+  useEffect(() => {
+    console.log("Layout profile", profile);
+
+    if (!profile && includeLogin) {
+      setLoginOpen(includeLogin);
+    }
+  }, [profile]);
 
   useEffect(() => {
     setDevOrEmp(
@@ -32,7 +47,11 @@ export default function Layout({ children, includeLogin = true }: LayoutProps) {
   return (
     <div className="layout-container">
       {includeLogin ? (
-        <AuthModal isOpen={loginOpen} toggleOpen={toggleLoginOpen} />
+        <AuthModal
+          isOpen={loginOpen}
+          toggleOpen={toggleLoginOpen}
+          userType={userType!}
+        />
       ) : null}
 
       {children}

@@ -11,6 +11,7 @@ export default function Home() {
   const [_profile, setProfile] = useProfile();
 
   useEffect(() => {
+    console.log("Home page");
     setProfile(null);
   }, []);
 

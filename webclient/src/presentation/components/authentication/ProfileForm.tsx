@@ -3,6 +3,8 @@ import { DevOrEmployer } from "../../models/DevOrEmployer";
 import DropDown, { OptionType } from "../controls/DropDown";
 import { getLanguages } from "../../../domain/repository/LanguageRepo";
 import { createDeveloper } from "../../../domain/repository/DeveloperRepo";
+import { useProfile } from "../../common/redux/profile/ProfileHooks";
+import DevProfile from "../../models/DevProfile";
 
 export enum ProfileFormEditMode {
   Create,
@@ -15,19 +17,17 @@ interface ProfileFormData {
   email: string;
   password: string;
   primaryLangId: number;
-  secondaryLangId: number | undefined;
+  secondaryLangId?: number | null;
 }
 
 interface ProfileFormProps {
   isModalMode: boolean;
   editMode: ProfileFormEditMode;
-  toggleOpen: () => void;
   userType: DevOrEmployer;
 }
 
 export function ProfileForm({
   isModalMode,
-  toggleOpen,
   editMode,
   userType,
 }: ProfileFormProps) {
@@ -35,7 +35,8 @@ export function ProfileForm({
   const [successMessage, setSuccessMessage] = useState("");
   const [primaryLang, setPrimaryLang] = useState<OptionType[]>([]);
   const [secondaryLang, setSecondaryLang] = useState<OptionType[]>([]);
-  const [profile, setProfile] = useState<ProfileFormData>({
+  const [profile, _setProfile] = useProfile();
+  const [profileForm, setProfileForm] = useState<ProfileFormData>({
     userName: "",
     fullName: "",
     email: "",
@@ -57,26 +58,45 @@ export function ProfileForm({
     });
   }, []);
 
+  useEffect(() => {
+    if (profile) {
+      if (userType === DevOrEmployer.Developer) {
+        const dev = profile as DevProfile;
+        setProfileForm({
+          userName: dev.userName,
+          fullName: dev.fullName,
+          email: dev.email,
+          password: "**********",
+          primaryLangId: dev.primaryLangId,
+          secondaryLangId: dev.secondaryLangId,
+        });
+      }
+    }
+  }, [profile]);
+
   const createOrEditProfile = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (!isValidateProfile()) return;
 
     if (editMode === ProfileFormEditMode.Create) {
-      console.log("profile form", profile);
+      console.log("profile form", profileForm);
 
       try {
-        await createDeveloper({
-          userName: profile.userName,
-          fullName: profile.fullName,
-          email: profile.email,
-          password: profile.password,
-          primaryLangId: profile.primaryLangId,
-          secondaryLangId: profile.secondaryLangId,
-        });
-        setSuccessMessage(
-          "Your profile has been created please check your email for confirmation."
-        );
+        if (userType === DevOrEmployer.Developer) {
+          await createDeveloper({
+            userName: profileForm.userName,
+            fullName: profileForm.fullName,
+            email: profileForm.email,
+            password: profileForm.password,
+            primaryLangId: profileForm.primaryLangId,
+            secondaryLangId: profileForm.secondaryLangId,
+          });
+          setSuccessMessage(
+            "Your profile has been created please check your email for confirmation."
+          );
+        }
+
         setValidationMessage("");
       } catch (e) {
         setSuccessMessage("");
@@ -90,48 +110,48 @@ export function ProfileForm({
 
   const isValidateProfile = () => {
     setSuccessMessage("");
-    if (!profile.userName) {
+    if (!profileForm.userName) {
       setValidationMessage("Username cannot be empty");
       return false;
     }
-    if (profile.userName.length < 2 || profile.userName.length > 60) {
+    if (profileForm.userName.length < 2 || profileForm.userName.length > 60) {
       setValidationMessage(
         "Username cannot be shorter than 2 or longer than 60 characters"
       );
       return false;
     }
-    if (!profile.fullName) {
+    if (!profileForm.fullName) {
       setValidationMessage("Fullname cannot be empty");
       return false;
     }
-    if (profile.fullName.length < 5 || profile.userName.length > 100) {
+    if (profileForm.fullName.length < 5 || profileForm.userName.length > 100) {
       setValidationMessage(
         "Fullname cannot be shorter than 5 or longer than 100 characters"
       );
       return false;
     }
-    if (!profile.email) {
+    if (!profileForm.email) {
       setValidationMessage("Email cannot be empty");
       return false;
     }
-    if (profile.email.length < 8 || profile.email.length > 120) {
+    if (profileForm.email.length < 8 || profileForm.email.length > 120) {
       setValidationMessage(
         "Email cannot be shorter than 10 or longer than 120 characters"
       );
       return false;
     }
-    if (!profile.password) {
+    if (!profileForm.password) {
       setValidationMessage("Password cannot be empty");
       return false;
     }
-    if (profile.password.length < 8 || profile.email.length > 40) {
+    if (profileForm.password.length < 8 || profileForm.email.length > 40) {
       setValidationMessage(
         "Password cannot be shorter than 8 or longer than 40 characters"
       );
       return false;
     }
-    console.log("primaryLangId", profile.primaryLangId);
-    if (!profile.primaryLangId) {
+    console.log("primaryLangId", profileForm.primaryLangId);
+    if (!profileForm.primaryLangId) {
       console.log("failed");
       setValidationMessage("Primary Language must be selected");
       return false;
@@ -144,8 +164,8 @@ export function ProfileForm({
   const updateForm = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
 
-    setProfile({
-      ...profile,
+    setProfileForm({
+      ...profileForm,
       [name]: value,
     });
   };
@@ -177,8 +197,8 @@ export function ProfileForm({
   const onChangePrimaryLang = (e: ChangeEvent<HTMLSelectElement>) => {
     console.log("primary id", e.currentTarget.value);
     e.preventDefault();
-    setProfile({
-      ...profile,
+    setProfileForm({
+      ...profileForm,
       primaryLangId: Number(e.currentTarget.value),
     });
   };
@@ -186,116 +206,124 @@ export function ProfileForm({
   const onChangeSecondaryLang = (e: ChangeEvent<HTMLSelectElement>) => {
     console.log("secondary id", e.currentTarget.value);
     e.preventDefault();
-    setProfile({
-      ...profile,
+    setProfileForm({
+      ...profileForm,
       secondaryLangId: Number(e.currentTarget.value),
     });
   };
 
   return (
     <form className="login-form" onSubmit={createOrEditProfile}>
-      <section>
-        {isModalMode ? (
-          <div className="login-item">
-            <span className="title-font">Welcome to SyntaxMakers</span>
-            <span
-              className="sub-title-font"
-              style={{ color: "var(--primary-font-cl)" }}
-            >
-              Please register
-            </span>
-          </div>
-        ) : (
-          <header className="header-container job-full-view-header">
-            <strong>{profile.userName} Profile</strong>
-          </header>
-        )}
-      </section>
-      <section className="form-section">
-        <span>Username</span>
-        <input
-          type="text"
-          name="userName"
-          className="input normal-font input-spacing"
-          style={isModalMode ? { width: "45%" } : {}}
-          value={profile.userName}
-          onChange={onChangeUserName}
-        />
-      </section>
-      <section className="form-section">
-        <span>Fullname</span>
-        <input
-          type="text"
-          name="fullName"
-          className="input normal-font input-spacing"
-          style={isModalMode ? { width: "45%" } : {}}
-          value={profile.fullName}
-          onChange={onChangeFullName}
-        />
-      </section>
-      <section className="form-section">
-        <span>Email</span>
-        <input
-          type="text"
-          name="email"
-          className="input normal-font input-spacing"
-          style={isModalMode ? { width: "45%" } : {}}
-          value={profile.email}
-          onChange={onChangeEmail}
-        />
-      </section>
-      <section className="form-section">
-        <span>Password</span>
-        <input
-          type="password"
-          name="password"
-          className="input normal-font input-spacing"
-          style={isModalMode ? { width: "45%" } : {}}
-          value={profile.password}
-          onChange={onChangePassword}
-        />
-      </section>
-      <section className="form-section" style={{ marginBottom: "1em" }}>
-        <DropDown
-          keyName="devprimarylang"
-          name="devprimarylang"
-          value={profile.primaryLangId}
-          label="Primary Language"
-          optionItems={primaryLang}
-          onChange={onChangePrimaryLang}
-          selectStyle={isModalMode ? { marginLeft: ".5em", width: "45%" } : {}}
-          isHorizontal={true}
-        />
-      </section>
-      <section className="form-section">
-        <DropDown
-          keyName="devsecondarylang"
-          name="devsecondarylang"
-          value={profile.secondaryLangId}
-          label="Secondary Language"
-          optionItems={secondaryLang}
-          onChange={onChangeSecondaryLang}
-          selectStyle={isModalMode ? { marginLeft: ".5em", width: "45%" } : {}}
-          isHorizontal={true}
-        />
-      </section>
-      <section
-        className="form-section"
-        style={{ marginTop: "1.5em", justifyContent: "flex-end" }}
-      >
-        <button type="submit" className="primary-btn">
-          {editMode === ProfileFormEditMode.Edit ? "edit" : "create"}
-        </button>
-      </section>
-      <section
-        className="form-section"
-        style={{
-          marginTop: "1.5em",
-          color: validationMessage ? "var(--error-cl)" : "",
-        }}
-      >
-        <span>{validationMessage ? validationMessage : successMessage}</span>
-      </section>
+      {isModalMode ? (
+        <div className="login-item">
+          <span className="title-font">Welcome to SyntaxMakers</span>
+          <span
+            className="sub-title-font"
+            style={{ color: "var(--primary-font-cl)" }}
+          >
+            Please register
+          </span>
+        </div>
+      ) : (
+        <header className="header-container job-full-view-header">
+          <strong>{profileForm.userName} Profile</strong>
+        </header>
+      )}
+      <div style={{ padding: "2em", width: "100%" }}>
+        <section className="form-section">
+          <span>Username</span>
+          <input
+            type="text"
+            name="userName"
+            className="input normal-font input-spacing"
+            style={isModalMode ? { width: "45%" } : { width: "80%" }}
+            value={profileForm.userName}
+            onChange={onChangeUserName}
+          />
+        </section>
+        <section className="form-section">
+          <span>Fullname</span>
+          <input
+            type="text"
+            name="fullName"
+            className="input normal-font input-spacing"
+            style={isModalMode ? { width: "45%" } : { width: "80%" }}
+            value={profileForm.fullName}
+            onChange={onChangeFullName}
+          />
+        </section>
+        <section className="form-section">
+          <span>Email</span>
+          <input
+            type="text"
+            name="email"
+            className="input normal-font input-spacing"
+            style={isModalMode ? { width: "45%" } : { width: "80%" }}
+            value={profileForm.email}
+            onChange={onChangeEmail}
+          />
+        </section>
+        <section className="form-section">
+          <span>Password</span>
+          <input
+            type="password"
+            name="password"
+            className="input normal-font input-spacing"
+            style={isModalMode ? { width: "45%" } : { width: "80%" }}
+            value={profileForm.password}
+            onChange={onChangePassword}
+          />
+        </section>
+        <section className="form-section" style={{ marginBottom: "1em" }}>
+          <DropDown
+            keyName="devprimarylang"
+            name="devprimarylang"
+            value={profileForm.primaryLangId}
+            label="Primary Language"
+            optionItems={primaryLang}
+            onChange={onChangePrimaryLang}
+            selectStyle={
+              isModalMode
+                ? { marginLeft: ".5em", width: "45%" }
+                : { width: "80%" }
+            }
+            isHorizontal={true}
+          />
+        </section>
+        <section className="form-section">
+          <DropDown
+            keyName="devsecondarylang"
+            name="devsecondarylang"
+            value={profileForm.secondaryLangId}
+            label="Secondary Language"
+            optionItems={secondaryLang}
+            onChange={onChangeSecondaryLang}
+            selectStyle={
+              isModalMode
+                ? { marginLeft: ".5em", width: "45%" }
+                : { width: "80%" }
+            }
+            isHorizontal={true}
+          />
+        </section>
+        <section
+          className="form-section"
+          style={{ marginTop: "1.5em", justifyContent: "flex-end" }}
+        >
+          <button type="submit" className="primary-btn">
+            {editMode === ProfileFormEditMode.Edit ? "edit" : "create"}
+          </button>
+        </section>
+        <section
+          className="form-section"
+          style={{
+            marginTop: "1.5em",
+            color: validationMessage ? "var(--error-cl)" : "",
+          }}
+        >
+          <span>{validationMessage ? validationMessage : successMessage}</span>
+        </section>
+      </div>
     </form>
   );
 }

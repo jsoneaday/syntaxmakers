@@ -10,8 +10,8 @@ type DevProfile = {
   userName: string;
   fullName: string;
   email: string;
-  primaryLangId: string;
-  secondaryLangId?: string | null;
+  primaryLangId: number;
+  secondaryLangId?: number | null;
   accessToken?: string | null;
 };
 export default DevProfile;
