@@ -26,7 +26,7 @@ mod internal {
             .bind(new_job.description)
             .bind(new_job.is_remote)
             .bind(new_job.primary_lang_id)
-            .bind(new_job.secondary_lang_id)
+            .bind(if let None = new_job.secondary_lang_id { None::<i64> } else { new_job.secondary_lang_id })
             .bind(new_job.industry_id)
             .bind(new_job.salary_id)
             .fetch_one(&mut *tx)

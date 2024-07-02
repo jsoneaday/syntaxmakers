@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { CSSProperties, useEffect, useState } from "react";
 import "../../theme/select.css";
 /// @ts-ignore
 import { v4 as uuidv4 } from "uuid";
@@ -13,8 +13,10 @@ interface DropDownProps {
   label: string;
   optionItems: OptionType[];
   onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
+  selectStyle?: CSSProperties;
   value?: any;
   name?: string;
+  isHorizontal?: boolean;
 }
 
 export default function DropDown({
@@ -22,13 +24,16 @@ export default function DropDown({
   label,
   optionItems,
   onChange,
+  selectStyle,
   value,
   name,
+  isHorizontal = false,
 }: DropDownProps) {
   const [options, setOptions] = useState<JSX.Element[]>();
   const [selectId, setSelectId] = useState("");
 
   useEffect(() => {
+    console.log("select value", value);
     setSelectId(uuidv4());
   }, []);
 
@@ -46,9 +51,15 @@ export default function DropDown({
   }, [optionItems]);
 
   return (
-    <div>
-      <label htmlFor={selectId}>{label}</label>
-      <div className="select" style={{ marginTop: ".5em" }}>
+    <div
+      className={
+        isHorizontal ? "dropdown-container-row" : "dropdown-container-col"
+      }
+    >
+      <div style={{ marginBottom: ".5em" }}>
+        <label htmlFor={selectId}>{label}</label>
+      </div>
+      <div className="select" style={selectStyle}>
         <select id={selectId} name={name} value={value} onChange={onChange}>
           {options}
         </select>

@@ -6,10 +6,20 @@ use crate::{
 };
 use super::models::{NewDeveloperForRoute, DeveloperResponder, DeveloperResponders};
 
-pub async fn create_developer<T: InsertDeveloperFn + Repository, U: Authenticator>(
+pub async fn create_developer<T: QueryDeveloperByEmailFn + InsertDeveloperFn + Repository, U: Authenticator>(
     app_data: Data<AppState<T, U>>, 
     json: Json<NewDeveloperForRoute>
 ) -> Result<OutputId, UserError> {
+    match app_data.repo.query_developer_by_email(json.email.clone()).await {
+        Ok(result) => match result {
+            Some(_) => {
+                return Err(UserError::EmailAlreadyInUse);
+            },
+            None => ()
+        },
+        Err(_) => ()
+    };
+
     let result = app_data.repo.insert_developer(NewDeveloper {
         user_name: json.user_name.to_owned(),
         full_name: json.full_name.to_owned(),

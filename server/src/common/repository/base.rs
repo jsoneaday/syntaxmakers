@@ -78,7 +78,6 @@ async fn get_conn_pool() -> Pool<Postgres> {
 
     if let Ok(version) = result {
         if let Some(_) = version {
-            println!("migration was already completed");
             info!("migration was already completed");
             return conn;
         }

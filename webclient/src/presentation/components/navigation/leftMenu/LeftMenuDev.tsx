@@ -1,7 +1,7 @@
 import "../../../theme/left_menu.css";
 import safebox from "../../../theme/assets/safe-box.png";
-import notification from "../../../theme/assets/notification.png";
 import search from "../../../theme/assets/search.png";
+import profileImg from "../../../theme/assets/profile.png";
 import { useProfile } from "../../../common/redux/profile/ProfileHooks";
 import LeftMenu from "./LeftMenu";
 import { RoutePaths } from "../../../../App";
@@ -34,6 +34,21 @@ export default function LeftMenuDev() {
             >
               <img className="leftmenu-icon" src={safebox} />
               <span>Applied Jobs</span>
+            </Link>
+            <Link
+              to={RoutePaths.DevProfile}
+              className="sub-title-font leftmenu-item"
+            >
+              <img
+                className="leftmenu-icon"
+                style={{
+                  width: "1.55em",
+                  marginLeft: "-.2em",
+                  marginRight: ".85em",
+                }}
+                src={profileImg}
+              />
+              <span>Profile</span>
             </Link>
           </div>
         </>

@@ -12,6 +12,8 @@ pub enum UserError {
     AuthenticationFailed,
     #[display(fmt = "Authorization Failed.")]
     AuthorizationFailed,
+    #[display(fmt = "Email already in use.")]
+    EmailAlreadyInUse,
 }
 
 impl UserError {
@@ -42,7 +44,8 @@ impl ResponseError for UserError {
             UserError::InternalError => StatusCode::INTERNAL_SERVER_ERROR,
             UserError::ValidationError { .. } => StatusCode::BAD_REQUEST,
             UserError::AuthenticationFailed => StatusCode::UNAUTHORIZED,
-            UserError::AuthorizationFailed => StatusCode::UNAUTHORIZED
+            UserError::AuthorizationFailed => StatusCode::UNAUTHORIZED,
+            UserError::EmailAlreadyInUse => StatusCode::NOT_ACCEPTABLE
         }
     }
 }

@@ -196,3 +196,14 @@ input[type="reset"] {
   padding: 0.75em;
   width: 100%;
 }
+
+.input-spacing {
+  margin-bottom: 1em;
+}
+
+.form-section {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}

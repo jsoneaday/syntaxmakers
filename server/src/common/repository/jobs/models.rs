@@ -62,6 +62,7 @@ pub struct JobCountry {
     pub country_id: i64,
 }
 
+#[derive(Clone)]
 pub struct NewJob {
     pub employer_id: i64,
     pub title: String,

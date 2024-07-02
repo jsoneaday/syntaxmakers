@@ -9,7 +9,6 @@ import {
   MouseEvent,
 } from "react";
 import "../../theme/job_full_view.css";
-import similar from "../../theme/assets/similar.png";
 import GoBack from "../navigation/GoBack";
 import DropDown from "../controls/DropDown";
 import Checkbox from "../controls/Checkbox";

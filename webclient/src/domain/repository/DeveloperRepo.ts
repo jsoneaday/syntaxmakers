@@ -7,9 +7,34 @@ export class Developer {
     public userName: string,
     public fullName: string,
     public email: string,
-    public primaryLangId: string,
-    public secondaryLangId?: string | null
+    public primaryLangId: number,
+    public secondaryLangId?: number | null
   ) {}
+}
+
+export async function createDeveloper(newDev: {
+  userName: string;
+  fullName: string;
+  email: string;
+  password: string;
+  primaryLangId: number;
+  secondaryLangId?: number | undefined;
+}) {
+  const response = await fetch(DEVELOPER_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(newDev),
+  });
+
+  if (response.ok) {
+    const newDev: { id: number } = await response.json();
+    console.log("newDevId", newDev.id);
+    return newDev.id;
+  } else {
+    throw new Error(await response.text());
+  }
 }
 
 export async function getDeveloper(id: string) {

@@ -1,11 +1,11 @@
 import { ReactNode, useEffect } from "react";
-import Login from "../components/authentication/Login";
 import { useLoginOpen } from "../common/redux/loginOpen/LoginOpenHooks";
 import { startViewTransition } from "../common/transitions/ViewTransition";
 import { useLocation } from "react-router-dom";
 import { useDevOrEmployer } from "../common/redux/devOrEmployer/DevOrEmployerHooks";
 import { DevOrEmployer } from "../models/DevOrEmployer";
 import { DEV_ROUTE_PREFIX } from "../../App";
+import { AuthModal } from "./authentication/AuthModal";
 
 interface LayoutProps {
   children: ReactNode;
@@ -32,7 +32,7 @@ export default function Layout({ children, includeLogin = true }: LayoutProps) {
   return (
     <div className="layout-container">
       {includeLogin ? (
-        <Login isOpen={loginOpen} toggleOpen={toggleLoginOpen} />
+        <AuthModal isOpen={loginOpen} toggleOpen={toggleLoginOpen} />
       ) : null}
 
       {children}
