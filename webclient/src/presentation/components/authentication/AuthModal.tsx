@@ -3,7 +3,7 @@ import Modal from "../Modal";
 import Login from "./Login";
 import { Tabs } from "../controls/Tabs";
 import { ProfileForm, ProfileFormEditMode } from "./ProfileForm";
-import { DevOrEmployer } from "../../models/DevOrEmployer";
+import { UiDevOrEmployer } from "../../models/DevOrEmployer";
 
 enum AuthModalMode {
   Login,
@@ -12,7 +12,7 @@ enum AuthModalMode {
 
 interface AuthModalProps {
   isOpen: boolean;
-  userType: DevOrEmployer;
+  userType: UiDevOrEmployer;
   toggleOpen: () => void;
 }
 

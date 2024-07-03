@@ -1,6 +1,6 @@
 import configureStore from "redux-mock-store";
 import { defaultEmpProfile } from "../../__test__/Fixtures";
-import { DevOrEmployer } from "../../models/DevOrEmployer";
+import { UiDevOrEmployer } from "../../models/DevOrEmployer";
 import { render, screen } from "@testing-library/react";
 import { Provider } from "react-redux";
 import { RouterProvider, createBrowserRouter } from "react-router-dom";
@@ -54,7 +54,7 @@ describe("Test JobPreview", () => {
     const mockStore = configureStore();
     const store = mockStore({
       profile: defaultEmpProfile,
-      devOrEmployer: DevOrEmployer.Employer,
+      devOrEmployer: UiDevOrEmployer.Employer,
     });
 
     const result = render(

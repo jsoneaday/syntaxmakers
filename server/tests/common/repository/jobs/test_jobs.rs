@@ -1,6 +1,6 @@
 use fake::Fake;
 use fake::faker::company::en::CompanyName;
-use fake::faker::internet::en::{Username, SafeEmail, FreeEmail};
+use fake::faker::internet::en::Username;
 use syntaxmakers_server::common::repository::application::models::NewApplication;
 use syntaxmakers_server::common::repository::application::repo::InsertApplicationFn;
 use syntaxmakers_server::common::repository::base::{Repository, DbRepo};
@@ -19,7 +19,7 @@ use syntaxmakers_server::common::repository::languages::repo::QueryAllLanguagesF
 use syntaxmakers_server::common::repository::companies::repo::InsertCompanyFn;
 use syntaxmakers_server::common::repository::salaries::repo::QueryAllSalariesFn;
 use syntaxmakers_server::common_test::fixtures::{ 
-    init_fixtures, get_fake_fullname, get_company_logo_randomly, get_fake_title, get_fake_desc, get_random_salary, LANGUAGES, INDUSTRIES, COUNTRIES, get_random_email
+    get_company_logo_randomly, get_fake_desc, get_fake_email, get_fake_fullname, get_fake_title, get_random_email, get_random_salary, init_fixtures, COUNTRIES, INDUSTRIES, LANGUAGES
 };
 
 #[tokio::test]
@@ -28,7 +28,7 @@ async fn test_create_job_and_get_back() {
     init_fixtures().await;
     let user_name = Username().fake::<String>();
     let full_name = get_fake_fullname();
-    let email = SafeEmail().fake::<String>();
+    let email = get_fake_email();
     let logo = get_company_logo_randomly();
     
     let company_create_result = repo.insert_company(NewCompany{ name: CompanyName().fake::<String>(), logo: Some(logo), headquarters_country_id: 1 }).await.unwrap();
@@ -66,7 +66,7 @@ async fn test_create_two_jobs_and_get_back_both() {
     init_fixtures().await;
     let user_name = Username().fake::<String>();
     let full_name = get_fake_fullname();
-    let email = SafeEmail().fake::<String>();
+    let email = get_fake_email();
     let logo = get_company_logo_randomly();
     
     // setup needed data
@@ -119,7 +119,7 @@ async fn test_create_two_jobs_and_get_back_only_one_that_matches_dev_profile() {
     init_fixtures().await;
     let user_name = Username().fake::<String>();
     let full_name = get_fake_fullname();
-    let email = SafeEmail().fake::<String>();
+    let email = get_fake_email();
     let logo = get_company_logo_randomly();
     
     // setup needed data    
@@ -137,7 +137,7 @@ async fn test_create_two_jobs_and_get_back_only_one_that_matches_dev_profile() {
     let developer = repo.insert_developer(NewDeveloper {
         user_name: Username().fake::<String>(),
         full_name: get_fake_fullname(),
-        email: FreeEmail().fake::<String>(),
+        email: get_fake_email(),
         password: "test1234".to_string(),
         primary_lang_id: languages_result.get(0).unwrap().id,
         secondary_lang_id: Some(languages_result.get(1).unwrap().id)
@@ -180,7 +180,7 @@ async fn test_create_two_jobs_and_get_back_both_as_employer() {
     init_fixtures().await;
     let user_name = Username().fake::<String>();
     let full_name = get_fake_fullname();
-    let email = SafeEmail().fake::<String>();
+    let email = get_fake_email();
     let logo = get_company_logo_randomly();
     
     let company_create_result = repo.insert_company(NewCompany{ name: CompanyName().fake::<String>(), logo: Some(logo), headquarters_country_id: 1 }).await.unwrap();
@@ -269,7 +269,7 @@ async fn test_update_job_that_is_remote_and_get_back() {
     let insert_employer_b_result = repo.insert_employer(NewEmployer {
         user_name: Username().fake::<String>(),
         full_name: get_fake_fullname(),
-        email: SafeEmail().fake::<String>(),
+        email: get_fake_email(),
         password: "test1234".to_string(),
         company_id
     }).await.unwrap();
@@ -332,7 +332,7 @@ async fn test_create_two_distinct_jobs_and_run_search_on_them_to_get_correct_res
     let create_employer_result1 = repo.insert_employer(NewEmployer {
         user_name: Username().fake::<String>(),
         full_name: get_fake_fullname(),
-        email: SafeEmail().fake::<String>(),
+        email: get_fake_email(),
         password: "test1234".to_string(),
         company_id: company_id1
     }).await.unwrap();
@@ -342,7 +342,7 @@ async fn test_create_two_distinct_jobs_and_run_search_on_them_to_get_correct_res
     let create_employer_result2 = repo.insert_employer(NewEmployer {
         user_name: Username().fake::<String>(),
         full_name: get_fake_fullname(),
-        email: SafeEmail().fake::<String>(),
+        email: get_fake_email(),
         password: "test1234".to_string(),
         company_id: company_id2
     }).await.unwrap();
@@ -351,7 +351,7 @@ async fn test_create_two_distinct_jobs_and_run_search_on_them_to_get_correct_res
     let _developer = repo.insert_developer(NewDeveloper {
         user_name: Username().fake::<String>(),
         full_name: get_fake_fullname(),
-        email: FreeEmail().fake::<String>(),
+        email: get_fake_email(),
         password: "test1234".to_string(),
         primary_lang_id: languages_result.get(0).unwrap().id,
         secondary_lang_id: Some(languages_result.get(1).unwrap().id)
@@ -422,7 +422,7 @@ async fn test_create_two_distinct_jobs_and_have_same_dev_apply_both_then_get_bac
     let create_employer_result1 = repo.insert_employer(NewEmployer {
         user_name: Username().fake::<String>(),
         full_name: get_fake_fullname(),
-        email: SafeEmail().fake::<String>(),
+        email: get_fake_email(),
         password: "test1234".to_string(),
         company_id: company_id1
     }).await.unwrap();
@@ -432,7 +432,7 @@ async fn test_create_two_distinct_jobs_and_have_same_dev_apply_both_then_get_bac
     let create_employer_result2 = repo.insert_employer(NewEmployer {
         user_name: Username().fake::<String>(),
         full_name: get_fake_fullname(),
-        email: SafeEmail().fake::<String>(),
+        email: get_fake_email(),
         password: "test1234".to_string(),
         company_id: company_id2
     }).await.unwrap();    
@@ -440,7 +440,7 @@ async fn test_create_two_distinct_jobs_and_have_same_dev_apply_both_then_get_bac
     let developer = repo.insert_developer(NewDeveloper {
         user_name: Username().fake::<String>(),
         full_name: get_fake_fullname(),
-        email: FreeEmail().fake::<String>(),
+        email: get_fake_email(),
         password: "test1234".to_string(),
         primary_lang_id: languages_result.get(0).unwrap().id,
         secondary_lang_id: Some(languages_result.get(1).unwrap().id)

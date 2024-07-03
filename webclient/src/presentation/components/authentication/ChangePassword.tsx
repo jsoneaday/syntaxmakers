@@ -1,10 +1,16 @@
 import { ChangeEvent, FormEvent, useState } from "react";
 import { ValidationMsgView } from "../controls/ValidationMsgView";
-import { changePassword } from "../../../domain/repository/DeveloperRepo";
+import { changePassword } from "../../../domain/repository/UserRepo";
 import { useProfile } from "../../common/redux/profile/ProfileHooks";
 import { PrimaryButton } from "../controls/Buttons";
+import { UiDevOrEmployer } from "../../models/DevOrEmployer";
+import { DevOrEmployer } from "../../../domain/repository/AuthRepo";
 
-export function ChangePassword() {
+interface ChangePasswordProps {
+  userType: UiDevOrEmployer;
+}
+
+export function ChangePassword({ userType }: ChangePasswordProps) {
   const [profile] = useProfile();
   const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -44,6 +50,9 @@ export function ChangePassword() {
         Number(profile.id),
         oldPassword,
         newPassword,
+        userType === UiDevOrEmployer.Developer
+          ? DevOrEmployer.Developer
+          : DevOrEmployer.Employer,
         profile.accessToken
       );
 

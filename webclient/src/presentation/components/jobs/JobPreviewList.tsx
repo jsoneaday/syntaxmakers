@@ -1,7 +1,7 @@
 import { RoutePaths } from "../../../App";
 import { useDevOrEmployer } from "../../common/redux/devOrEmployer/DevOrEmployerHooks";
 import { startViewTransition } from "../../common/transitions/ViewTransition";
-import { DevOrEmployer } from "../../models/DevOrEmployer";
+import { UiDevOrEmployer } from "../../models/DevOrEmployer";
 import JobPost from "../../models/JobPost";
 import Lister from "../Lister";
 import JobPreview from "./JobPreview";
@@ -29,7 +29,7 @@ export default function JobPreviewList({ jobPosts }: JobPreviewListProps) {
             <li key={dataItem.key} className="dev-preview-item">
               <Link
                 to={
-                  devOrEmp === DevOrEmployer.Developer
+                  devOrEmp === UiDevOrEmployer.Developer
                     ? RoutePaths.DevJobFullView
                     : RoutePaths.EmpJobFullView
                 }

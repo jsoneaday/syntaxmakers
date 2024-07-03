@@ -8,7 +8,7 @@ import { convert as convertEmp } from "../../models/EmpProfile";
 import Checkbox from "../controls/Checkbox";
 import { useEffect, useState, useTransition } from "react";
 import { useDevOrEmployer } from "../../common/redux/devOrEmployer/DevOrEmployerHooks";
-import { DevOrEmployer } from "../../models/DevOrEmployer";
+import { UiDevOrEmployer } from "../../models/DevOrEmployer";
 import { getEmployerByEmail } from "../../../domain/repository/EmployerRepo";
 
 interface LoginProps {
@@ -26,7 +26,7 @@ export default function Login({ toggleOpen }: LoginProps) {
 
   useEffect(() => {
     // todo: remove hard codings when ready
-    if (devOrEmp === DevOrEmployer.Developer) {
+    if (devOrEmp === UiDevOrEmployer.Developer) {
       setEmail("jon@jon.com");
     } else {
       setEmail("jon@acmecorp.com");
@@ -39,7 +39,7 @@ export default function Login({ toggleOpen }: LoginProps) {
     login(devOrEmp, email, password)
       .then(({ message, status }: LoginResult) => {
         if (status === 200) {
-          if (devOrEmp === DevOrEmployer.Developer) {
+          if (devOrEmp === UiDevOrEmployer.Developer) {
             getDeveloperByEmail(email, message)
               .then((dev) => {
                 if (dev) {

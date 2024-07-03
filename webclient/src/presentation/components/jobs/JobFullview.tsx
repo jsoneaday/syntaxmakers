@@ -13,7 +13,7 @@ import GoBack from "../navigation/GoBack";
 import DropDown from "../controls/DropDown";
 import Checkbox from "../controls/Checkbox";
 import { useDevOrEmployer } from "../../common/redux/devOrEmployer/DevOrEmployerHooks";
-import { DevOrEmployer } from "../../models/DevOrEmployer";
+import { UiDevOrEmployer } from "../../models/DevOrEmployer";
 /// @ts-ignore
 import { v4 as uuidv4 } from "uuid";
 import {
@@ -245,7 +245,7 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
 
   useEffect(() => {
     // if there's an employer logged in and no route state, assume new job post
-    if (devOrEmp === DevOrEmployer.Employer && profile && !routeJobPost) {
+    if (devOrEmp === UiDevOrEmployer.Employer && profile && !routeJobPost) {
       setCurrentJobPost({
         type: FormActionTypes.EmployerId,
         payload: profile.id,
@@ -779,7 +779,7 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
         <div className="header-container job-full-view-header">
           <GoBack
             label={
-              devOrEmp === DevOrEmployer.Developer
+              devOrEmp === UiDevOrEmployer.Developer
                 ? "developer home"
                 : "employer home"
             }

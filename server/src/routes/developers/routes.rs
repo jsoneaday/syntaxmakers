@@ -6,13 +6,14 @@ use crate::{
         repository::{
             base::Repository, 
             developers::{
-                models::{NewDeveloper, UpdateDeveloper}, repo::{ChangeDevPasswordFn, InsertDeveloperFn, QueryAllDevelopersFn, QueryDeveloperByEmailFn, QueryDeveloperFn, UpdateDeveloperFn}
-            }, employers::repo::QueryEmployerFn, user::models::ChangePassword
+                models::{NewDeveloper, UpdateDeveloper}, repo::{InsertDeveloperFn, QueryAllDevelopersFn, QueryDeveloperByEmailFn, QueryDeveloperFn, UpdateDeveloperFn}
+            }, 
+            employers::repo::QueryEmployerFn
         }
     }, 
     routes::{auth_helper::check_is_authenticated, base_model::{IdAndPagingModel, OutputBool, OutputId}, route_utils::get_header_strings, user_error::UserError}
 };
-use super::models::{ChangePasswordRoute, DeveloperResponder, DeveloperResponders, NewDeveloperForRoute, UpdateDeveloperForRoute};
+use super::models::{DeveloperResponder, DeveloperResponders, NewDeveloperForRoute, UpdateDeveloperForRoute};
 use crate::routes::authentication::models::DeveloperOrEmployer as AuthDeveloperOrEmployer;
 use log::error;
 
@@ -42,29 +43,6 @@ pub async fn create_developer<T: QueryDeveloperByEmailFn + InsertDeveloperFn + R
 
     match result {
         Ok(entity) => Ok(OutputId { id: entity.id }),
-        Err(e) => Err(e.into())
-    }
-}
-
-pub async fn change_password<T: QueryDeveloperFn + QueryEmployerFn + ChangeDevPasswordFn + Repository, U: Authenticator>(
-    app_data: Data<AppState<T, U>>, 
-    json: Json<ChangePasswordRoute>,
-    req: HttpRequest
-) -> Result<OutputBool, UserError> {
-    let is_auth = check_is_authenticated(app_data.clone(), json.id, AuthDeveloperOrEmployer::Developer, req).await;
-    if !is_auth {
-        error!("Authorization failed");
-        return Err(UserError::AuthenticationFailed);
-    }
-    
-    let result = app_data.repo.change_password(ChangePassword {
-        id: json.id,
-        old_password: json.old_password.to_owned(),
-        new_password: json.new_password.to_owned()
-    }).await;
-
-    match result {
-        Ok(_) => Ok(OutputBool { result: true }),
         Err(e) => Err(e.into())
     }
 }
@@ -221,7 +199,7 @@ pub async fn get_all_developers<T: QueryAllDevelopersFn + QueryDeveloperFn + Rep
 
 #[cfg(test)]
 mod tests {
-    use crate::{common::{authentication::auth_service::AuthenticationError, repository::{base::EntityId, developers::models::Developer, user::models::DeveloperOrEmployer}}, common_test::fixtures::{get_app_data, get_fake_fullname, get_fake_httprequest_with_bearer_token, init_fixtures, MockDbRepo}};
+    use crate::{common::{authentication::auth_service::AuthenticationError, repository::{base::EntityId, developers::models::Developer, user::{models::{ChangePassword, DeveloperOrEmployer}, repo::ChangePasswordFn}}}, common_test::fixtures::{get_app_data, get_fake_fullname, get_fake_httprequest_with_bearer_token, init_fixtures, MockDbRepo}, routes::user::{models::ChangePasswordRoute, routes::change_password}};
     use async_trait::async_trait;
     use chrono::Utc;
     use fake::{faker::internet::en::{Username, FreeEmail}, Fake};
@@ -339,7 +317,7 @@ mod tests {
 
 
     #[async_trait]
-    impl ChangeDevPasswordFn for MockDbRepo {
+    impl ChangePasswordFn for MockDbRepo {
         async fn change_password(&self, _: ChangePassword) -> Result<(), sqlx::Error> {
             Ok(())
         }
@@ -359,7 +337,8 @@ mod tests {
         let result = change_password(app_data, Json(ChangePasswordRoute { 
             id: 1,
             old_password: "test1234".to_string(),
-            new_password: "test1234".to_string()
+            new_password: "test1234".to_string(),
+            dev_or_emp: AuthDeveloperOrEmployer::Developer
         }), req).await;
 
         assert!(result.is_ok());

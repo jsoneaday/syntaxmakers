@@ -15,6 +15,7 @@ export async function login(
   email: string,
   password: string
 ) {
+  console.log("login devOrEmp", devOrEmp);
   try {
     const response = await fetch(LOGIN_URL, {
       method: "post",

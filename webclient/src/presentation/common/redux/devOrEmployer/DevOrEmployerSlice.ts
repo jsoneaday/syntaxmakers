@@ -1,13 +1,13 @@
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
-import { DevOrEmployer } from "../../../models/DevOrEmployer";
+import { UiDevOrEmployer } from "../../../models/DevOrEmployer";
 
-const initialState: DevOrEmployer = DevOrEmployer.Developer;
+const initialState: UiDevOrEmployer = UiDevOrEmployer.Developer;
 
 const devOrEmployerSlice = createSlice({
   name: "devOrEmployer",
   initialState,
   reducers: {
-    setDevOrEmployer: (state: any, action: PayloadAction<DevOrEmployer>) => {
+    setDevOrEmployer: (state: any, action: PayloadAction<UiDevOrEmployer>) => {
       state = action.payload;
       return state;
     },

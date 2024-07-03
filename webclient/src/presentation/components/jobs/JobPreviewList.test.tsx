@@ -1,6 +1,6 @@
 import configureStore from "redux-mock-store";
 import { defaultEmpProfile } from "../../__test__/Fixtures";
-import { DevOrEmployer } from "../../models/DevOrEmployer";
+import { UiDevOrEmployer } from "../../models/DevOrEmployer";
 import { render, screen } from "@testing-library/react";
 import * as DevOrEmployerHooks from "../../common/redux/devOrEmployer/DevOrEmployerHooks";
 import { Provider } from "react-redux";
@@ -70,7 +70,7 @@ describe("Test JobPreviewList", () => {
     jest
       .spyOn(DevOrEmployerHooks, "useDevOrEmployer")
       .mockImplementation(() => {
-        return [DevOrEmployer.Employer, (_devOrEmp: DevOrEmployer) => {}];
+        return [UiDevOrEmployer.Employer, (_devOrEmp: UiDevOrEmployer) => {}];
       });
   });
 
@@ -78,7 +78,7 @@ describe("Test JobPreviewList", () => {
     const mockStore = configureStore();
     const store = mockStore({
       profile: defaultEmpProfile,
-      devOrEmployer: DevOrEmployer.Employer,
+      devOrEmployer: UiDevOrEmployer.Employer,
     });
 
     const result = render(
@@ -94,7 +94,7 @@ describe("Test JobPreviewList", () => {
     const mockStore = configureStore();
     const store = mockStore({
       profile: defaultEmpProfile,
-      devOrEmployer: DevOrEmployer.Employer,
+      devOrEmployer: UiDevOrEmployer.Employer,
     });
 
     render(

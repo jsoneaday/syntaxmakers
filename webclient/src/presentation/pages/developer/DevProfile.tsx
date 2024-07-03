@@ -7,7 +7,7 @@ import {
   ProfileForm,
   ProfileFormEditMode,
 } from "../../components/authentication/ProfileForm";
-import { DevOrEmployer } from "../../models/DevOrEmployer";
+import { UiDevOrEmployer } from "../../models/DevOrEmployer";
 
 export default function DevProfile() {
   return (
@@ -15,7 +15,7 @@ export default function DevProfile() {
       <ProfileForm
         isModalMode={false}
         editMode={ProfileFormEditMode.Edit}
-        userType={DevOrEmployer.Developer}
+        userType={UiDevOrEmployer.Developer}
       />
     </DeveloperHome>
   );

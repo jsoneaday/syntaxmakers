@@ -2,8 +2,9 @@ use fake::Fake;
 use fake::faker::internet::en::{Username, SafeEmail};
 use syntaxmakers_server::common::repository::base::{Repository, DbRepo};
 use syntaxmakers_server::common::repository::developers::models::{NewDeveloper, UpdateDeveloper};
-use syntaxmakers_server::common::repository::developers::repo::{ChangeDevPasswordFn, InsertDeveloperFn, QueryAllDevelopersFn, QueryDeveloperByEmailFn, QueryDeveloperFn, UpdateDeveloperFn};
-use syntaxmakers_server::common::repository::user::models::ChangePassword;
+use syntaxmakers_server::common::repository::developers::repo::{InsertDeveloperFn, QueryAllDevelopersFn, QueryDeveloperByEmailFn, QueryDeveloperFn, UpdateDeveloperFn};
+use syntaxmakers_server::common::repository::user::models::{ChangePassword, DeveloperOrEmployer};
+use syntaxmakers_server::common::repository::user::repo::ChangePasswordFn;
 use syntaxmakers_server::common_test::fixtures::{ get_fake_email, get_fake_fullname, init_fixtures, LANGUAGES};
 
 #[tokio::test]
@@ -114,7 +115,8 @@ async fn test_change_dev_password_fails_on_invalid_old_password() {
     let update_result = repo.change_password(ChangePassword { 
         id: create_result.id, 
         old_password: "fake_old".to_string(),
-        new_password: "test4567".to_string()
+        new_password: "test4567".to_string(),
+        dev_or_emp: DeveloperOrEmployer::Developer
     }).await;
     assert!(update_result.is_err());
 }
@@ -142,7 +144,8 @@ async fn test_change_dev_password_fails_on_invalid_new_password() {
     let update_result = repo.change_password(ChangePassword { 
         id: create_result.id, 
         old_password: old_password.clone(), 
-        new_password: "test456".to_string()
+        new_password: "test456".to_string(),
+        dev_or_emp: DeveloperOrEmployer::Developer
     }).await;
     assert!(update_result.is_err());
 }
@@ -170,7 +173,8 @@ async fn test_change_dev_password_succeeds_on_new_password() {
     let update_result = repo.change_password(ChangePassword { 
         id: create_result.id, 
         old_password: old_password.clone(), 
-        new_password: "test4567".to_string()
+        new_password: "test4567".to_string(),
+        dev_or_emp: DeveloperOrEmployer::Developer
     }).await;
     assert!(update_result.is_ok());
 }

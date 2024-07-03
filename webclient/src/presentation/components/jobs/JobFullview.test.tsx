@@ -7,7 +7,7 @@ import { RouterProvider, createBrowserRouter } from "react-router-dom";
 import { Provider } from "react-redux";
 import configureStore from "redux-mock-store";
 import { defaultDevProfile, defaultEmpProfile } from "../../__test__/Fixtures";
-import { DevOrEmployer } from "../../models/DevOrEmployer";
+import { UiDevOrEmployer } from "../../models/DevOrEmployer";
 
 const routerWithReadonlyJobFullview = createBrowserRouter([
   {
@@ -71,7 +71,7 @@ describe("Test JobFullview", () => {
     const mockStore = configureStore();
     const store = mockStore({
       profile: defaultDevProfile,
-      devOrEmployer: DevOrEmployer.Developer,
+      devOrEmployer: UiDevOrEmployer.Developer,
     });
 
     const result = render(
@@ -87,7 +87,7 @@ describe("Test JobFullview", () => {
     const mockStore = configureStore();
     const store = mockStore({
       profile: defaultDevProfile,
-      devOrEmployer: DevOrEmployer.Developer,
+      devOrEmployer: UiDevOrEmployer.Developer,
     });
 
     render(
@@ -110,7 +110,7 @@ describe("Test JobFullview", () => {
     const mockStore = configureStore();
     const store = mockStore({
       profile: defaultEmpProfile,
-      devOrEmployer: DevOrEmployer.Employer,
+      devOrEmployer: UiDevOrEmployer.Employer,
     });
 
     const result = render(

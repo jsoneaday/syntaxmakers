@@ -3,14 +3,14 @@ import { useLoginOpen } from "../common/redux/loginOpen/LoginOpenHooks";
 import { startViewTransition } from "../common/transitions/ViewTransition";
 import { useLocation } from "react-router-dom";
 import { useDevOrEmployer } from "../common/redux/devOrEmployer/DevOrEmployerHooks";
-import { DevOrEmployer } from "../models/DevOrEmployer";
+import { UiDevOrEmployer } from "../models/DevOrEmployer";
 import { DEV_ROUTE_PREFIX } from "../../App";
 import { AuthModal } from "./authentication/AuthModal";
 import { useProfile } from "../common/redux/profile/ProfileHooks";
 
 interface LayoutProps {
   children: ReactNode;
-  userType?: DevOrEmployer;
+  userType?: UiDevOrEmployer;
   includeLogin?: boolean;
 }
 
@@ -35,8 +35,8 @@ export default function Layout({
   useEffect(() => {
     setDevOrEmp(
       location.pathname.includes(DEV_ROUTE_PREFIX)
-        ? DevOrEmployer.Developer
-        : DevOrEmployer.Employer
+        ? UiDevOrEmployer.Developer
+        : UiDevOrEmployer.Employer
     );
   }, [location]);
 

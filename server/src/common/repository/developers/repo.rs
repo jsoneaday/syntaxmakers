@@ -4,12 +4,11 @@ use sqlx::{Postgres, Pool, query_as};
 use crate::common::repository::base::{DbRepo, ConnGetter};
 use crate::common::repository::developers::models::{Developer, NewDeveloper, UpdateDeveloper};
 use crate::common::repository::base::EntityId;
-use crate::common::repository::user::models::ChangePassword;
 use log::error;
 
 mod internal {
     use sqlx::query;
-    use crate::common::{authentication::password_hash::{hash_password, verify_password}, repository::{error::SqlxError, user::models::{ChangePassword, Password}}};
+    use crate::common::{authentication::password_hash::hash_password, repository::error::SqlxError};
     use super::*;    
 
     pub async fn insert_developer(conn: &Pool<Postgres>, new_developer: NewDeveloper) -> Result<EntityId, Error> {
@@ -65,45 +64,7 @@ mod internal {
 
         Ok(EntityId { id: dev_id })
     }
-
-    pub async fn change_password(conn: &Pool<Postgres>, change_password: ChangePassword) -> Result<(), Error> {
-        let password_result = query_as::<_, Password>(r"
-            select password from developer where id = $1
-        ")
-        .bind(change_password.id)
-        .fetch_one(conn)
-        .await;
-
-        match password_result {
-            Ok(current_password) => {
-                if !verify_password(&change_password.old_password, &current_password.password).unwrap() {
-                    println!("old and current passwords do not match");
-                    return Err(SqlxError::PasswordChangeFailed.into());
-                }
-                if change_password.new_password.len() < 8 || change_password.new_password.len() > 50 { 
-                    println!("new password invalid");
-                    return Err(SqlxError::PasswordChangeFailed.into());
-                }
-            },
-            Err(e) => return Err(e)
-        };
-
-        match query::<_>("update developer set password = $2 where id = $1")
-            .bind(change_password.id)
-            .bind(hash_password(&change_password.new_password).unwrap())
-            .execute(conn)
-            .await {
-                Ok(row) => {
-                    println!("change password result {:?}", row);
-                    if row.rows_affected() == 0 {
-                        return Err(SqlxError::PasswordChangeFailed.into());
-                    }
-                    Ok(())
-                },
-                Err(e) => Err(e)
-        }
-    }
-
+    
     /// note: Does NOT change password!
     pub async fn update_developer(conn: &Pool<Postgres>, update_developer: UpdateDeveloper) -> Result<(), Error> {
         let mut tx = conn.begin().await.unwrap();
@@ -246,18 +207,6 @@ pub trait InsertDeveloperFn {
 impl InsertDeveloperFn for DbRepo {
     async fn insert_developer(&self, new_developer: NewDeveloper) -> Result<EntityId, Error> {
         internal::insert_developer(self.get_conn(), new_developer).await
-    }
-}
-
-#[async_trait]
-pub trait ChangeDevPasswordFn {
-    async fn change_password(&self, change_password: ChangePassword) -> Result<(), Error>;
-}
-
-#[async_trait]
-impl ChangeDevPasswordFn for DbRepo {
-    async fn change_password(&self, change_password: ChangePassword) -> Result<(), Error> {
-        internal::change_password(self.get_conn(), change_password).await
     }
 }
 

@@ -5,7 +5,7 @@ import { v4 as uuidv4 } from "uuid";
 import Layout from "../../components/Layout";
 import LeftMenuDev from "../../components/navigation/leftMenu/LeftMenuDev";
 import { ReactNode } from "react";
-import { DevOrEmployer } from "../../models/DevOrEmployer";
+import { UiDevOrEmployer } from "../../models/DevOrEmployer";
 import { useProfile } from "../../common/redux/profile/ProfileHooks";
 
 interface DeveloperHomeProps {
@@ -15,7 +15,7 @@ interface DeveloperHomeProps {
 export default function DeveloperHome({ children }: DeveloperHomeProps) {
   const [profile] = useProfile();
   return (
-    <Layout userType={DevOrEmployer.Developer}>
+    <Layout userType={UiDevOrEmployer.Developer}>
       {profile ? (
         <div className="userhome-container" data-testid="developer-page">
           <LeftMenuDev />

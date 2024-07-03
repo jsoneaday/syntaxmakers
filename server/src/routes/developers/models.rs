@@ -16,15 +16,6 @@ pub struct NewDeveloperForRoute {
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct ChangePasswordRoute {
-    /// developer id
-    pub id: i64,
-    pub old_password: String,
-    pub new_password: String
-}
-
-#[derive(Deserialize)]
-#[serde(rename_all = "camelCase")]
 pub struct UpdateDeveloperForRoute {
     pub id: i64,
     pub full_name: String,

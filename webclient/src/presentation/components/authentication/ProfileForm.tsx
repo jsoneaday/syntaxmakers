@@ -1,5 +1,5 @@
 import { ChangeEvent, FormEvent, useEffect, useState } from "react";
-import { DevOrEmployer } from "../../models/DevOrEmployer";
+import { UiDevOrEmployer } from "../../models/DevOrEmployer";
 import DropDown, { OptionType } from "../controls/DropDown";
 import { getLanguages } from "../../../domain/repository/LanguageRepo";
 import {
@@ -29,7 +29,7 @@ interface ProfileFormData {
 interface ProfileFormProps {
   isModalMode: boolean;
   editMode: ProfileFormEditMode;
-  userType: DevOrEmployer;
+  userType: UiDevOrEmployer;
 }
 
 export function ProfileForm({
@@ -67,7 +67,7 @@ export function ProfileForm({
 
   useEffect(() => {
     if (profile) {
-      if (userType === DevOrEmployer.Developer) {
+      if (userType === UiDevOrEmployer.Developer) {
         const dev = profile as DevProfile;
         setProfileForm({
           userName: dev.userName,
@@ -94,7 +94,7 @@ export function ProfileForm({
 
     try {
       setDisableSubmit(true);
-      if (userType === DevOrEmployer.Developer) {
+      if (userType === UiDevOrEmployer.Developer) {
         if (editMode === ProfileFormEditMode.Create) {
           await createDeveloper({
             userName: profileForm.userName,
@@ -367,7 +367,7 @@ export function ProfileForm({
       </form>
       {!isModalMode ? (
         <div style={{ marginTop: "2em" }}>
-          <ChangePassword />
+          <ChangePassword userType={userType} />
         </div>
       ) : null}
     </div>
