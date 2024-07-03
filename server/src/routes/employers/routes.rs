@@ -7,11 +7,21 @@ use crate::{
 use super::models::{NewEmployerForRoute, EmployerResponder, EmployerResponders};
 
 /// register a new employer profile
-pub async fn create_employer<T: InsertEmployerFn + Repository, U: Authenticator>(
+pub async fn create_employer<T: QueryEmployerByEmailFn + InsertEmployerFn + Repository, U: Authenticator>(
     app_data: Data<AppState<T, U>>, 
     json: Json<NewEmployerForRoute>
 ) -> Result<OutputId, UserError> {
-    // todo: check if email exists already
+    println!("email {}", json.email);
+    match app_data.repo.query_employer_by_email(json.email.clone()).await {
+        Ok(result) => match result {
+            Some(emp) => {
+                println!("found emp {:?}", emp);
+                return Err(UserError::EmailAlreadyInUse);
+            },
+            None => ()
+        },
+        Err(_) => ()
+    };
 
     let result = app_data.repo.insert_employer(NewEmployer {
         user_name: json.user_name.to_owned(),
@@ -111,7 +121,15 @@ pub async fn get_all_employers<T: QueryAllEmployersFn + Repository, U: Authentic
 #[cfg(test)]
 mod tests {
     use std::vec;
-    use crate::{common_test::fixtures::{MockDbRepo, get_app_data, get_fake_fullname, get_fake_httprequest_with_bearer_token}, common::{repository::{base::EntityId, employers::{models::Employer, repo::QueryAllEmployersFn}, user::models::DeveloperOrEmployer}, authentication::auth_service::AuthenticationError}};
+    use crate::{
+        common::{
+            authentication::auth_service::AuthenticationError, 
+            repository::{
+                base::EntityId, employers::{models::Employer, repo::QueryAllEmployersFn}, user::models::DeveloperOrEmployer
+            }
+        }, 
+        common_test::fixtures::{get_app_data, get_fake_email, get_fake_fullname, get_fake_httprequest_with_bearer_token, MockDbRepo}
+    };
     use super::*;
     use async_trait::async_trait;
     use chrono::Utc;
@@ -129,7 +147,7 @@ mod tests {
     #[async_trait]
     impl InsertEmployerFn for MockDbRepo {
         async fn insert_employer(&self, _: NewEmployer) -> Result<EntityId, sqlx::Error> {
-            Ok(EntityId {id: 1 })
+            Ok(EntityId { id: 1 })
         }
     }
 
@@ -142,24 +160,8 @@ mod tests {
                 Utc::now(),
                 Username().fake::<String>(),
                 get_fake_fullname(),
-                FreeEmail().fake::<String>(),
                 "".to_string(),
-                1
-            )))
-        }
-    }
-
-    #[async_trait]
-    impl QueryEmployerByEmailFn for MockDbRepo {
-        async fn query_employer_by_email(&self, _: String) -> Result<Option<Employer>, sqlx::Error> {
-            Ok(Some(Employer::new(
-                1,
-                Utc::now(),
-                Utc::now(),
-                Username().fake::<String>(),
-                get_fake_fullname(),
-                FreeEmail().fake::<String>(),
-                "".to_string(),
+                FreeEmail().fake::<String>(),                
                 1
             )))
         }
@@ -175,30 +177,50 @@ mod tests {
                     Utc::now(),
                     Username().fake::<String>(),
                     get_fake_fullname(),
-                    FreeEmail().fake::<String>(),
                     "".to_string(),
+                    FreeEmail().fake::<String>(),                    
                     1
                 )
             ])
         }
     }
 
-    #[tokio::test]
-    async fn test_insert_employer_route() {
-        let repo = MockDbRepo::init().await;
-        let auth_service = MockAuthService;
-        let app_data = get_app_data(repo, auth_service).await;
+    mod test_create_employer_route {
+        use super::*;
 
-        let result = create_employer(app_data, Json(NewEmployerForRoute { 
-            user_name: Username().fake::<String>(), 
-            full_name: get_fake_fullname(), 
-            email: FreeEmail().fake::<String>(), 
-            password: "test1234".to_string(),
-            company_id: 1 
-        })).await.unwrap();
+        #[async_trait]
+        impl QueryEmployerByEmailFn for MockDbRepo {
+            async fn query_employer_by_email(&self, _: String) -> Result<Option<Employer>, sqlx::Error> {
+                Ok(Some(Employer::new(
+                    1,
+                    Utc::now(),
+                    Utc::now(),
+                    Username().fake::<String>(),
+                    get_fake_fullname(),                
+                    "".to_string(),
+                    FreeEmail().fake::<String>(),
+                    1
+                )))
+            }
+        }
 
-        assert!(result.id == 1)
-    }
+        #[tokio::test]
+        async fn test_create_employer_route() {
+            let repo = MockDbRepo::init().await;
+            let auth_service = MockAuthService;
+            let app_data = get_app_data(repo, auth_service).await;        
+            let email = get_fake_email();
+    
+            let result = create_employer(app_data, Json(NewEmployerForRoute { 
+                user_name: Username().fake::<String>(), 
+                full_name: get_fake_fullname(), 
+                email, 
+                password: "test1234".to_string(),
+                company_id: 1 
+            })).await;
+            assert!(result.err().unwrap() == UserError::EmailAlreadyInUse)
+        }
+    }    
 
     #[tokio::test]
     async fn test_get_employer_route() {

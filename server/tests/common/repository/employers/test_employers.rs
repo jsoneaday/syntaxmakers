@@ -6,7 +6,7 @@ use syntaxmakers_server::common::repository::companies::models::NewCompany;
 use syntaxmakers_server::common::repository::employers::models::NewEmployer;
 use syntaxmakers_server::common::repository::employers::repo::{QueryEmployerFn, QueryAllEmployersFn, InsertEmployerFn, QueryEmployerByEmailFn};
 use syntaxmakers_server::common::repository::companies::repo::InsertCompanyFn;
-use syntaxmakers_server::common_test::fixtures::{ init_fixtures, get_fake_fullname, get_company_logo_randomly};
+use syntaxmakers_server::common_test::fixtures::{ get_company_logo_randomly, get_fake_email, get_fake_fullname, init_fixtures};
 
 #[tokio::test]
 async fn test_create_employer_and_get_back() {
@@ -14,7 +14,7 @@ async fn test_create_employer_and_get_back() {
     init_fixtures().await;
     let user_name = Username().fake::<String>();
     let full_name = get_fake_fullname();
-    let email = SafeEmail().fake::<String>();
+    let email = get_fake_email();
     let logo = get_company_logo_randomly();
     
     let company_create_result = repo.insert_company(NewCompany{ name: CompanyName().fake::<String>(), logo: Some(logo), headquarters_country_id: 1 }).await.unwrap();

@@ -8,6 +8,7 @@ use fake::Fake;
 use fake::faker::internet::en::SafeEmail;
 use fake::faker::name::en::{FirstName, LastName};
 use jsonwebtoken::{EncodingKey, DecodingKey};
+use rand::Rng;
 use serde::Serialize;
 use log::{info, error};
 use crate::app_state::AppState;
@@ -234,7 +235,8 @@ pub fn get_fake_fullname() -> String {
 }
 
 pub fn get_fake_email() -> String {
-    SafeEmail().fake::<String>()
+    let rand: u64 = rand::thread_rng().gen();
+    format!("{}{}", rand, SafeEmail().fake::<String>())
 }
 
 pub fn get_fake_title() -> &'static str {
