@@ -75,7 +75,7 @@ export async function developerAppliedToJob(
 
   if (response.ok) {
     const output: OutputBool = await response.json();
-    console.log("result", output.result);
+
     return output.result;
   }
   return false;

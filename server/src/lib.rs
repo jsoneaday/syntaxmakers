@@ -108,7 +108,7 @@ use common::authentication::auth_service::{init_auth_keys, AuthService};
 use common::repository::base::{DbRepo, Repository};
 use routes::application::routes::{create_application, developer_applied};
 use routes::authentication::routes::{login, refresh_access_token};
-use routes::developers::routes::get_developer_by_email;
+use routes::developers::routes::{change_password, get_developer_by_email, update_developer};
 use routes::employers::routes::get_employer_by_email;
 use routes::jobs::routes::{get_jobs_by_applier, get_jobs_by_employer, get_jobs_by_search_terms, update_job};
 use routes::{
@@ -210,6 +210,10 @@ pub async fn run() -> std::io::Result<()> {
                         .route(web::get().to(get_developer::<DbRepo, AuthService>)))
                     .service(web::resource("/developer")
                         .route(web::post().to(create_developer::<DbRepo, AuthService>)))
+                    .service(web::resource("/developer_update")
+                        .route(web::post().to(update_developer::<DbRepo, AuthService>)))
+                    .service(web::resource("/developer_change_password")
+                        .route(web::post().to(change_password::<DbRepo, AuthService>)))
                     .service(web::resource("/developers")
                         .route(web::get().to(get_all_developers::<DbRepo, AuthService>)))
                     .service(web::resource("/countries")

@@ -2,9 +2,15 @@ import { ChangeEvent, FormEvent, useEffect, useState } from "react";
 import { DevOrEmployer } from "../../models/DevOrEmployer";
 import DropDown, { OptionType } from "../controls/DropDown";
 import { getLanguages } from "../../../domain/repository/LanguageRepo";
-import { createDeveloper } from "../../../domain/repository/DeveloperRepo";
+import {
+  createDeveloper,
+  updateDeveloper,
+} from "../../../domain/repository/DeveloperRepo";
 import { useProfile } from "../../common/redux/profile/ProfileHooks";
 import DevProfile from "../../models/DevProfile";
+import { ValidationMsgView } from "../controls/ValidationMsgView";
+import { ChangePassword } from "./ChangePassword";
+import { PrimaryButton } from "../controls/Buttons";
 
 export enum ProfileFormEditMode {
   Create,
@@ -44,6 +50,7 @@ export function ProfileForm({
     primaryLangId: 0,
     secondaryLangId: undefined,
   });
+  const [disableSubmit, setDisableSubmit] = useState(false);
 
   useEffect(() => {
     getLanguages().then((languages) => {
@@ -77,13 +84,18 @@ export function ProfileForm({
   const createOrEditProfile = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
+    if (!profile || !profile.accessToken) {
+      setValidationMessage(
+        "User must be logged in before making changes to profile"
+      );
+      return;
+    }
     if (!isValidateProfile()) return;
 
-    if (editMode === ProfileFormEditMode.Create) {
-      console.log("profile form", profileForm);
-
-      try {
-        if (userType === DevOrEmployer.Developer) {
+    try {
+      setDisableSubmit(true);
+      if (userType === DevOrEmployer.Developer) {
+        if (editMode === ProfileFormEditMode.Create) {
           await createDeveloper({
             userName: profileForm.userName,
             fullName: profileForm.fullName,
@@ -95,16 +107,34 @@ export function ProfileForm({
           setSuccessMessage(
             "Your profile has been created please check your email for confirmation."
           );
+        } else {
+          const result = await updateDeveloper({
+            id: Number(profile.id),
+            fullName: profileForm.fullName,
+            email: profileForm.email,
+            primaryLangId: profileForm.primaryLangId,
+            secondaryLangId: profileForm.secondaryLangId,
+            access_token: profile.accessToken,
+          });
+          if (result) {
+            setSuccessMessage("Your profile has been updated.");
+            setValidationMessage("");
+          } else {
+            setValidationMessage("Failed to update your profile");
+            setSuccessMessage("");
+          }
         }
-
-        setValidationMessage("");
-      } catch (e) {
-        setSuccessMessage("");
-        if (e instanceof Error) {
-          setValidationMessage(e.message);
-        }
-        setValidationMessage("An error has occurred creating your profile");
       }
+
+      setValidationMessage("");
+    } catch (e) {
+      setSuccessMessage("");
+      if (e instanceof Error) {
+        setValidationMessage(e.message);
+      }
+      setValidationMessage("An error has occurred creating your profile");
+    } finally {
+      setDisableSubmit(false);
     }
   };
 
@@ -140,17 +170,20 @@ export function ProfileForm({
       );
       return false;
     }
-    if (!profileForm.password) {
-      setValidationMessage("Password cannot be empty");
-      return false;
+
+    if (isModalMode) {
+      if (!profileForm.password) {
+        setValidationMessage("Password cannot be empty");
+        return false;
+      }
+      if (profileForm.password.length < 8 || profileForm.email.length > 50) {
+        setValidationMessage(
+          "Password cannot be shorter than 8 or longer than 50 characters"
+        );
+        return false;
+      }
     }
-    if (profileForm.password.length < 8 || profileForm.email.length > 40) {
-      setValidationMessage(
-        "Password cannot be shorter than 8 or longer than 40 characters"
-      );
-      return false;
-    }
-    console.log("primaryLangId", profileForm.primaryLangId);
+
     if (!profileForm.primaryLangId) {
       console.log("failed");
       setValidationMessage("Primary Language must be selected");
@@ -213,117 +246,130 @@ export function ProfileForm({
   };
 
   return (
-    <form className="login-form" onSubmit={createOrEditProfile}>
-      {isModalMode ? (
-        <div className="login-item">
-          <span className="title-font">Welcome to SyntaxMakers</span>
-          <span
-            className="sub-title-font"
-            style={{ color: "var(--primary-font-cl)" }}
+    <div style={{ width: "100%" }}>
+      <form className="login-form" onSubmit={createOrEditProfile}>
+        {isModalMode ? (
+          <div className="login-item">
+            <span className="title-font">Welcome to SyntaxMakers</span>
+            <span
+              className="sub-title-font"
+              style={{ color: "var(--primary-font-cl)" }}
+            >
+              Please register
+            </span>
+          </div>
+        ) : (
+          <header className="header-container job-full-view-header">
+            <strong>{`@${profileForm.userName}`} Profile</strong>
+          </header>
+        )}
+        <div style={{ padding: isModalMode ? "" : "2em", width: "100%" }}>
+          <section className="form-section">
+            <span>Username</span>
+            <input
+              type="text"
+              name="userName"
+              className="input normal-font input-spacing"
+              style={
+                isModalMode
+                  ? { width: "45%" }
+                  : {
+                      width: "75%",
+                      backgroundColor: "var(--border-cl)",
+                      opacity: 0.75,
+                    }
+              }
+              value={profileForm.userName}
+              onChange={onChangeUserName}
+              disabled={isModalMode ? false : true}
+            />
+          </section>
+          <section className="form-section">
+            <span>Fullname</span>
+            <input
+              type="text"
+              name="fullName"
+              className="input normal-font input-spacing"
+              style={isModalMode ? { width: "45%" } : { width: "75%" }}
+              value={profileForm.fullName}
+              onChange={onChangeFullName}
+            />
+          </section>
+          <section className="form-section">
+            <span>Email</span>
+            <input
+              type="text"
+              name="email"
+              className="input normal-font input-spacing"
+              style={isModalMode ? { width: "45%" } : { width: "75%" }}
+              value={profileForm.email}
+              onChange={onChangeEmail}
+            />
+          </section>
+          {isModalMode ? (
+            <section className="form-section">
+              <span>Password</span>
+              <input
+                type="password"
+                name="password"
+                className="input normal-font input-spacing"
+                style={isModalMode ? { width: "45%" } : { width: "75%" }}
+                value={profileForm.password}
+                onChange={onChangePassword}
+              />
+            </section>
+          ) : null}
+          <section className="form-section" style={{ marginBottom: "1em" }}>
+            <DropDown
+              keyName="devprimarylang"
+              name="devprimarylang"
+              value={profileForm.primaryLangId}
+              label="Primary Language"
+              optionItems={primaryLang}
+              onChange={onChangePrimaryLang}
+              selectStyle={
+                isModalMode
+                  ? { marginLeft: ".5em", width: "45%" }
+                  : { width: "75%" }
+              }
+              isHorizontal={true}
+            />
+          </section>
+          <section className="form-section">
+            <DropDown
+              keyName="devsecondarylang"
+              name="devsecondarylang"
+              value={profileForm.secondaryLangId}
+              label="Secondary Language"
+              optionItems={secondaryLang}
+              onChange={onChangeSecondaryLang}
+              selectStyle={
+                isModalMode
+                  ? { marginLeft: ".5em", width: "45%" }
+                  : { width: "75%" }
+              }
+              isHorizontal={true}
+            />
+          </section>
+          <section
+            className="form-section"
+            style={{ marginTop: "1.5em", justifyContent: "flex-end" }}
           >
-            Please register
-          </span>
+            <PrimaryButton type="submit" disabled={disableSubmit}>
+              {editMode === ProfileFormEditMode.Edit ? "edit" : "create"}
+            </PrimaryButton>
+          </section>
+          <ValidationMsgView
+            validationMessage={validationMessage}
+            successMessage={successMessage}
+          />
         </div>
-      ) : (
-        <header className="header-container job-full-view-header">
-          <strong>{profileForm.userName} Profile</strong>
-        </header>
-      )}
-      <div style={{ padding: "2em", width: "100%" }}>
-        <section className="form-section">
-          <span>Username</span>
-          <input
-            type="text"
-            name="userName"
-            className="input normal-font input-spacing"
-            style={isModalMode ? { width: "45%" } : { width: "80%" }}
-            value={profileForm.userName}
-            onChange={onChangeUserName}
-          />
-        </section>
-        <section className="form-section">
-          <span>Fullname</span>
-          <input
-            type="text"
-            name="fullName"
-            className="input normal-font input-spacing"
-            style={isModalMode ? { width: "45%" } : { width: "80%" }}
-            value={profileForm.fullName}
-            onChange={onChangeFullName}
-          />
-        </section>
-        <section className="form-section">
-          <span>Email</span>
-          <input
-            type="text"
-            name="email"
-            className="input normal-font input-spacing"
-            style={isModalMode ? { width: "45%" } : { width: "80%" }}
-            value={profileForm.email}
-            onChange={onChangeEmail}
-          />
-        </section>
-        <section className="form-section">
-          <span>Password</span>
-          <input
-            type="password"
-            name="password"
-            className="input normal-font input-spacing"
-            style={isModalMode ? { width: "45%" } : { width: "80%" }}
-            value={profileForm.password}
-            onChange={onChangePassword}
-          />
-        </section>
-        <section className="form-section" style={{ marginBottom: "1em" }}>
-          <DropDown
-            keyName="devprimarylang"
-            name="devprimarylang"
-            value={profileForm.primaryLangId}
-            label="Primary Language"
-            optionItems={primaryLang}
-            onChange={onChangePrimaryLang}
-            selectStyle={
-              isModalMode
-                ? { marginLeft: ".5em", width: "45%" }
-                : { width: "80%" }
-            }
-            isHorizontal={true}
-          />
-        </section>
-        <section className="form-section">
-          <DropDown
-            keyName="devsecondarylang"
-            name="devsecondarylang"
-            value={profileForm.secondaryLangId}
-            label="Secondary Language"
-            optionItems={secondaryLang}
-            onChange={onChangeSecondaryLang}
-            selectStyle={
-              isModalMode
-                ? { marginLeft: ".5em", width: "45%" }
-                : { width: "80%" }
-            }
-            isHorizontal={true}
-          />
-        </section>
-        <section
-          className="form-section"
-          style={{ marginTop: "1.5em", justifyContent: "flex-end" }}
-        >
-          <button type="submit" className="primary-btn">
-            {editMode === ProfileFormEditMode.Edit ? "edit" : "create"}
-          </button>
-        </section>
-        <section
-          className="form-section"
-          style={{
-            marginTop: "1.5em",
-            color: validationMessage ? "var(--error-cl)" : "",
-          }}
-        >
-          <span>{validationMessage ? validationMessage : successMessage}</span>
-        </section>
-      </div>
-    </form>
+      </form>
+      {!isModalMode ? (
+        <div style={{ marginTop: "2em" }}>
+          <ChangePassword />
+        </div>
+      ) : null}
+    </div>
   );
 }

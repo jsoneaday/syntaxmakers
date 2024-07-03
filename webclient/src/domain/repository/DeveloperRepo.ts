@@ -1,4 +1,10 @@
-import { DEVELOPER_EMAIL_URL, DEVELOPER_URL } from "./Api";
+import {
+  DEVELOPER_CHANGE_PASSWORD_URL,
+  DEVELOPER_EMAIL_URL,
+  DEVELOPER_UPDATE_URL,
+  DEVELOPER_URL,
+  OutputBool,
+} from "./Api";
 
 export class Developer {
   constructor(
@@ -35,6 +41,58 @@ export async function createDeveloper(newDev: {
   } else {
     throw new Error(await response.text());
   }
+}
+
+export async function updateDeveloper(updateDev: {
+  id: number; // dev id
+  fullName: string;
+  email: string;
+  primaryLangId: number;
+  secondaryLangId?: number | null;
+  access_token: string;
+}) {
+  const response = await fetch(DEVELOPER_UPDATE_URL, {
+    method: "POST",
+    credentials: "include",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${updateDev.access_token}`,
+    },
+    body: JSON.stringify(updateDev),
+  });
+
+  if (response.ok) {
+    const changePassResult: OutputBool = await response.json();
+    return changePassResult.result;
+  }
+  return false;
+}
+
+export async function changePassword(
+  devId: number,
+  oldPassword: string,
+  newPassword: string,
+  access_token: string
+) {
+  const response = await fetch(DEVELOPER_CHANGE_PASSWORD_URL, {
+    method: "POST",
+    credentials: "include",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${access_token}`,
+    },
+    body: JSON.stringify({
+      id: devId,
+      oldPassword,
+      newPassword,
+    }),
+  });
+
+  if (response.ok) {
+    const changePassResult: OutputBool = await response.json();
+    return changePassResult.result;
+  }
+  return false;
 }
 
 export async function getDeveloper(id: string) {

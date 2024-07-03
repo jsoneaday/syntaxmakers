@@ -77,9 +77,11 @@ mod internal {
         match password_result {
             Ok(current_password) => {
                 if !verify_password(&change_password.old_password, &current_password.password).unwrap() {
+                    println!("old and current passwords do not match");
                     return Err(SqlxError::PasswordChangeFailed.into());
                 }
                 if change_password.new_password.len() < 8 || change_password.new_password.len() > 50 { 
+                    println!("new password invalid");
                     return Err(SqlxError::PasswordChangeFailed.into());
                 }
             },
@@ -121,15 +123,20 @@ mod internal {
 
         let update_result = match update_result {
             Ok(row) => {
-                Ok(row)
+                if row.rows_affected() > 0 {
+                    Ok(row)
+                } else {
+                    error!("update developer has failed");
+                    Err(SqlxError::QueryFailed)
+                }
             },
             Err(e) => {
                 error!("update developer error: {:?}", e);
-                Err(e)
+                Err(SqlxError::QueryFailed)
             }
         };
         if let Err(e) = update_result {
-            return Err(e);
+            return Err(e.into());
         }
 
         match query_as::<_, EntityId>(

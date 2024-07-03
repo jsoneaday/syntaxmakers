@@ -10,7 +10,7 @@ use crate::{
             }, employers::repo::QueryEmployerFn, user::models::ChangePassword
         }
     }, 
-    routes::{auth_helper::check_is_authenticated, base_model::{IdAndPagingModel, OutputId}, route_utils::get_header_strings, user_error::UserError}
+    routes::{auth_helper::check_is_authenticated, base_model::{IdAndPagingModel, OutputBool, OutputId}, route_utils::get_header_strings, user_error::UserError}
 };
 use super::models::{ChangePasswordRoute, DeveloperResponder, DeveloperResponders, NewDeveloperForRoute, UpdateDeveloperForRoute};
 use crate::routes::authentication::models::DeveloperOrEmployer as AuthDeveloperOrEmployer;
@@ -50,7 +50,7 @@ pub async fn change_password<T: QueryDeveloperFn + QueryEmployerFn + ChangeDevPa
     app_data: Data<AppState<T, U>>, 
     json: Json<ChangePasswordRoute>,
     req: HttpRequest
-) -> Result<(), UserError> {
+) -> Result<OutputBool, UserError> {
     let is_auth = check_is_authenticated(app_data.clone(), json.id, AuthDeveloperOrEmployer::Developer, req).await;
     if !is_auth {
         error!("Authorization failed");
@@ -64,7 +64,7 @@ pub async fn change_password<T: QueryDeveloperFn + QueryEmployerFn + ChangeDevPa
     }).await;
 
     match result {
-        Ok(_) => Ok(()),
+        Ok(_) => Ok(OutputBool { result: true }),
         Err(e) => Err(e.into())
     }
 }
@@ -73,7 +73,7 @@ pub async fn update_developer<T: QueryDeveloperFn + QueryEmployerFn + UpdateDeve
     app_data: Data<AppState<T, U>>, 
     json: Json<UpdateDeveloperForRoute>,
     req: HttpRequest
-) -> Result<(), UserError> {
+) -> Result<OutputBool, UserError> {
     let is_auth = check_is_authenticated(app_data.clone(), json.id, AuthDeveloperOrEmployer::Developer, req).await;
     if !is_auth {
         error!("Authorization failed");
@@ -89,7 +89,7 @@ pub async fn update_developer<T: QueryDeveloperFn + QueryEmployerFn + UpdateDeve
     }).await;
 
     match result {
-        Ok(_) => Ok(()),
+        Ok(_) => Ok(OutputBool { result: true }),
         Err(e) => Err(e.into())
     }
 }

@@ -1,8 +1,11 @@
 import { ReactNode, MouseEvent, CSSProperties } from "react";
 import "../../theme/buttons.css";
 
+type ButtonTypes = "button" | "submit" | "reset" | undefined;
+
 export interface ButtonProps {
   children: ReactNode;
+  type?: ButtonTypes;
   containerStyle?: object;
   txtStyle?: object;
   onClick?: (e: MouseEvent<HTMLButtonElement>) => void;
@@ -11,12 +14,14 @@ export interface ButtonProps {
 
 export function PrimaryButton({
   children,
+  type = "button",
   containerStyle = {},
   onClick,
   disabled = false,
 }: ButtonProps) {
   return (
     <button
+      type={type}
       onClick={onClick}
       className="primary-btn"
       style={{
