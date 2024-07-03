@@ -2,7 +2,8 @@ use fake::Fake;
 use fake::faker::internet::en::{Username, SafeEmail};
 use syntaxmakers_server::common::repository::base::{Repository, DbRepo};
 use syntaxmakers_server::common::repository::developers::models::{NewDeveloper, UpdateDeveloper};
-use syntaxmakers_server::common::repository::developers::repo::{InsertDeveloperFn, QueryAllDevelopersFn, QueryDeveloperByEmailFn, QueryDeveloperFn, UpdateDeveloperFn};
+use syntaxmakers_server::common::repository::developers::repo::{ChangeDevPasswordFn, InsertDeveloperFn, QueryAllDevelopersFn, QueryDeveloperByEmailFn, QueryDeveloperFn, UpdateDeveloperFn};
+use syntaxmakers_server::common::repository::user::models::ChangePassword;
 use syntaxmakers_server::common_test::fixtures::{ get_fake_email, get_fake_fullname, init_fixtures, LANGUAGES};
 
 #[tokio::test]
@@ -91,7 +92,7 @@ async fn test_create_two_developers_and_get_all() {
 }
 
 #[tokio::test]
-async fn test_update_developer_fails_on_old_password() {
+async fn test_change_dev_password_fails_on_invalid_old_password() {
     let repo = DbRepo::init().await;
     init_fixtures().await;
     
@@ -110,20 +111,16 @@ async fn test_update_developer_fails_on_old_password() {
         secondary_lang_id: None
     }).await.unwrap();
 
-    let update_result = repo.update_developer(UpdateDeveloper { 
+    let update_result = repo.change_password(ChangePassword { 
         id: create_result.id, 
-        full_name: get_fake_fullname(), 
-        email: get_fake_email(), 
-        old_password: "fake_old".to_string(), // no match should fail
-        new_password: "test456".to_string(), 
-        primary_lang_id: LANGUAGES.get().unwrap()[1].id,
-        secondary_lang_id: Some(LANGUAGES.get().unwrap()[2].id)
+        old_password: "fake_old".to_string(),
+        new_password: "test4567".to_string()
     }).await;
     assert!(update_result.is_err());
 }
 
 #[tokio::test]
-async fn test_update_developer_fails_on_new_password() {
+async fn test_change_dev_password_fails_on_invalid_new_password() {
     let repo = DbRepo::init().await;
     init_fixtures().await;
     
@@ -142,16 +139,40 @@ async fn test_update_developer_fails_on_new_password() {
         secondary_lang_id: None
     }).await.unwrap();
 
-    let update_result = repo.update_developer(UpdateDeveloper { 
+    let update_result = repo.change_password(ChangePassword { 
         id: create_result.id, 
-        full_name: get_fake_fullname(), 
-        email: get_fake_email(), 
         old_password: old_password.clone(), 
-        new_password: "test456".to_string(), // not at least 8 characters should fail
-        primary_lang_id: LANGUAGES.get().unwrap()[1].id,
-        secondary_lang_id: Some(LANGUAGES.get().unwrap()[2].id)
+        new_password: "test456".to_string()
     }).await;
     assert!(update_result.is_err());
+}
+
+#[tokio::test]
+async fn test_change_dev_password_succeeds_on_new_password() {
+    let repo = DbRepo::init().await;
+    init_fixtures().await;
+    
+    let user_name = Username().fake::<String>();
+    let full_name = get_fake_fullname();
+    let email = get_fake_email();
+    let old_password = "test1234".to_string();
+    let primary_lang_id = LANGUAGES.get().unwrap()[0].id;
+
+    let create_result = repo.insert_developer(NewDeveloper {
+        user_name: user_name.clone(),
+        full_name: full_name.clone(),
+        email: email.clone(),
+        password: old_password.clone(),
+        primary_lang_id,
+        secondary_lang_id: None
+    }).await.unwrap();
+
+    let update_result = repo.change_password(ChangePassword { 
+        id: create_result.id, 
+        old_password: old_password.clone(), 
+        new_password: "test4567".to_string()
+    }).await;
+    assert!(update_result.is_ok());
 }
 
 #[tokio::test]
@@ -182,8 +203,6 @@ async fn test_update_developer_updates_fields() {
         id: create_result.id, 
         full_name: new_full_name.clone(), 
         email: new_email.clone(), 
-        old_password: old_password.clone(), 
-        new_password: "test4567".to_string(),
         primary_lang_id: new_primary_lang_id,
         secondary_lang_id: new_secondary_lang_id
     }).await;    
@@ -225,8 +244,6 @@ async fn test_update_developer_updates_secondary_lang() {
         id: create_result.id, 
         full_name: new_full_name.clone(), 
         email: new_email.clone(), 
-        old_password, 
-        new_password: "test4567".to_string(),
         primary_lang_id: new_primary_lang_id,
         secondary_lang_id: new_secondary_lang_id
     }).await;    
@@ -263,8 +280,6 @@ async fn test_update_developer_succeeds_on_remove_new_secondary_lang() {
         id: create_result.id, 
         full_name: new_full_name.clone(), 
         email: new_email.clone(), 
-        old_password, 
-        new_password: "test4567".to_string(),
         primary_lang_id: new_primary_lang_id,
         secondary_lang_id: None
     }).await;    

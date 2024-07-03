@@ -18,7 +18,7 @@ interface LoginProps {
 export default function Login({ toggleOpen }: LoginProps) {
   const [_profile, setProfile] = useProfile();
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("test123");
+  const [password, setPassword] = useState("test1234");
   const [_isPending, startTransition] = useTransition();
   const [errorMessage, setErrorMessage] = useState("");
   const [devOrEmp, _setDevOrEmp] = useDevOrEmployer();

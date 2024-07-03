@@ -1,10 +1,20 @@
 use actix_web::{web::{Data, Json, Path}, HttpRequest};
 use crate::{
     app_state::AppState, 
-    common::{authentication::auth_service::Authenticator, repository::{base::Repository, developers::{models::NewDeveloper, repo::{InsertDeveloperFn, QueryAllDevelopersFn, QueryDeveloperByEmailFn, QueryDeveloperFn}}}}, 
-    routes::{base_model::{IdAndPagingModel, OutputId}, route_utils::get_header_strings, user_error::UserError}
+    common::{
+        authentication::auth_service::Authenticator, 
+        repository::{
+            base::Repository, 
+            developers::{
+                models::{NewDeveloper, UpdateDeveloper}, repo::{ChangeDevPasswordFn, InsertDeveloperFn, QueryAllDevelopersFn, QueryDeveloperByEmailFn, QueryDeveloperFn, UpdateDeveloperFn}
+            }, employers::repo::QueryEmployerFn, user::models::ChangePassword
+        }
+    }, 
+    routes::{auth_helper::check_is_authenticated, base_model::{IdAndPagingModel, OutputId}, route_utils::get_header_strings, user_error::UserError}
 };
-use super::models::{NewDeveloperForRoute, DeveloperResponder, DeveloperResponders};
+use super::models::{ChangePasswordRoute, DeveloperResponder, DeveloperResponders, NewDeveloperForRoute, UpdateDeveloperForRoute};
+use crate::routes::authentication::models::DeveloperOrEmployer as AuthDeveloperOrEmployer;
+use log::error;
 
 /// register a new developer profile
 pub async fn create_developer<T: QueryDeveloperByEmailFn + InsertDeveloperFn + Repository, U: Authenticator>(
@@ -32,6 +42,54 @@ pub async fn create_developer<T: QueryDeveloperByEmailFn + InsertDeveloperFn + R
 
     match result {
         Ok(entity) => Ok(OutputId { id: entity.id }),
+        Err(e) => Err(e.into())
+    }
+}
+
+pub async fn change_password<T: QueryDeveloperFn + QueryEmployerFn + ChangeDevPasswordFn + Repository, U: Authenticator>(
+    app_data: Data<AppState<T, U>>, 
+    json: Json<ChangePasswordRoute>,
+    req: HttpRequest
+) -> Result<(), UserError> {
+    let is_auth = check_is_authenticated(app_data.clone(), json.id, AuthDeveloperOrEmployer::Developer, req).await;
+    if !is_auth {
+        error!("Authorization failed");
+        return Err(UserError::AuthenticationFailed);
+    }
+    
+    let result = app_data.repo.change_password(ChangePassword {
+        id: json.id,
+        old_password: json.old_password.to_owned(),
+        new_password: json.new_password.to_owned()
+    }).await;
+
+    match result {
+        Ok(_) => Ok(()),
+        Err(e) => Err(e.into())
+    }
+}
+
+pub async fn update_developer<T: QueryDeveloperFn + QueryEmployerFn + UpdateDeveloperFn + Repository, U: Authenticator>(
+    app_data: Data<AppState<T, U>>, 
+    json: Json<UpdateDeveloperForRoute>,
+    req: HttpRequest
+) -> Result<(), UserError> {
+    let is_auth = check_is_authenticated(app_data.clone(), json.id, AuthDeveloperOrEmployer::Developer, req).await;
+    if !is_auth {
+        error!("Authorization failed");
+        return Err(UserError::AuthenticationFailed);
+    }
+    
+    let result = app_data.repo.update_developer(UpdateDeveloper {
+        id: json.id,
+        full_name: json.full_name.to_owned(),
+        email: json.email.to_owned(),
+        primary_lang_id: json.primary_lang_id,
+        secondary_lang_id: json.secondary_lang_id
+    }).await;
+
+    match result {
+        Ok(_) => Ok(()),
         Err(e) => Err(e.into())
     }
 }
@@ -163,7 +221,7 @@ pub async fn get_all_developers<T: QueryAllDevelopersFn + QueryDeveloperFn + Rep
 
 #[cfg(test)]
 mod tests {
-    use crate::{common_test::fixtures::{MockDbRepo, get_app_data, get_fake_fullname, get_fake_httprequest_with_bearer_token}, common::{repository::{base::EntityId, developers::models::Developer, user::models::DeveloperOrEmployer}, authentication::auth_service::AuthenticationError}};
+    use crate::{common::{authentication::auth_service::AuthenticationError, repository::{base::EntityId, developers::models::Developer, user::models::DeveloperOrEmployer}}, common_test::fixtures::{get_app_data, get_fake_fullname, get_fake_httprequest_with_bearer_token, init_fixtures, MockDbRepo}};
     use async_trait::async_trait;
     use chrono::Utc;
     use fake::{faker::internet::en::{Username, FreeEmail}, Fake};
@@ -176,13 +234,6 @@ mod tests {
     impl Authenticator for MockAuthService {
         async fn is_authenticated(&self, _: String, _: Vec<(&str, &str)>, _: &DecodingKey) -> Result<bool, AuthenticationError> {
             Ok(true)
-        }
-    }
-
-    #[async_trait]
-    impl InsertDeveloperFn for MockDbRepo {
-        async fn insert_developer(&self, _: NewDeveloper) -> Result<EntityId, sqlx::Error> {
-            Ok(EntityId { id: 1 })
         }
     }
 
@@ -239,23 +290,80 @@ mod tests {
         }
     }
 
+    mod mod_create_developer_route {
+        use crate::common_test::fixtures::{get_fake_email, get_fake_user_name, init_fixtures, LANGUAGES};
+        use super::*;
+
+        pub struct CreateDevMockDbRepo;
+
+        #[async_trait]
+        impl Repository for CreateDevMockDbRepo {
+            async fn init() -> Self {
+                CreateDevMockDbRepo
+            }
+        }
+
+        #[async_trait]
+        impl InsertDeveloperFn for CreateDevMockDbRepo {
+            async fn insert_developer(&self, _: NewDeveloper) -> Result<EntityId, sqlx::Error> {
+                Ok(EntityId { id: 1 })
+            }
+        }
+
+        #[async_trait]
+        impl QueryDeveloperByEmailFn for CreateDevMockDbRepo {
+            async fn query_developer_by_email(&self, _: String) -> Result<Option<Developer>, sqlx::Error> {
+                Ok(None)
+            }
+        }
+
+        #[tokio::test]
+        async fn test_create_developer_route() {
+            let repo = CreateDevMockDbRepo::init().await;
+            init_fixtures().await;
+            let auth_service = MockAuthService;
+            let app_data = get_app_data(repo, auth_service).await;
+
+            let result = create_developer(app_data, Json(NewDeveloperForRoute { 
+                user_name: get_fake_user_name(), 
+                full_name: get_fake_fullname(), 
+                email: get_fake_email(), 
+                password: "test1234".to_string(),
+                primary_lang_id: LANGUAGES.get().unwrap()[0].id, 
+                secondary_lang_id: None
+            })).await;
+
+            assert!(result.unwrap().id == 1);
+        }
+    }
+
+
+    #[async_trait]
+    impl ChangeDevPasswordFn for MockDbRepo {
+        async fn change_password(&self, _: ChangePassword) -> Result<(), sqlx::Error> {
+            Ok(())
+        }
+    }
+
     #[tokio::test]
-    async fn test_insert_developer_route() {
+    async fn test_change_dev_password_route() {
         let repo = MockDbRepo::init().await;
+        init_fixtures().await;
         let auth_service = MockAuthService;
         let app_data = get_app_data(repo, auth_service).await;
 
-        let result = app_data.repo.insert_developer(NewDeveloper { 
-            user_name: Username().fake::<String>(), 
-            full_name: get_fake_fullname(), 
-            email: FreeEmail().fake::<String>(), 
-            password: "test1234".to_string(),
-            primary_lang_id: 1, 
-            secondary_lang_id: Some(2) 
-        }).await.unwrap();
+        let req = get_fake_httprequest_with_bearer_token(
+            DEV_USERNAME.to_string(), DeveloperOrEmployer::Developer, &app_data.auth_keys.encoding_key, "/v1/developer", 1, Some(60*2), None
+        );
 
-        assert!(result.id == 1);
-    }
+        let result = change_password(app_data, Json(ChangePasswordRoute { 
+            id: 1,
+            old_password: "test1234".to_string(),
+            new_password: "test1234".to_string()
+        }), req).await;
+
+        assert!(result.is_ok());
+    }        
 
     #[tokio::test]
     async fn test_get_developer_route() {

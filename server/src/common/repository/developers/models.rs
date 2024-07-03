@@ -1,6 +1,5 @@
 use chrono::{DateTime, Utc};
 use sqlx::FromRow;
-
 use crate::common::authentication::password_hash::verify_password;
 
 #[derive(FromRow, Debug, Clone)]
@@ -37,12 +36,6 @@ impl Developer {
     }
 }
 
-/// Never never return this object!
-#[derive(FromRow, Debug, Clone)]
-pub struct DevPassword {
-    pub password: String
-}
-
 pub struct NewDeveloper {
     pub user_name: String,
     pub full_name: String,
@@ -55,9 +48,7 @@ pub struct NewDeveloper {
 pub struct UpdateDeveloper {
     pub id: i64,
     pub full_name: String,
-    pub email: String,
-    pub old_password: String,
-    pub new_password: String,
+    pub email: String,    
     pub primary_lang_id: i64,
     pub secondary_lang_id: Option<i64>
 }

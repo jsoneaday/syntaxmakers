@@ -15,7 +15,6 @@ use crate::routes::authentication::models::DeveloperOrEmployer as AuthDeveloperO
 #[allow(unused)]
 pub async fn create_job<T: InsertJobFn + QueryEmployerFn + QueryDeveloperFn + Repository, U: Authenticator>(app_data: Data<AppState<T, U>>, json: Json<NewJobForRoute>, req: HttpRequest)
  -> Result<OutputId, UserError> {    
-    info!("start insert_job {}", json.description);
     let is_auth = check_is_authenticated(app_data.clone(), json.employer_id, AuthDeveloperOrEmployer::Employer, req).await;
     if !is_auth {
         error!("Authorization failed");
