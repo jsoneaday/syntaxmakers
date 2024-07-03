@@ -1,7 +1,7 @@
 use serde::{Serialize, Deserialize};
 
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Debug)]
 pub enum AuthenticateResult {
     Success{ id: i64 },
     Failure

@@ -86,7 +86,6 @@ async fn get_conn_pool() -> Pool<Postgres> {
     info!("migration started");
     let migrate_result = migrate!("./migrations").run(&conn).await;
     info!("end migration {:?}", migrate_result);
-    println!("end migration {:?}", migrate_result);
     match migrate_result {
         Ok(()) => {
             info!("migration complete");

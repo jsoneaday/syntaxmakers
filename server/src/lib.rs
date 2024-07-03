@@ -47,6 +47,7 @@ pub mod common {
         }        
     }
     pub mod authentication {
+        pub mod password_hash;
         pub mod auth_service;
     }
 }

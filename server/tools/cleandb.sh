@@ -1,0 +1,1 @@
+psql postgresql://syntaxmakers:syntaxmakers@localhost:5433/syntaxmakers -f ./tools/truncatedb.sql

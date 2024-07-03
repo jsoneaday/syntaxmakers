@@ -7,6 +7,7 @@ use crate::common::repository::base::EntityId;
 use log::error;
 
 mod internal {
+    use crate::common::authentication::password_hash::hash_password;
     use super::*;    
 
     pub async fn insert_employer(conn: &Pool<Postgres>, new_employer: NewEmployer) -> Result<EntityId, Error> {
@@ -14,7 +15,7 @@ mod internal {
             .bind(new_employer.user_name)
             .bind(new_employer.full_name)
             .bind(new_employer.email)
-            .bind(new_employer.password)
+            .bind(hash_password(&new_employer.password).unwrap())
             .bind(new_employer.company_id)
             .fetch_one(conn)
             .await;
@@ -31,7 +32,7 @@ mod internal {
     pub async fn query_employer(conn: &Pool<Postgres>, id: i64) -> Result<Option<Employer>, Error> {
         query_as::<_, Employer>(
             r"
-            select id, created_at, updated_at, user_name, full_name, email, company_id 
+            select id, created_at, updated_at, user_name, full_name, email, password, company_id 
             from employer where id = $1
             ")
             .bind(id)
@@ -41,7 +42,7 @@ mod internal {
     pub async fn query_employer_by_email(conn: &Pool<Postgres>, email: String) -> Result<Option<Employer>, Error> {
         query_as::<_, Employer>(
             r"
-            select id, created_at, updated_at, user_name, full_name, email, company_id 
+            select id, created_at, updated_at, user_name, full_name, email, password, company_id 
             from employer where email = $1
             ")
             .bind(email)
@@ -51,7 +52,7 @@ mod internal {
     pub async fn query_all_employers(conn: &Pool<Postgres>, page_size: i32, last_offset: i64) -> Result<Vec<Employer>, Error> {
         query_as::<_, Employer>(
             r"
-            select id, created_at, updated_at, user_name, full_name, email, company_id 
+            select id, created_at, updated_at, user_name, full_name, email, password, company_id 
             from employer
             order by updated_at desc
             limit $1

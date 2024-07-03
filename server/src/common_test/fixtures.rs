@@ -17,6 +17,10 @@ use crate::common::rand_utils::get_random_no_from_range;
 use crate::common::repository::base::{Repository, DbRepo};
 use crate::common::repository::countries::models::Country;
 use crate::common::repository::countries::repo::QueryAllCountriesFn;
+use crate::common::repository::developers::models::NewDeveloper;
+use crate::common::repository::developers::repo::{InsertDeveloperFn, QueryAllDevelopersFn};
+use crate::common::repository::employers::models::NewEmployer;
+use crate::common::repository::employers::repo::{InsertEmployerFn, QueryAllEmployersFn};
 use crate::common::repository::industries::models::Industry;
 use crate::common::repository::industries::repo::QueryAllIndustriesFn;
 use crate::common::repository::jobs::models::NewJob;
@@ -27,6 +31,7 @@ use crate::common::repository::salaries::repo::QueryAllSalariesFn;
 use crate::common::repository::salaries::models::Salary;
 use crate::common::repository::user::models::DeveloperOrEmployer;
 use async_trait::async_trait;
+use tokio::time::{sleep, Duration};
 
 pub static COUNTRIES: OnceLock<Vec<Country>> = OnceLock::new();
 pub static INDUSTRIES: OnceLock<Vec<Industry>> = OnceLock::new();
@@ -144,17 +149,65 @@ pub async fn init_fixtures() {
 
 async fn setup_data() {
     let repo = DbRepo::init().await;
-    let jobs = repo.query_all_jobs_count().await.unwrap().count;
-    
-    if jobs == 0 {
+
+    let devs_count = repo.query_all_developers(1000, 0).await.unwrap().len();
+    if devs_count == 0 {
+        _ = repo.insert_developer(NewDeveloper {
+            user_name: "jon".to_string(),
+            full_name: "John Jones".to_string(),
+            email: "jon@jon.com".to_string(),
+            password: "test1234".to_string(),
+            primary_lang_id: LANGUAGES.get().unwrap()[0].id,
+            secondary_lang_id: Some(LANGUAGES.get().unwrap()[1].id),
+        }).await;
+    }
+
+    let emp_count = repo.query_all_employers(1000, 0).await.unwrap().len();
+    if emp_count < 5 {
+        _ = repo.insert_employer(NewEmployer {
+            user_name: "jim".to_string(),
+            full_name: "Jim Tim".to_string(),
+            email: "jon@FantasticStuff.com".to_string(),
+            password: "test1234".to_string(),
+            company_id: 1
+        }).await;
+        _ = repo.insert_employer(NewEmployer {
+            user_name: "linda".to_string(),
+            full_name: "Linda Shin".to_string(),
+            email: "lshin@AmazingAndCo.com".to_string(),
+            password: "test1234".to_string(),
+            company_id: 2
+        }).await;
+        _ = repo.insert_employer(NewEmployer {
+            user_name: "dave".to_string(),
+            full_name: "David Waver".to_string(),
+            email: "jon@SuperDuperCorp.com".to_string(),
+            password: "test1234".to_string(),
+            company_id: 3
+        }).await;
+        _ = repo.insert_employer(NewEmployer {
+            user_name: "dawn".to_string(),
+            full_name: "Dawn Happ".to_string(),
+            email: "jon@acmecorp.com".to_string(),
+            password: "test1234".to_string(),
+            company_id: 4
+        }).await;
+    }
+
+    let jobs_count = repo.query_all_jobs_count().await.unwrap().count;    
+    if jobs_count == 0 {
+        let emps = repo.query_all_employers(1000, 0).await.unwrap();
+        if emps.len() < 5 {
+            sleep(Duration::from_secs(2)).await;
+        }
         for _ in 1..40 {          
-            let emp_id = get_random_no_from_range(1, 5);
+            let emp_index = get_random_no_from_range(0, 4);
             let is_remote = if get_random_no_from_range(0, 2) == 0 { false } else { true };
             let country_id = if is_remote { None } else { Some(1) };
             error!("is_remote {}, country_id {:?}", is_remote, country_id);
             
             repo.insert_job(NewJob {
-                employer_id: emp_id as i64,
+                employer_id: emps[emp_index].id,
                 title: get_fake_title().to_string(),
                 description: get_fake_desc().to_string(),
                 is_remote,

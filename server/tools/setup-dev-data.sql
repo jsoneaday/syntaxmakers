@@ -668,17 +668,3 @@ insert into salary (base) values (300000);
 insert into salary (base) values (400000);
 insert into salary (base) values (500000);
 
-insert into developer 
-(user_name, full_name, email, "password", primary_lang_id) 
-values 
-('jon', 'John Jones', 'jon@jon.com', 'test123', 1);
-
-insert into developers_secondary_langs 
-(developer_id, secondary_lang_id)
-values
-(1, 2);
-
-insert into employer (user_name, full_name, email, "password", company_id) values ('jim', 'Jim Tim', 'jon@FantasticStuff.com', 'test123', 1);
-insert into employer (user_name, full_name, email, "password", company_id) values ('linda', 'Linda Shin', 'lshin@AmazingAndCo.com', 'test123', 2);
-insert into employer (user_name, full_name, email, "password", company_id) values ('dave', 'David Waver', 'jon@SuperDuperCorp.com', 'test123', 3);
-insert into employer (user_name, full_name, email, "password", company_id) values ('dawn', 'Dawn Happ', 'jon@acmecorp.com', 'test123', 4);

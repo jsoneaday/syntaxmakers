@@ -46,7 +46,7 @@ create table developer (
     "user_name" varchar(60) not null,
     "full_name" varchar(100) not null,
     "email" varchar(120) not null unique,
-    "password" varchar(60) not null,
+    "password" varchar(200) not null,
     "primary_lang_id" bigserial not null,
 
     constraint fk_primary_lang foreign key(primary_lang_id) references prog_language(id)
@@ -67,7 +67,7 @@ create table employer (
     "user_name" varchar(60) not null,
     "full_name" varchar(100) not null,
     "email" varchar(120) not null unique,
-    "password" varchar(60) not null,
+    "password" varchar(200) not null,
     "company_id" bigserial not null,
 
     constraint fk_company foreign key(company_id) references company(id)

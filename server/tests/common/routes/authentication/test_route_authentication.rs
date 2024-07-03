@@ -24,7 +24,7 @@ async fn test_refresh_access_token_route() {
     let app_data = get_app_data(repo, auth_service).await;
     let user_name = "jon".to_string();
     let email = "jon@jon.com".to_string();
-    let password = "test123".to_string();
+    let password = "test1234".to_string();
      
     let login_token_result = login(
         app_data.clone(), Json(LoginCredential { dev_or_emp: AuthDeveloperOrEmployer::Developer, email, password })

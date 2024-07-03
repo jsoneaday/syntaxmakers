@@ -32,8 +32,6 @@ async fn test_insert_application_fails_if_user_already_applied() {
         salary_id: SALARY_BASE.get().unwrap()[0].id
     }).await;
 
-    println!("job {:?}", job);
-
     let developer = repo.insert_developer(NewDeveloper { 
         user_name: get_fake_user_name(), 
         full_name: get_fake_fullname(), 

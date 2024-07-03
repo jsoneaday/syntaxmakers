@@ -85,7 +85,6 @@ pub async fn login<T: AuthenticateDbFn + QueryDeveloperFn + QueryEmployerFn + Re
                                         .cookie(refresh_cookie)
                                         .body(access_token));
                                 } else {
-                                    error!("Authentication failed. Developer not found");
                                     http_response = Some(HttpResponse::Unauthorized()
                                         .content_type(ContentType::json())
                                         .body("Authentication failed. Developer not found"));
@@ -201,31 +200,33 @@ mod tests {
     #[async_trait]
     impl QueryDeveloperFn for MockDbRepo {
         async fn query_developer(&self, _: i64) -> Result<Option<Developer>, sqlx::Error> {
-            Ok(Some(Developer {
-                id: 1,
-                created_at: Utc::now(),
-                updated_at: Utc::now(),
-                user_name: DEV_USERNAME.to_string(),
-                full_name: "Tester Test".to_string(),
-                email: FreeEmail().fake::<String>(),
-                primary_lang_id: 1,
-                secondary_lang_id: None
-            }))
+            Ok(Some(Developer::new(
+                1,
+                Utc::now(),
+                Utc::now(),
+                DEV_USERNAME.to_string(),
+                "Tester Test".to_string(),
+                FreeEmail().fake::<String>(),
+                "".to_string(),
+                1,
+                None
+            )))
         }
     }    
 
     #[async_trait]
     impl QueryEmployerFn for MockDbRepo {
         async fn query_employer(&self, _: i64) -> Result<Option<Employer>, sqlx::Error> {
-            Ok(Some(Employer {
-                id: 1,
-                created_at: Utc::now(),
-                updated_at: Utc::now(),
-                user_name: EMP_USERNAME.to_string(),
-                full_name: "Tester Test".to_string(),
-                email: FreeEmail().fake::<String>(),
-                company_id: 1
-            }))
+            Ok(Some(Employer::new(
+                1,
+                Utc::now(),
+                Utc::now(),
+                EMP_USERNAME.to_string(),
+                "Tester Test".to_string(),
+                FreeEmail().fake::<String>(),
+                "".to_string(),
+                1
+            )))
         }
     }    
 
@@ -235,7 +236,7 @@ mod tests {
         let auth_service = MockAuthService;
         let app_data = get_app_data(repo, auth_service).await;
 
-        let result = login(app_data.clone(), Json(LoginCredential { dev_or_emp: AuthDeveloperOrEmployer::Developer, email: FreeEmail().fake::<String>(), password: "test123".to_string() })).await;
+        let result = login(app_data.clone(), Json(LoginCredential { dev_or_emp: AuthDeveloperOrEmployer::Developer, email: FreeEmail().fake::<String>(), password: "test1234".to_string() })).await;
 
         assert!(result.status() == StatusCode::OK);
         let cookie = result.cookies().last().unwrap();

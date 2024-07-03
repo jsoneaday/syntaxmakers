@@ -19,7 +19,7 @@ async fn test_create_developer_and_get_back() {
         user_name: user_name.clone(),
         full_name: full_name.clone(),
         email: email.clone(),
-        password: "test123".to_string(),
+        password: "test1234".to_string(),
         primary_lang_id,
         secondary_lang_id: None
     }).await.unwrap();
@@ -45,7 +45,7 @@ async fn test_create_developer_and_get_back_by_email() {
         user_name: user_name.clone(),
         full_name: full_name.clone(),
         email: email.clone(),
-        password: "test123".to_string(),
+        password: "test1234".to_string(),
         primary_lang_id,
         secondary_lang_id: None
     }).await.unwrap();
@@ -67,7 +67,7 @@ async fn test_create_two_developers_and_get_all() {
         user_name: Username().fake::<String>(),
         full_name: get_fake_fullname(),
         email: SafeEmail().fake::<String>(),
-        password: "test123".to_string(),
+        password: "test1234".to_string(),
         primary_lang_id: 1,
         secondary_lang_id: None
     }).await.unwrap();
@@ -75,7 +75,7 @@ async fn test_create_two_developers_and_get_all() {
         user_name: Username().fake::<String>(),
         full_name: get_fake_fullname(),
         email: SafeEmail().fake::<String>(),
-        password: "test123".to_string(),
+        password: "test1234".to_string(),
         primary_lang_id: 1,
         secondary_lang_id: None
     }).await.unwrap();
@@ -98,7 +98,7 @@ async fn test_update_developer_fails_on_old_password() {
     let user_name = Username().fake::<String>();
     let full_name = get_fake_fullname();
     let email = get_fake_email();
-    let old_password = "test123".to_string();
+    let old_password = "test1234".to_string();
     let primary_lang_id = LANGUAGES.get().unwrap()[0].id;
 
     let create_result = repo.insert_developer(NewDeveloper {
@@ -130,7 +130,7 @@ async fn test_update_developer_fails_on_new_password() {
     let user_name = Username().fake::<String>();
     let full_name = get_fake_fullname();
     let email = get_fake_email();
-    let old_password = "test123".to_string();
+    let old_password = "test1234".to_string();
     let primary_lang_id = LANGUAGES.get().unwrap()[0].id;
 
     let create_result = repo.insert_developer(NewDeveloper {
@@ -162,7 +162,7 @@ async fn test_update_developer_updates_fields() {
     let user_name = Username().fake::<String>();
     let full_name = get_fake_fullname();
     let email = get_fake_email();
-    let old_password = "test123".to_string();
+    let old_password = "test1234".to_string();
     let primary_lang_id = LANGUAGES.get().unwrap()[0].id;
 
     let create_result = repo.insert_developer(NewDeveloper {
@@ -204,7 +204,7 @@ async fn test_update_developer_updates_secondary_lang() {
     let user_name = Username().fake::<String>();
     let full_name = get_fake_fullname();
     let email = get_fake_email();
-    let old_password = "test123".to_string();
+    let old_password = "test1234".to_string();
     let primary_lang_id = LANGUAGES.get().unwrap()[0].id;
     let secondary_lang_id = Some(LANGUAGES.get().unwrap()[3].id);
 
@@ -231,7 +231,7 @@ async fn test_update_developer_updates_secondary_lang() {
         secondary_lang_id: new_secondary_lang_id
     }).await;    
     let get_result = repo.query_developer(create_result.id).await.unwrap().unwrap();
-    println!("id: {}", get_result.id);
+    
     assert!(get_result.clone().secondary_lang_id.unwrap() == new_secondary_lang_id.unwrap());
 }
 
@@ -243,7 +243,7 @@ async fn test_update_developer_succeeds_on_remove_new_secondary_lang() {
     let user_name = Username().fake::<String>();
     let full_name = get_fake_fullname();
     let email = get_fake_email();
-    let old_password = "test123".to_string();
+    let old_password = "test1234".to_string();
     let primary_lang_id = LANGUAGES.get().unwrap()[0].id;
     let secondary_lang_id = Some(LANGUAGES.get().unwrap()[3].id);
 
@@ -269,6 +269,6 @@ async fn test_update_developer_succeeds_on_remove_new_secondary_lang() {
         secondary_lang_id: None
     }).await;    
     let get_result = repo.query_developer(create_result.id).await.unwrap().unwrap();
-    println!("id: {}", get_result.id);
+    
     assert!(get_result.clone().secondary_lang_id == None);
 }

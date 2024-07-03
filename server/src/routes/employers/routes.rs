@@ -1,17 +1,18 @@
 use actix_web::{web::{Data, Json, Path}, HttpRequest};
 use crate::{
-    common::{
-        repository::{employers::{repo::{InsertEmployerFn, QueryEmployerFn, QueryAllEmployersFn, QueryEmployerByEmailFn}, models::NewEmployer}, base::Repository}, authentication::auth_service::Authenticator
-    }, 
-    routes::{base_model::{OutputId, PagingModel}, user_error::UserError, route_utils::get_header_strings}, 
-    app_state::AppState
+    app_state::AppState, common::{
+        authentication::auth_service::Authenticator, repository::{base::Repository, employers::{models::NewEmployer, repo::{InsertEmployerFn, QueryAllEmployersFn, QueryEmployerByEmailFn, QueryEmployerFn}}}
+    }, routes::{base_model::{OutputId, PagingModel}, route_utils::get_header_strings, user_error::UserError}
 };
 use super::models::{NewEmployerForRoute, EmployerResponder, EmployerResponders};
 
+/// register a new employer profile
 pub async fn create_employer<T: InsertEmployerFn + Repository, U: Authenticator>(
     app_data: Data<AppState<T, U>>, 
     json: Json<NewEmployerForRoute>
 ) -> Result<OutputId, UserError> {
+    // todo: check if email exists already
+
     let result = app_data.repo.insert_employer(NewEmployer {
         user_name: json.user_name.to_owned(),
         full_name: json.full_name.to_owned(),
@@ -135,30 +136,32 @@ mod tests {
     #[async_trait]
     impl QueryEmployerFn for MockDbRepo {
         async fn query_employer(&self, _: i64) -> Result<Option<Employer>, sqlx::Error> {
-            Ok(Some(Employer {
-                id: 1,
-                created_at: Utc::now(),
-                updated_at: Utc::now(),
-                user_name: Username().fake::<String>(),
-                full_name: get_fake_fullname(),
-                email: FreeEmail().fake::<String>(),
-                company_id: 1
-            }))
+            Ok(Some(Employer::new(
+                1,
+                Utc::now(),
+                Utc::now(),
+                Username().fake::<String>(),
+                get_fake_fullname(),
+                FreeEmail().fake::<String>(),
+                "".to_string(),
+                1
+            )))
         }
     }
 
     #[async_trait]
     impl QueryEmployerByEmailFn for MockDbRepo {
         async fn query_employer_by_email(&self, _: String) -> Result<Option<Employer>, sqlx::Error> {
-            Ok(Some(Employer {
-                id: 1,
-                created_at: Utc::now(),
-                updated_at: Utc::now(),
-                user_name: Username().fake::<String>(),
-                full_name: get_fake_fullname(),
-                email: FreeEmail().fake::<String>(),
-                company_id: 1
-            }))
+            Ok(Some(Employer::new(
+                1,
+                Utc::now(),
+                Utc::now(),
+                Username().fake::<String>(),
+                get_fake_fullname(),
+                FreeEmail().fake::<String>(),
+                "".to_string(),
+                1
+            )))
         }
     }
 
@@ -166,15 +169,16 @@ mod tests {
     impl QueryAllEmployersFn for MockDbRepo {
         async fn query_all_employers(&self, _: i32, _: i64) -> Result<Vec<Employer>, sqlx::Error> {
             Ok(vec![
-              Employer {
-                id: 1,
-                created_at: Utc::now(),
-                updated_at: Utc::now(),
-                user_name: Username().fake::<String>(),
-                full_name: get_fake_fullname(),
-                email: FreeEmail().fake::<String>(),
-                company_id: 1
-              }  
+              Employer::new(
+                    1,
+                    Utc::now(),
+                    Utc::now(),
+                    Username().fake::<String>(),
+                    get_fake_fullname(),
+                    FreeEmail().fake::<String>(),
+                    "".to_string(),
+                    1
+                )
             ])
         }
     }
@@ -189,7 +193,7 @@ mod tests {
             user_name: Username().fake::<String>(), 
             full_name: get_fake_fullname(), 
             email: FreeEmail().fake::<String>(), 
-            password: "test123".to_string(),
+            password: "test1234".to_string(),
             company_id: 1 
         })).await.unwrap();
 

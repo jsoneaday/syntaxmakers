@@ -60,11 +60,9 @@ mod internal {
 
         match result {
             Ok(_) => {
-                println!("user {} already applied to job {}", dev_id, job_id);
                 Ok(true)
             },
             Err(e) => {
-                println!("error {:?}, user {} has not applied to {}", e, dev_id, job_id);
                 Err(e)
             }
         }

@@ -8,12 +8,14 @@ use log::error;
 
 mod internal {
     use sqlx::query;
-    use crate::common::repository::error::SqlxError;
+    use crate::common::{authentication::password_hash::{hash_password, verify_password}, repository::error::SqlxError};
     use super::*;    
 
     pub async fn insert_developer(conn: &Pool<Postgres>, new_developer: NewDeveloper) -> Result<EntityId, Error> {
         let mut tx = conn.begin().await.unwrap();
         
+        // todo: need to test min password length 8 and max 200
+        let hashed_password = hash_password(&new_developer.password).unwrap();
         let insert_result = query_as::<_, EntityId>(
             r"
             insert into developer 
@@ -25,7 +27,7 @@ mod internal {
             .bind(new_developer.user_name)
             .bind(new_developer.full_name)
             .bind(new_developer.email)
-            .bind(new_developer.password)
+            .bind(hashed_password)
             .bind(new_developer.primary_lang_id)
             .fetch_one(&mut *tx)
             .await;
@@ -74,10 +76,10 @@ mod internal {
         .await;
         match password_result {
             Ok(current_password) => {
-                if current_password.password != update_developer.old_password {
+                if !verify_password(&update_developer.old_password, &current_password.password).unwrap() {
                     return Err(SqlxError::PasswordChangeFailed.into());
                 }
-                if update_developer.new_password.len() < 8 {
+                if update_developer.new_password.len() < 8 { // todo: add max check
                     return Err(SqlxError::PasswordChangeFailed.into());
                 }
             },
@@ -100,7 +102,6 @@ mod internal {
 
         let update_result = match update_result {
             Ok(row) => {
-                println!("update developer {:?}", row);
                 Ok(row)
             },
             Err(e) => {
@@ -122,7 +123,7 @@ mod internal {
                 match entity {
                     Some(_) => {
                         if let None = update_developer.secondary_lang_id {
-                            let test = query::<_>(
+                            let _ = query::<_>(
                                 r"
                                     delete from developers_secondary_langs
                                     where developer_id = $1
@@ -131,9 +132,8 @@ mod internal {
                             .bind(update_developer.id)
                             .execute(&mut *tx)
                             .await;
-                            println!("delete secondary lang {:?}", test);
                         } else {                            
-                            let test = query::<_>(
+                            let _ = query::<_>(
                                 r"
                                     update developers_secondary_langs
                                     set secondary_lang_id = $2
@@ -144,7 +144,6 @@ mod internal {
                             .bind(update_developer.secondary_lang_id.unwrap())
                             .execute(&mut *tx)
                             .await;
-                            println!("update existing secondary {:?}", test);
                         }
                     },
                     None => {
@@ -162,7 +161,6 @@ mod internal {
                             .bind(secondary_lang_id)
                             .fetch_one(&mut *tx)
                             .await;
-                            println!("insert new secondary lang")
                         }
                     }
                 }
@@ -178,7 +176,7 @@ mod internal {
     pub async fn query_developer(conn: &Pool<Postgres>, id: i64) -> Result<Option<Developer>, Error> {
         query_as::<_, Developer>(
             r"
-            select d.id, d.created_at, d.updated_at, d.user_name, d.full_name, d.email, d.primary_lang_id, dsl.secondary_lang_id
+            select d.id, d.created_at, d.updated_at, d.user_name, d.full_name, d.email, d.password, d.primary_lang_id, dsl.secondary_lang_id
             from developer d left join developers_secondary_langs dsl on d.id = dsl.developer_id
             where d.id = $1
             ")
@@ -189,7 +187,7 @@ mod internal {
     pub async fn query_developer_by_email(conn: &Pool<Postgres>, email: String) -> Result<Option<Developer>, Error> {
         query_as::<_, Developer>(
             r"
-            select d.id, d.created_at, d.updated_at, d.user_name, d.full_name, d.email, d.primary_lang_id, dsl.secondary_lang_id
+            select d.id, d.created_at, d.updated_at, d.user_name, d.full_name, d.email, d.password, d.primary_lang_id, dsl.secondary_lang_id
             from developer d left join developers_secondary_langs dsl on d.id = dsl.developer_id
             where d.email = $1
             ")
@@ -200,7 +198,7 @@ mod internal {
     pub async fn query_all_developers(conn: &Pool<Postgres>, page_size: i32, last_offset: i64) -> Result<Vec<Developer>, Error> {
         query_as::<_, Developer>(
             r"
-            select d.id, d.created_at, d.updated_at, d.user_name, d.full_name, d.email, d.primary_lang_id, dsl.secondary_lang_id
+            select d.id, d.created_at, d.updated_at, d.user_name, d.full_name, d.email, d.password, d.primary_lang_id, dsl.secondary_lang_id
             from developer d left join developers_secondary_langs dsl on d.id = dsl.developer_id
             order by updated_at desc
             limit $1

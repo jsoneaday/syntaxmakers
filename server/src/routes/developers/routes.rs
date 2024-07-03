@@ -1,11 +1,12 @@
 use actix_web::{web::{Data, Json, Path}, HttpRequest};
 use crate::{
     app_state::AppState, 
-    common::{repository::{developers::{repo::{InsertDeveloperFn, QueryDeveloperFn, QueryAllDevelopersFn, QueryDeveloperByEmailFn}, models::NewDeveloper}, base::Repository}, authentication::auth_service::Authenticator}, 
-    routes::{base_model::{OutputId, IdAndPagingModel}, user_error::UserError, route_utils::get_header_strings}
+    common::{authentication::auth_service::Authenticator, repository::{base::Repository, developers::{models::NewDeveloper, repo::{InsertDeveloperFn, QueryAllDevelopersFn, QueryDeveloperByEmailFn, QueryDeveloperFn}}}}, 
+    routes::{base_model::{IdAndPagingModel, OutputId}, route_utils::get_header_strings, user_error::UserError}
 };
 use super::models::{NewDeveloperForRoute, DeveloperResponder, DeveloperResponders};
 
+/// register a new developer profile
 pub async fn create_developer<T: QueryDeveloperByEmailFn + InsertDeveloperFn + Repository, U: Authenticator>(
     app_data: Data<AppState<T, U>>, 
     json: Json<NewDeveloperForRoute>
@@ -188,32 +189,34 @@ mod tests {
     #[async_trait]
     impl QueryDeveloperFn for MockDbRepo {
         async fn query_developer(&self, _: i64) -> Result<Option<Developer>, sqlx::Error> {
-            Ok(Some(Developer { 
-                id: 1, 
-                user_name: DEV_USERNAME.to_string(), 
-                created_at: Utc::now(), 
-                updated_at: Utc::now(), 
-                full_name: get_fake_fullname(), 
-                email: FreeEmail().fake::<String>(), 
-                primary_lang_id: 1,
-                secondary_lang_id: Some(2)
-            }))
+            Ok(Some(Developer::new( 
+                1,                     
+                Utc::now(), 
+                Utc::now(), 
+                DEV_USERNAME.to_string(), 
+                get_fake_fullname(), 
+                FreeEmail().fake::<String>(), 
+                "".to_string(),
+                1,
+                Some(2)
+            )))
         }
     }
 
     #[async_trait]
     impl QueryDeveloperByEmailFn for MockDbRepo {
         async fn query_developer_by_email(&self, _: String) -> Result<Option<Developer>, sqlx::Error> {
-            Ok(Some(Developer { 
-                id: 1, 
-                user_name: DEV_USERNAME.to_string(), 
-                created_at: Utc::now(), 
-                updated_at: Utc::now(), 
-                full_name: get_fake_fullname(), 
-                email: FreeEmail().fake::<String>(), 
-                primary_lang_id: 1,
-                secondary_lang_id: Some(2)
-            }))
+            Ok(Some(Developer::new( 
+                1,                     
+                Utc::now(), 
+                Utc::now(), 
+                DEV_USERNAME.to_string(), 
+                get_fake_fullname(), 
+                FreeEmail().fake::<String>(), 
+                "".to_string(),
+                1,
+                Some(2)
+            )))
         }
     }
 
@@ -221,16 +224,17 @@ mod tests {
     impl QueryAllDevelopersFn for MockDbRepo {
         async fn query_all_developers(&self, _: i32, _: i64) -> Result<Vec<Developer>, sqlx::Error> {
             Ok(vec![
-                Developer { 
-                    id: 1, 
-                    user_name: Username().fake::<String>(), 
-                    created_at: Utc::now(), 
-                    updated_at: Utc::now(), 
-                    full_name: get_fake_fullname(), 
-                    email: FreeEmail().fake::<String>(), 
-                    primary_lang_id: 1,
-                    secondary_lang_id: Some(2)
-                }
+                Developer::new( 
+                    1,                     
+                    Utc::now(), 
+                    Utc::now(), 
+                    Username().fake::<String>(), 
+                    get_fake_fullname(), 
+                    FreeEmail().fake::<String>(), 
+                    "".to_string(),
+                    1,
+                    Some(2)
+                )
             ])
         }
     }
@@ -245,7 +249,7 @@ mod tests {
             user_name: Username().fake::<String>(), 
             full_name: get_fake_fullname(), 
             email: FreeEmail().fake::<String>(), 
-            password: "test123".to_string(),
+            password: "test1234".to_string(),
             primary_lang_id: 1, 
             secondary_lang_id: Some(2) 
         }).await.unwrap();

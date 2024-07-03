@@ -8,7 +8,7 @@ async fn test_authenticate_returns_authenticateresult() {
     let auth_service = AuthService;
     let app_data = get_app_data(repo, auth_service).await;
 
-    let password = "test123".to_string();
+    let password = "test1234".to_string();
     let dev_entity = app_data.repo.insert_developer(NewDeveloper {
         user_name:Username().fake::<String>(), 
         full_name: get_fake_fullname(), 
