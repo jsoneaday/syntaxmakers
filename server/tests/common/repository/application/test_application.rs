@@ -1,6 +1,7 @@
 use syntaxmakers_server::common::repository::jobs::models::NewJob;
 use syntaxmakers_server::common::repository::jobs::repo::InsertJobFn;
 use syntaxmakers_server::common_test::fixtures::get_fake_desc;
+use syntaxmakers_server::common_test::fixtures::get_fake_dev_desc;
 use syntaxmakers_server::common_test::fixtures::get_fake_email;
 use syntaxmakers_server::common_test::fixtures::get_fake_title;
 use syntaxmakers_server::common_test::fixtures::get_fake_user_name;
@@ -36,6 +37,7 @@ async fn test_insert_application_fails_if_user_already_applied() {
         user_name: get_fake_user_name(), 
         full_name: get_fake_fullname(), 
         email: get_fake_email(), 
+        description: get_fake_dev_desc(),
         password: "123".to_string(), 
         primary_lang_id: 1, 
         secondary_lang_id: None

@@ -219,18 +219,11 @@ fn convert_job_applied(job: &JobApplied) -> JobAppliedResponder {
 mod tests {
     use crate::{
         common::{
-            repository::{
-                jobs::models::Job, 
-                developers::models::Developer, 
-                employers::models::Employer, 
-                user::{repo::AuthenticateDbFn, models::AuthenticateResult},
-                user::models::DeveloperOrEmployer as UserDeveloperOrEmployer
-            }, 
-            authentication::auth_service::AuthenticationError            
+            authentication::auth_service::AuthenticationError, repository::{
+                developers::models::Developer, employers::models::Employer, jobs::models::Job, user::{models::{AuthenticateResult, DeveloperOrEmployer as UserDeveloperOrEmployer}, repo::AuthenticateDbFn}
+            }            
         }, 
-        common_test::fixtures::{get_fake_fullname, init_fixtures, COUNTRIES, LANGUAGES, INDUSTRIES, SALARY_BASE}, routes::authentication::models::LoginCredential,
-        common_test::fixtures::get_fake_httprequest_with_bearer_token,
-        routes::authentication::routes::login
+        common_test::fixtures::{get_fake_dev_desc, get_fake_email, get_fake_fullname, get_fake_httprequest_with_bearer_token, init_fixtures, COUNTRIES, INDUSTRIES, LANGUAGES, SALARY_BASE}, routes::authentication::{models::LoginCredential, routes::login}
     };
     use super::*;
     use async_trait::async_trait;
@@ -303,8 +296,9 @@ mod tests {
                 Utc::now(),
                 DEV_USERNAME.to_string(),
                 "Tester Test".to_string(),
-                FreeEmail().fake::<String>(),
                 "".to_string(),
+                get_fake_email(),
+                get_fake_dev_desc(),
                 1,
                 None
             )))

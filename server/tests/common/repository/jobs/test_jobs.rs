@@ -19,7 +19,7 @@ use syntaxmakers_server::common::repository::languages::repo::QueryAllLanguagesF
 use syntaxmakers_server::common::repository::companies::repo::InsertCompanyFn;
 use syntaxmakers_server::common::repository::salaries::repo::QueryAllSalariesFn;
 use syntaxmakers_server::common_test::fixtures::{ 
-    get_company_logo_randomly, get_fake_desc, get_fake_email, get_fake_fullname, get_fake_title, get_random_email, get_random_salary, init_fixtures, COUNTRIES, INDUSTRIES, LANGUAGES
+    get_company_logo_randomly, get_fake_desc, get_fake_dev_desc, get_fake_email, get_fake_fullname, get_fake_title, get_random_email, get_random_salary, init_fixtures, COUNTRIES, INDUSTRIES, LANGUAGES
 };
 
 #[tokio::test]
@@ -138,6 +138,7 @@ async fn test_create_two_jobs_and_get_back_only_one_that_matches_dev_profile() {
         user_name: Username().fake::<String>(),
         full_name: get_fake_fullname(),
         email: get_fake_email(),
+        description: get_fake_dev_desc(),
         password: "test1234".to_string(),
         primary_lang_id: languages_result.get(0).unwrap().id,
         secondary_lang_id: Some(languages_result.get(1).unwrap().id)
@@ -352,6 +353,7 @@ async fn test_create_two_distinct_jobs_and_run_search_on_them_to_get_correct_res
         user_name: Username().fake::<String>(),
         full_name: get_fake_fullname(),
         email: get_fake_email(),
+        description: get_fake_dev_desc(),
         password: "test1234".to_string(),
         primary_lang_id: languages_result.get(0).unwrap().id,
         secondary_lang_id: Some(languages_result.get(1).unwrap().id)
@@ -441,6 +443,7 @@ async fn test_create_two_distinct_jobs_and_have_same_dev_apply_both_then_get_bac
         user_name: Username().fake::<String>(),
         full_name: get_fake_fullname(),
         email: get_fake_email(),
+        description: get_fake_dev_desc(),
         password: "test1234".to_string(),
         primary_lang_id: languages_result.get(0).unwrap().id,
         secondary_lang_id: Some(languages_result.get(1).unwrap().id)

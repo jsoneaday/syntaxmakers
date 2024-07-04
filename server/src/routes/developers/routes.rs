@@ -1,7 +1,6 @@
 use actix_web::{web::{Data, Json, Path}, HttpRequest};
 use crate::{
-    app_state::AppState, 
-    common::{
+    app_state::AppState, common::{
         authentication::auth_service::Authenticator, 
         repository::{
             base::Repository, 
@@ -11,6 +10,7 @@ use crate::{
             employers::repo::QueryEmployerFn
         }
     }, 
+    common_test::fixtures::get_fake_dev_desc, 
     routes::{auth_helper::check_is_authenticated, base_model::{IdAndPagingModel, OutputBool, OutputId}, route_utils::get_header_strings, user_error::UserError}
 };
 use super::models::{DeveloperResponder, DeveloperResponders, NewDeveloperForRoute, UpdateDeveloperForRoute};
@@ -36,6 +36,7 @@ pub async fn create_developer<T: QueryDeveloperByEmailFn + InsertDeveloperFn + R
         user_name: json.user_name.to_owned(),
         full_name: json.full_name.to_owned(),
         email: json.email.to_owned(),
+        description: get_fake_dev_desc(),
         password: json.password.to_owned(),
         primary_lang_id: json.primary_lang_id,
         secondary_lang_id: json.secondary_lang_id
@@ -63,7 +64,8 @@ pub async fn update_developer<T: QueryDeveloperFn + QueryEmployerFn + UpdateDeve
         full_name: json.full_name.to_owned(),
         email: json.email.to_owned(),
         primary_lang_id: json.primary_lang_id,
-        secondary_lang_id: json.secondary_lang_id
+        secondary_lang_id: json.secondary_lang_id,
+        description: json.description.to_owned()
     }).await;
 
     match result {
@@ -94,6 +96,7 @@ pub async fn get_developer<T: QueryDeveloperFn + Repository, U: Authenticator>(
                                 user_name: dev.user_name.to_owned(), 
                                 full_name: dev.full_name.to_owned(), 
                                 email: dev.email.to_owned(), 
+                                description: dev.description.to_owned(),
                                 primary_lang_id: dev.primary_lang_id,
                                 secondary_lang_id: dev.secondary_lang_id
                             }))
@@ -132,6 +135,7 @@ pub async fn get_developer_by_email<T: QueryDeveloperByEmailFn + Repository, U: 
                                 user_name: dev.user_name.to_owned(), 
                                 full_name: dev.full_name.to_owned(), 
                                 email: dev.email.to_owned(), 
+                                description: dev.description.to_owned(),
                                 primary_lang_id: dev.primary_lang_id,
                                 secondary_lang_id: dev.secondary_lang_id
                             }))
@@ -174,6 +178,7 @@ pub async fn get_all_developers<T: QueryAllDevelopersFn + QueryDeveloperFn + Rep
                                             user_name: dev.user_name.to_owned(), 
                                             full_name: dev.full_name.to_owned(), 
                                             email: dev.email.to_owned(), 
+                                            description: dev.description.to_owned(),
                                             primary_lang_id: dev.primary_lang_id,
                                             secondary_lang_id: dev.secondary_lang_id
                                         }
@@ -199,10 +204,17 @@ pub async fn get_all_developers<T: QueryAllDevelopersFn + QueryDeveloperFn + Rep
 
 #[cfg(test)]
 mod tests {
-    use crate::{common::{authentication::auth_service::AuthenticationError, repository::{base::EntityId, developers::models::Developer, user::{models::{ChangePassword, DeveloperOrEmployer}, repo::ChangePasswordFn}}}, common_test::fixtures::{get_app_data, get_fake_fullname, get_fake_httprequest_with_bearer_token, init_fixtures, MockDbRepo}, routes::user::{models::ChangePasswordRoute, routes::change_password}};
+    use crate::{
+        common::{
+            authentication::auth_service::AuthenticationError, 
+            repository::{base::EntityId, developers::models::Developer, user::{models::{ChangePassword, DeveloperOrEmployer}, repo::ChangePasswordFn}}
+        }, 
+        common_test::fixtures::{get_app_data, get_fake_dev_desc, get_fake_email, get_fake_fullname, get_fake_httprequest_with_bearer_token, init_fixtures, MockDbRepo}, 
+        routes::user::{models::ChangePasswordRoute, routes::change_password}
+    };
     use async_trait::async_trait;
     use chrono::Utc;
-    use fake::{faker::internet::en::{Username, FreeEmail}, Fake};
+    use fake::{faker::internet::en::Username, Fake};
     use jsonwebtoken::DecodingKey;
     use super::*;
 
@@ -224,8 +236,9 @@ mod tests {
                 Utc::now(), 
                 DEV_USERNAME.to_string(), 
                 get_fake_fullname(), 
-                FreeEmail().fake::<String>(), 
                 "".to_string(),
+                get_fake_email(),
+                get_fake_dev_desc(),
                 1,
                 Some(2)
             )))
@@ -241,8 +254,9 @@ mod tests {
                 Utc::now(), 
                 DEV_USERNAME.to_string(), 
                 get_fake_fullname(), 
-                FreeEmail().fake::<String>(), 
                 "".to_string(),
+                get_fake_email(), 
+                get_fake_dev_desc(),
                 1,
                 Some(2)
             )))
@@ -259,8 +273,9 @@ mod tests {
                     Utc::now(), 
                     Username().fake::<String>(), 
                     get_fake_fullname(), 
-                    FreeEmail().fake::<String>(), 
                     "".to_string(),
+                    get_fake_email(), 
+                    get_fake_dev_desc(),
                     1,
                     Some(2)
                 )
@@ -308,7 +323,8 @@ mod tests {
                 email: get_fake_email(), 
                 password: "test1234".to_string(),
                 primary_lang_id: LANGUAGES.get().unwrap()[0].id, 
-                secondary_lang_id: None
+                secondary_lang_id: None,
+                description: get_fake_dev_desc()
             })).await;
 
             assert!(result.unwrap().id == 1);

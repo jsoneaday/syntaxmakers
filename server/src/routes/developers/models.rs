@@ -9,6 +9,7 @@ pub struct NewDeveloperForRoute {
     pub user_name: String,
     pub full_name: String,
     pub email: String,
+    pub description: String,
     pub password: String,
     pub primary_lang_id: i64,
     pub secondary_lang_id: Option<i64>
@@ -20,6 +21,7 @@ pub struct UpdateDeveloperForRoute {
     pub id: i64,
     pub full_name: String,
     pub email: String,
+    pub description: String,
     pub primary_lang_id: i64,
     pub secondary_lang_id: Option<i64>
 }
@@ -32,6 +34,7 @@ pub struct DeveloperResponder {
     pub user_name: String,
     pub full_name: String,
     pub email: String,
+    pub description: String,
     pub primary_lang_id: i64,
     pub secondary_lang_id: Option<i64>
 }

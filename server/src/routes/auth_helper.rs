@@ -72,10 +72,10 @@ mod tests {
     use jsonwebtoken::DecodingKey;
     use crate::{
         common::{
-            authentication::auth_service::{Authenticator, AuthenticationError}, 
-            repository::{user::{repo::AuthenticateDbFn, models::{DeveloperOrEmployer as UserDeveloperOrEmployer, AuthenticateResult}}, developers::models::Developer, employers::models::Employer}
+            authentication::auth_service::{AuthenticationError, Authenticator}, 
+            repository::{developers::models::Developer, employers::models::Employer, user::{models::{AuthenticateResult, DeveloperOrEmployer as UserDeveloperOrEmployer}, repo::AuthenticateDbFn}}
         }, 
-        common_test::fixtures::{get_app_data, get_fake_httprequest_with_bearer_token}, routes::authentication::{routes::login, models::LoginCredential}
+        common_test::fixtures::{get_app_data, get_fake_dev_desc, get_fake_email, get_fake_httprequest_with_bearer_token}, routes::authentication::{models::LoginCredential, routes::login}
     };
 
     const DEV_USERNAME: &str = "tester";
@@ -112,8 +112,9 @@ mod tests {
                 Utc::now(),
                 DEV_USERNAME.to_string(),
                 "Tester Test".to_string(),
-                FreeEmail().fake::<String>(),
                 "".to_string(),
+                get_fake_email(),
+                get_fake_dev_desc(),
                 1,
                 None
             )))

@@ -13,7 +13,7 @@ mod internal {
     pub async fn authenticate_db(conn: &Pool<Postgres>, is_dev_or_emp: DeveloperOrEmployer, email: String, password: String) -> Result<AuthenticateResult, sqlx::Error> {
         if is_dev_or_emp == DeveloperOrEmployer::Developer {            
             let result = query_as::<_, Developer>(r"
-                select d.id, d.created_at, d.updated_at, d.user_name, d.full_name, d.email, d.password, d.primary_lang_id, sl.secondary_lang_id
+                select d.id, d.created_at, d.updated_at, d.user_name, d.full_name, d.email, d.description, d.password, d.primary_lang_id, sl.secondary_lang_id
                 from developer d left join developers_secondary_langs sl on d.id = sl.developer_id where email = $1
             ")
             .bind(email)

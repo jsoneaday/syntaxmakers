@@ -47,6 +47,7 @@ create table developer (
     "full_name" varchar(100) not null,
     "email" varchar(120) not null unique,
     "password" varchar(200) not null,
+    "description" varchar(5000) not null,
     "primary_lang_id" bigserial not null,
 
     constraint fk_primary_lang foreign key(primary_lang_id) references prog_language(id)

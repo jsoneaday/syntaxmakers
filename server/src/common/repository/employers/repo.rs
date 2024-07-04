@@ -8,6 +8,8 @@ use crate::common::{authentication::password_hash::hash_password, repository::{e
 use log::error;
 
 mod internal {
+    use chrono::Utc;
+
     use super::*;    
 
     pub async fn insert_employer(conn: &Pool<Postgres>, new_employer: NewEmployer) -> Result<EntityId, Error> {
@@ -34,10 +36,11 @@ mod internal {
         let update_result = query::<_>(
             r"
                 update employer
-                set full_name = $2, email = $3, company_id = $4
+                set updated_at = $2, full_name = $3, email = $4, company_id = $5
                 where id = $1
             ")
             .bind(update_employer.id)
+            .bind(Utc::now())
             .bind(update_employer.full_name)
             .bind(update_employer.email)
             .bind(update_employer.company_id)

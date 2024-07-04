@@ -11,8 +11,8 @@ import {
   headingsPlugin,
   ListsToggle,
   ConditionalContents,
-  InsertCodeBlock,
-  ChangeCodeMirrorLanguage,
+  //InsertCodeBlock,
+  //ChangeCodeMirrorLanguage,
 } from "@mdxeditor/editor";
 import "@mdxeditor/editor/style.css";
 import "../../theme/editor.css";

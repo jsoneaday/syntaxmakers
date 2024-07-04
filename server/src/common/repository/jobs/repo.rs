@@ -395,7 +395,7 @@ mod internal {
     pub async fn query_jobs_by_developer(conn: &Pool<Postgres>, dev_id: i64, page_size: i32, last_offset: i64) -> Result<Vec<Job>, Error> {
         let developer_result = query_as::<_, Developer>(
             r"
-            select d.id, d.created_at, d.updated_at, d.user_name, d.full_name, d.email, d.password, d.primary_lang_id, dsl.secondary_lang_id
+            select d.id, d.created_at, d.updated_at, d.user_name, d.full_name, d.email, d.description, d.password, d.primary_lang_id, dsl.secondary_lang_id
             from developer d left join developers_secondary_langs dsl on d.id = dsl.developer_id
             where d.id = $1
             "

@@ -40,7 +40,7 @@ mod tests {
                 base::EntityId, developers::models::Developer, employers::models::Employer, jobs::models::Job, user::{models::{AuthenticateResult, DeveloperOrEmployer as UserDeveloperOrEmployer}, repo::AuthenticateDbFn}
             }            
         }, 
-        common_test::fixtures::{get_fake_fullname, get_fake_httprequest_with_bearer_token, init_fixtures, COUNTRIES, INDUSTRIES, LANGUAGES, SALARY_BASE}, 
+        common_test::fixtures::{get_fake_dev_desc, get_fake_email, get_fake_fullname, get_fake_httprequest_with_bearer_token, init_fixtures, COUNTRIES, INDUSTRIES, LANGUAGES, SALARY_BASE}, 
         routes::authentication::{models::LoginCredential, routes::login}
     };
     use async_trait::async_trait;
@@ -118,9 +118,10 @@ mod tests {
                 Utc::now(),
                 Utc::now(),
                 DEV_USERNAME.to_string(),
-                "Tester Test".to_string(),
-                FreeEmail().fake::<String>(),
+                get_fake_fullname(),
                 "".to_string(),
+                get_fake_email(),
+                get_fake_dev_desc(),
                 1,
                 None
             )))
@@ -135,9 +136,9 @@ mod tests {
                 Utc::now(),
                 Utc::now(),
                 EMP_USERNAME.to_string(),
-                "Tester Test".to_string(),
-                FreeEmail().fake::<String>(),
+                get_fake_fullname(),
                 "".to_string(),
+                get_fake_email(),
                 1
             )))
         }

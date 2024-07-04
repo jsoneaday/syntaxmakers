@@ -5,7 +5,7 @@ use syntaxmakers_server::common::repository::developers::models::{NewDeveloper, 
 use syntaxmakers_server::common::repository::developers::repo::{InsertDeveloperFn, QueryAllDevelopersFn, QueryDeveloperByEmailFn, QueryDeveloperFn, UpdateDeveloperFn};
 use syntaxmakers_server::common::repository::user::models::{ChangePassword, DeveloperOrEmployer};
 use syntaxmakers_server::common::repository::user::repo::ChangePasswordFn;
-use syntaxmakers_server::common_test::fixtures::{ get_fake_email, get_fake_fullname, init_fixtures, LANGUAGES};
+use syntaxmakers_server::common_test::fixtures::{ get_fake_dev_desc, get_fake_email, get_fake_fullname, init_fixtures, LANGUAGES};
 
 #[tokio::test]
 async fn test_create_developer_and_get_back() {
@@ -21,6 +21,7 @@ async fn test_create_developer_and_get_back() {
         user_name: user_name.clone(),
         full_name: full_name.clone(),
         email: email.clone(),
+        description: get_fake_dev_desc(),
         password: "test1234".to_string(),
         primary_lang_id,
         secondary_lang_id: None
@@ -47,6 +48,7 @@ async fn test_create_developer_and_get_back_by_email() {
         user_name: user_name.clone(),
         full_name: full_name.clone(),
         email: email.clone(),
+        description: get_fake_dev_desc(),
         password: "test1234".to_string(),
         primary_lang_id,
         secondary_lang_id: None
@@ -69,6 +71,7 @@ async fn test_create_two_developers_and_get_all() {
         user_name: Username().fake::<String>(),
         full_name: get_fake_fullname(),
         email: SafeEmail().fake::<String>(),
+        description: get_fake_dev_desc(),
         password: "test1234".to_string(),
         primary_lang_id: 1,
         secondary_lang_id: None
@@ -77,6 +80,7 @@ async fn test_create_two_developers_and_get_all() {
         user_name: Username().fake::<String>(),
         full_name: get_fake_fullname(),
         email: SafeEmail().fake::<String>(),
+        description: get_fake_dev_desc(),
         password: "test1234".to_string(),
         primary_lang_id: 1,
         secondary_lang_id: None
@@ -107,6 +111,7 @@ async fn test_change_dev_password_fails_on_invalid_old_password() {
         user_name: user_name.clone(),
         full_name: full_name.clone(),
         email: email.clone(),
+        description: get_fake_dev_desc(),
         password: old_password.clone(),
         primary_lang_id,
         secondary_lang_id: None
@@ -136,6 +141,7 @@ async fn test_change_dev_password_fails_on_invalid_new_password() {
         user_name: user_name.clone(),
         full_name: full_name.clone(),
         email: email.clone(),
+        description: get_fake_dev_desc(),
         password: old_password.clone(),
         primary_lang_id,
         secondary_lang_id: None
@@ -165,6 +171,7 @@ async fn test_change_dev_password_succeeds_on_new_password() {
         user_name: user_name.clone(),
         full_name: full_name.clone(),
         email: email.clone(),
+        description: get_fake_dev_desc(),
         password: old_password.clone(),
         primary_lang_id,
         secondary_lang_id: None
@@ -194,6 +201,7 @@ async fn test_update_developer_updates_fields() {
         user_name: user_name.clone(),
         full_name: full_name.clone(),
         email: email.clone(),
+        description: get_fake_dev_desc(),
         password: old_password.clone(),
         primary_lang_id,
         secondary_lang_id: None
@@ -207,6 +215,7 @@ async fn test_update_developer_updates_fields() {
         id: create_result.id, 
         full_name: new_full_name.clone(), 
         email: new_email.clone(), 
+        description: get_fake_dev_desc(),
         primary_lang_id: new_primary_lang_id,
         secondary_lang_id: new_secondary_lang_id
     }).await;    
@@ -235,6 +244,7 @@ async fn test_update_developer_updates_secondary_lang() {
         user_name: user_name.clone(),
         full_name: full_name.clone(),
         email: email.clone(),
+        description: get_fake_dev_desc(),
         password: old_password.clone(),
         primary_lang_id,
         secondary_lang_id
@@ -248,6 +258,7 @@ async fn test_update_developer_updates_secondary_lang() {
         id: create_result.id, 
         full_name: new_full_name.clone(), 
         email: new_email.clone(), 
+        description: get_fake_dev_desc(),
         primary_lang_id: new_primary_lang_id,
         secondary_lang_id: new_secondary_lang_id
     }).await;    
@@ -272,6 +283,7 @@ async fn test_update_developer_succeeds_on_remove_new_secondary_lang() {
         user_name: user_name.clone(),
         full_name: full_name.clone(),
         email: email.clone(),
+        description: get_fake_dev_desc(),
         password: old_password.clone(),
         primary_lang_id,
         secondary_lang_id
@@ -284,6 +296,7 @@ async fn test_update_developer_succeeds_on_remove_new_secondary_lang() {
         id: create_result.id, 
         full_name: new_full_name.clone(), 
         email: new_email.clone(), 
+        description: get_fake_dev_desc(),
         primary_lang_id: new_primary_lang_id,
         secondary_lang_id: None
     }).await;    

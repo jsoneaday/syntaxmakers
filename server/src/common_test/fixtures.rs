@@ -71,7 +71,9 @@ pub async fn init_fixtures() {
                 "Senior NodeJS Developer",
                 "Full-Stack Python Developer",
                 "Senior C# Developer",
-                "Full-Stack Engineer"
+                "Full-Stack Engineer",
+                "Staff Engineer",
+                "Principle Engineer"
             ]
         });
     }
@@ -160,6 +162,7 @@ async fn setup_data() {
             password: "test1234".to_string(),
             primary_lang_id: LANGUAGES.get().unwrap()[0].id,
             secondary_lang_id: Some(LANGUAGES.get().unwrap()[1].id),
+            description: get_fake_dev_desc()
         }).await;
     }
 
@@ -242,6 +245,10 @@ pub fn get_fake_email() -> String {
 pub fn get_fake_title() -> &'static str {
     let index = get_random_no_from_range(0, FAKE_JOB_TITLES.get().unwrap().len()-1);
     FAKE_JOB_TITLES.get().unwrap()[index]
+}
+
+pub fn get_fake_dev_desc() -> String {
+    fake::faker::lorem::en::Sentence(2..3).fake::<String>()
 }
 
 pub fn get_fake_desc() -> &'static str {

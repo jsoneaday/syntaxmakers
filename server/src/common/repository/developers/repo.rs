@@ -7,6 +7,7 @@ use crate::common::repository::base::EntityId;
 use log::error;
 
 mod internal {
+    use chrono::Utc;
     use sqlx::query;
     use crate::common::{authentication::password_hash::hash_password, repository::error::SqlxError};
     use super::*;    
@@ -19,14 +20,15 @@ mod internal {
         let insert_result = query_as::<_, EntityId>(
             r"
             insert into developer 
-            (user_name, full_name, email, password, primary_lang_id) 
+            (user_name, full_name, email, description, password, primary_lang_id) 
             values 
-            ($1, $2, $3, $4, $5)
+            ($1, $2, $3, $4, $5, $6)
             returning id
             ")
             .bind(new_developer.user_name)
             .bind(new_developer.full_name)
             .bind(new_developer.email)
+            .bind(new_developer.description)
             .bind(hashed_password)
             .bind(new_developer.primary_lang_id)
             .fetch_one(&mut *tx)
@@ -72,12 +74,14 @@ mod internal {
         let update_result = query::<_>(
             r"
                 update developer
-                set full_name = $2, email = $3, primary_lang_id = $4
+                set updated_at = $2, full_name = $3, email = $4, description = $5, primary_lang_id = $6
                 where id = $1
             ")
             .bind(update_developer.id)
+            .bind(Utc::now())
             .bind(update_developer.full_name)
             .bind(update_developer.email)
+            .bind(update_developer.description)
             .bind(update_developer.primary_lang_id)
             .execute(&mut *tx)
             .await;
@@ -163,7 +167,7 @@ mod internal {
     pub async fn query_developer(conn: &Pool<Postgres>, id: i64) -> Result<Option<Developer>, Error> {
         query_as::<_, Developer>(
             r"
-            select d.id, d.created_at, d.updated_at, d.user_name, d.full_name, d.email, d.password, d.primary_lang_id, dsl.secondary_lang_id
+            select d.id, d.created_at, d.updated_at, d.user_name, d.full_name, d.email, d.description, d.password, d.primary_lang_id, dsl.secondary_lang_id
             from developer d left join developers_secondary_langs dsl on d.id = dsl.developer_id
             where d.id = $1
             ")
@@ -174,7 +178,7 @@ mod internal {
     pub async fn query_developer_by_email(conn: &Pool<Postgres>, email: String) -> Result<Option<Developer>, Error> {
         query_as::<_, Developer>(
             r"
-            select d.id, d.created_at, d.updated_at, d.user_name, d.full_name, d.email, d.password, d.primary_lang_id, dsl.secondary_lang_id
+            select d.id, d.created_at, d.updated_at, d.user_name, d.full_name, d.email, d.description, d.password, d.primary_lang_id, dsl.secondary_lang_id
             from developer d left join developers_secondary_langs dsl on d.id = dsl.developer_id
             where d.email = $1
             ")
@@ -185,7 +189,7 @@ mod internal {
     pub async fn query_all_developers(conn: &Pool<Postgres>, page_size: i32, last_offset: i64) -> Result<Vec<Developer>, Error> {
         query_as::<_, Developer>(
             r"
-            select d.id, d.created_at, d.updated_at, d.user_name, d.full_name, d.email, d.password, d.primary_lang_id, dsl.secondary_lang_id
+            select d.id, d.created_at, d.updated_at, d.user_name, d.full_name, d.email, d.description, d.password, d.primary_lang_id, dsl.secondary_lang_id
             from developer d left join developers_secondary_langs dsl on d.id = dsl.developer_id
             order by updated_at desc
             limit $1
