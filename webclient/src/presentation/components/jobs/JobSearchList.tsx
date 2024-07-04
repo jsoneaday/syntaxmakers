@@ -3,17 +3,23 @@ import JobPost from "../../models/JobPost";
 import { useProfile } from "../../common/redux/profile/ProfileHooks";
 import {
   getJobsByDeveloper,
+  getJobsByEmployer,
   getJobsBySearchTerms,
 } from "../../../domain/repository/JobRepo";
 import { convert as convertJob } from "../../models/JobPost";
-import JobPreviewList from "../jobs/JobPreviewList";
+import JobPreviewList from "./JobPreviewList";
 import { Link, useParams } from "react-router-dom";
 import { PrimaryButton } from "../controls/Buttons";
 import { PAGE_SIZE } from "../../common/Paging";
 import { Paging } from "../controls/Paging";
 import { RoutePaths } from "../../../App";
+import { UiDevOrEmployer } from "../../models/DevOrEmployer";
 
-export default function DevJobSearchList() {
+interface JobSearchListProps {
+  userType: UiDevOrEmployer;
+}
+
+export default function JobSearchList({ userType }: JobSearchListProps) {
   const { search } = useParams();
   const [jobData, setJobsData] = useState<JobPost[]>([]);
   const [searchInput, setSearchInput] = useState(search || "");
@@ -29,21 +35,46 @@ export default function DevJobSearchList() {
 
     setData && setJobsData([]);
     if (profile) {
-      try {
-        const jobs = await getJobsByDeveloper(profile.id, PAGE_SIZE, newOffset);
-        const jobsData = jobs.map((job) => {
-          return convertJob(job);
-        });
-        setData && setJobsData(jobsData);
-        console.log("queryUserJobs:", newOffset, setData, jobsData);
+      if (userType === UiDevOrEmployer.Developer) {
+        try {
+          const jobs = await getJobsByDeveloper(
+            profile.id,
+            PAGE_SIZE,
+            newOffset
+          );
+          const jobsData = jobs.map((job) => {
+            return convertJob(job);
+          });
+          setData && setJobsData(jobsData);
 
-        returnJobs = jobsData;
-      } catch (e) {
-        console.log("failed to get jobs for current profile", e);
+          returnJobs = jobsData;
+        } catch (e) {
+          console.log("failed to get jobs for current profile", e);
+        }
+
+        setSearchResultsMessage("Your recommended jobs");
+      } else {
+        try {
+          const jobs = await getJobsByEmployer(
+            profile.id,
+            PAGE_SIZE,
+            newOffset
+          );
+          const jobsData = jobs.map((job) => {
+            return convertJob(job);
+          });
+
+          setData && setJobsData(jobsData);
+
+          returnJobs = jobsData;
+        } catch (e) {
+          console.log("failed to get jobs for current profile", e);
+        }
+
+        setSearchResultsMessage("Your posted jobs");
       }
     }
 
-    setSearchResultsMessage("Your recommended jobs");
     return returnJobs;
   }
 
@@ -77,11 +108,17 @@ export default function DevJobSearchList() {
   return (
     <div className="userhome-main">
       <header className="header-container job-full-view-header">
-        <strong>Developer Job Search</strong>
+        <strong>
+          {userType === UiDevOrEmployer.Developer
+            ? "Developer Job Search"
+            : "Posted Jobs Search"}
+        </strong>
       </header>
       <div className="userhome-top" style={{ padding: "2em" }}>
         <div className="sub-title-font userhome-sub-header">
-          Enter your preferences to find your next job
+          {userType === UiDevOrEmployer.Developer
+            ? "Enter your preferences to find your next job"
+            : "Search your job postings"}
         </div>
         <div className="search-header">
           <input

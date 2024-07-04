@@ -113,7 +113,7 @@ use common::repository::base::{DbRepo, Repository};
 use routes::application::routes::{create_application, developer_applied};
 use routes::authentication::routes::{login, refresh_access_token};
 use routes::developers::routes::{get_developer_by_email, update_developer};
-use routes::employers::routes::get_employer_by_email;
+use routes::employers::routes::{get_employer_by_email, update_employer};
 use routes::user::routes::change_password;
 use routes::jobs::routes::{get_jobs_by_applier, get_jobs_by_employer, get_jobs_by_search_terms, update_job};
 use routes::{
@@ -205,6 +205,8 @@ pub async fn run() -> std::io::Result<()> {
                         .route(web::get().to(get_employer::<DbRepo, AuthService>)))
                     .service(web::resource("/employer")
                         .route(web::post().to(create_employer::<DbRepo, AuthService>)))
+                    .service(web::resource("/employer_update")
+                        .route(web::post().to(update_employer::<DbRepo, AuthService>)))
                     .service(web::resource("/employer_email/{email}")
                         .route(web::get().to(get_employer_by_email::<DbRepo, AuthService>)))
                     .service(web::resource("/employers")

@@ -33,7 +33,6 @@ export function Paging<T>({ dataQuery }: PagingProps<T>) {
   const [profile] = useProfile();
 
   useEffect(() => {
-    console.log("init", search != lastSearch);
     getNextData(search != lastSearch).then(() => {
       if (profile) {
         setLastSearch(search);

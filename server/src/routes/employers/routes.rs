@@ -1,10 +1,12 @@
 use actix_web::{web::{Data, Json, Path}, HttpRequest};
 use crate::{
     app_state::AppState, common::{
-        authentication::auth_service::Authenticator, repository::{base::Repository, employers::{models::NewEmployer, repo::{InsertEmployerFn, QueryAllEmployersFn, QueryEmployerByEmailFn, QueryEmployerFn}}}
-    }, routes::{base_model::{OutputId, PagingModel}, route_utils::get_header_strings, user_error::UserError}
+        authentication::auth_service::Authenticator, repository::{base::Repository, developers::repo::QueryDeveloperFn, employers::{models::{NewEmployer, UpdateEmployer}, repo::{InsertEmployerFn, QueryAllEmployersFn, QueryEmployerByEmailFn, QueryEmployerFn, UpdateEmployerFn}}}
+    }, routes::{auth_helper::check_is_authenticated, base_model::{OutputBool, OutputId, PagingModel}, route_utils::get_header_strings, user_error::UserError}
 };
-use super::models::{NewEmployerForRoute, EmployerResponder, EmployerResponders};
+use super::models::{EmployerResponder, EmployerResponders, NewEmployerForRoute, UpdateEmployerForRoute};
+use crate::routes::authentication::models::DeveloperOrEmployer as AuthDeveloperOrEmployer;
+use log::error;
 
 /// register a new employer profile
 pub async fn create_employer<T: QueryEmployerByEmailFn + InsertEmployerFn + Repository, U: Authenticator>(
@@ -33,6 +35,30 @@ pub async fn create_employer<T: QueryEmployerByEmailFn + InsertEmployerFn + Repo
 
     match result {
         Ok(entity) => Ok(OutputId { id: entity.id }),
+        Err(e) => Err(e.into())
+    }
+}
+
+pub async fn update_employer<T: QueryDeveloperFn + QueryEmployerFn + UpdateEmployerFn + Repository, U: Authenticator>(
+    app_data: Data<AppState<T, U>>, 
+    json: Json<UpdateEmployerForRoute>,
+    req: HttpRequest
+) -> Result<OutputBool, UserError> {
+    let is_auth = check_is_authenticated(app_data.clone(), json.id, AuthDeveloperOrEmployer::Developer, req).await;
+    if !is_auth {
+        error!("Authorization failed");
+        return Err(UserError::AuthenticationFailed);
+    }
+    
+    let result = app_data.repo.update_employer(UpdateEmployer {
+        id: json.id,
+        full_name: json.full_name.to_owned(),
+        email: json.email.to_owned(),
+        company_id: json.company_id
+    }).await;
+
+    match result {
+        Ok(_) => Ok(OutputBool { result: true }),
         Err(e) => Err(e.into())
     }
 }
@@ -152,6 +178,13 @@ mod tests {
     }
 
     #[async_trait]
+    impl UpdateEmployerFn for MockDbRepo {
+        async fn update_employer(&self, _: UpdateEmployer) -> Result<(), sqlx::Error> {
+            Ok(())
+        }
+    }
+
+    #[async_trait]
     impl QueryEmployerFn for MockDbRepo {
         async fn query_employer(&self, _: i64) -> Result<Option<Employer>, sqlx::Error> {
             Ok(Some(Employer::new(
@@ -220,6 +253,25 @@ mod tests {
             })).await;
             assert!(result.err().unwrap() == UserError::EmailAlreadyInUse)
         }
+    }
+
+    #[tokio::test]
+    async fn test_update_employer_route() {
+        let repo = MockDbRepo::init().await;
+        let auth_service = MockAuthService;
+        let app_data = get_app_data(repo, auth_service).await;        
+        let email = get_fake_email();
+        let req = get_fake_httprequest_with_bearer_token("linda".to_string(), DeveloperOrEmployer::Employer, &app_data.auth_keys.encoding_key, "/employer_email/{email}", "lshin@AmazingAndCo.com".to_string(), None, None);
+
+        let result = update_employer(app_data, Json(UpdateEmployerForRoute { 
+            id: 1, 
+            full_name: get_fake_fullname(), 
+            email, 
+            company_id: 1 
+        }),
+        req).await;
+
+        assert!(result.is_ok())
     }    
 
     #[tokio::test]

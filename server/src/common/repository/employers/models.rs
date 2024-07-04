@@ -40,3 +40,11 @@ pub struct NewEmployer {
     pub password: String,
     pub company_id: i64
 }
+
+/// does not include password!
+pub struct UpdateEmployer {
+    pub id: i64,
+    pub full_name: String,
+    pub email: String,    
+    pub company_id: i64
+}

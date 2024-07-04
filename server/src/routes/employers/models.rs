@@ -13,6 +13,15 @@ pub struct NewEmployerForRoute {
     pub company_id: i64
 }
 
+#[derive(Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UpdateEmployerForRoute {
+    pub id: i64,
+    pub full_name: String,
+    pub email: String,
+    pub company_id: i64
+}
+
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct EmployerResponder {

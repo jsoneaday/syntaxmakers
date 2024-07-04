@@ -15,7 +15,6 @@ pub async fn change_password<T: QueryDeveloperFn + QueryEmployerFn + ChangePassw
     json: Json<ChangePasswordRoute>,
     req: HttpRequest
 ) -> Result<OutputBool, UserError> {
-    println!("dev or emp {:?}", json.dev_or_emp);
     let is_auth = check_is_authenticated(app_data.clone(), json.id, if json.dev_or_emp == AuthDeveloperOrEmployer::Developer {
         AuthDeveloperOrEmployer::Developer
     } else {

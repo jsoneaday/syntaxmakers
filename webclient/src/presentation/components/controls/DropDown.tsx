@@ -33,7 +33,6 @@ export default function DropDown({
   const [selectId, setSelectId] = useState("");
 
   useEffect(() => {
-    console.log("select value", value);
     setSelectId(uuidv4());
   }, []);
 

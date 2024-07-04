@@ -137,10 +137,6 @@ export async function getJobsByEmployer(
 
   if (result.ok) {
     const jobs: Job[] = await result.json();
-    for (let j of jobs) {
-      j.description = JSON.stringify(j.description);
-    }
-
     return jobs;
   }
   return [];
@@ -150,7 +146,7 @@ export async function insertJobPost(
   jobFormState: JobFormState,
   access_token: string
 ) {
-  const result = await fetch(JOB_URL, {
+  const response = await fetch(JOB_URL, {
     method: "post",
     credentials: "include",
     cache: "no-store",
@@ -171,11 +167,11 @@ export async function insertJobPost(
     }),
   });
 
-  if (result.ok) {
-    if (result.status === 204) {
+  if (response.ok) {
+    if (response.status === 204) {
       return "";
     }
-    return await result.json();
+    return await response.json();
   }
   throw new Error("Failed to update job");
 }
@@ -184,9 +180,8 @@ export async function updateJobPost(
   jobFormState: JobFormState,
   access_token: string
 ) {
-  console.log("jobFormState", jobFormState);
-
-  const result = await fetch(JOB_UPDATE_URL, {
+  console.log("jobFormState.description", jobFormState.description);
+  const response = await fetch(JOB_UPDATE_URL, {
     method: "post",
     credentials: "include",
     cache: "no-store",
@@ -200,19 +195,19 @@ export async function updateJobPost(
       title: jobFormState.title,
       description: jobFormState.description,
       isRemote: jobFormState.isRemote,
+      countryId: jobFormState.countryId,
       primaryLangId: jobFormState.primaryLangId,
+      secondaryLangId: jobFormState.secondaryLangId,
       industryId: jobFormState.industryId,
       salaryId: jobFormState.salaryId,
-      secondaryLangId: jobFormState.secondaryLangId,
-      countryId: jobFormState.countryId,
     }),
   });
 
-  if (result.ok) {
-    if (result.status === 204) {
+  if (response.ok) {
+    if (response.status === 204) {
       return "";
     }
-    return await result.json();
+    return await response.json();
   }
   throw new Error("Failed to update job");
 }

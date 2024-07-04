@@ -3,8 +3,8 @@ use fake::faker::company::en::CompanyName;
 use fake::faker::internet::en::{Username, SafeEmail};
 use syntaxmakers_server::common::repository::base::{Repository, DbRepo};
 use syntaxmakers_server::common::repository::companies::models::NewCompany;
-use syntaxmakers_server::common::repository::employers::models::NewEmployer;
-use syntaxmakers_server::common::repository::employers::repo::{QueryEmployerFn, QueryAllEmployersFn, InsertEmployerFn, QueryEmployerByEmailFn};
+use syntaxmakers_server::common::repository::employers::models::{NewEmployer, UpdateEmployer};
+use syntaxmakers_server::common::repository::employers::repo::{InsertEmployerFn, QueryAllEmployersFn, QueryEmployerByEmailFn, QueryEmployerFn, UpdateEmployerFn};
 use syntaxmakers_server::common::repository::companies::repo::InsertCompanyFn;
 use syntaxmakers_server::common_test::fixtures::{ get_company_logo_randomly, get_fake_email, get_fake_fullname, init_fixtures};
 
@@ -97,4 +97,39 @@ async fn test_create_two_employers_and_get_back_both() {
     assert!(get_all_result.iter().find(|dev| {
         dev.id == create_result2.id
     }).is_some());
+}
+
+#[tokio::test]
+async fn test_create_employer_then_update_and_confirm_new_field_values() {
+    let repo = DbRepo::init().await;
+    init_fixtures().await;
+    let logo = get_company_logo_randomly();
+
+    let company_create_result = repo.insert_company(NewCompany{ name: CompanyName().fake::<String>(), logo: Some(logo.clone()), headquarters_country_id: 1 }).await.unwrap();
+    let company_id = company_create_result.id;
+
+    let create_result = repo.insert_employer(NewEmployer {
+        user_name: Username().fake::<String>(),
+        full_name: get_fake_fullname(),
+        email: get_fake_email(),
+        password: "test1234".to_string(),
+        company_id
+    }).await.unwrap();
+
+    let company_update_result = repo.insert_company(NewCompany{ name: CompanyName().fake::<String>(), logo: Some(logo), headquarters_country_id: 1 }).await.unwrap();
+    let update_company_id = company_update_result.id;
+    let full_name = get_fake_fullname();
+    let email = get_fake_email();
+    _ = repo.update_employer(UpdateEmployer {
+        id: create_result.id,
+        full_name: full_name.clone(),
+        email: email.clone(),
+        company_id: update_company_id
+    }).await.unwrap();
+
+    let updated = repo.query_employer(create_result.id).await.unwrap().unwrap();
+
+    assert!(updated.full_name == full_name);
+    assert!(updated.email == email);
+    assert!(updated.company_id == update_company_id);
 }

@@ -60,7 +60,6 @@ pub async fn refresh_access_token<T: Repository, U: Authenticator>(app_data: Dat
 
 pub async fn login<T: AuthenticateDbFn + QueryDeveloperFn + QueryEmployerFn + Repository, U: Authenticator>(app_data: Data<AppState<T, U>>, json: Json<LoginCredential>) 
     -> HttpResponse {
-    println!("dev or emp {:?}", json.dev_or_emp);
     let dev_or_emp = if json.dev_or_emp == AuthDeveloperOrEmployer::Developer {
         UserDeveloperOrEmployer::Developer
     } else {

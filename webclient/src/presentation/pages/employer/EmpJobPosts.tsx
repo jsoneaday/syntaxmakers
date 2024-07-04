@@ -3,13 +3,13 @@ import "../../theme/userhome.css";
 /// @ts-ignore
 import { v4 as uuidv4 } from "uuid";
 import EmployerHome from "./EmployerHome";
-import EmpJobPreviewList from "../../components/employer/EmpJobPreviewList";
+import JobSearchList from "../../components/jobs/JobSearchList";
+import { UiDevOrEmployer } from "../../models/DevOrEmployer";
 
 export default function EmpJobPosts() {
-  console.log("empjobposts");
   return (
     <EmployerHome>
-      <EmpJobPreviewList />
+      <JobSearchList userType={UiDevOrEmployer.Employer} />
     </EmployerHome>
   );
 }

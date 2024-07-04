@@ -14,7 +14,7 @@ export default function LeftMenuEmp() {
     <LeftMenu>
       {profile ? (
         <div className="leftmenu-body">
-          <span className="title-font leftmenu-header">{`@${profile?.userName}`}</span>
+          <span className="title-font leftmenu-item">{`@${profile?.userName}`}</span>
           <Link
             to={RoutePaths.EmpPostNewJob}
             className="sub-title-font leftmenu-item"

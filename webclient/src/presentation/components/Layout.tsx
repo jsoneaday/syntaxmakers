@@ -25,8 +25,6 @@ export default function Layout({
   const location = useLocation();
 
   useEffect(() => {
-    console.log("Layout profile", profile);
-
     if (!profile && includeLogin) {
       setLoginOpen(includeLogin);
     }

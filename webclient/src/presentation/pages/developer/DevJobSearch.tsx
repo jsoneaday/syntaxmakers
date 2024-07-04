@@ -2,13 +2,14 @@ import "../../theme/devhome.css";
 import "../../theme/userhome.css";
 /// @ts-ignore
 import { v4 as uuidv4 } from "uuid";
-import DevJobSearchList from "../../components/developer/DevJobSearchList";
+import JobSearchList from "../../components/jobs/JobSearchList";
 import DeveloperHome from "./DeveloperHome";
+import { UiDevOrEmployer } from "../../models/DevOrEmployer";
 
 export default function DevJobSearch() {
   return (
     <DeveloperHome>
-      <DevJobSearchList />
+      <JobSearchList userType={UiDevOrEmployer.Developer} />
     </DeveloperHome>
   );
 }

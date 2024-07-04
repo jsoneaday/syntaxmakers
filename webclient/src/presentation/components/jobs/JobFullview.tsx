@@ -6,7 +6,7 @@ import {
   useReducer,
   useRef,
   useState,
-  MouseEvent,
+  FormEvent,
 } from "react";
 import "../../theme/job_full_view.css";
 import GoBack from "../navigation/GoBack";
@@ -37,6 +37,7 @@ import {
   developerAppliedToJob,
 } from "../../../domain/repository/JobApplicationRepo";
 import { Popup } from "../controls/Popup";
+import { ValidationMsgView } from "../controls/ValidationMsgView";
 
 type JobPostDisplayComponents = {
   title: JSX.Element;
@@ -178,10 +179,10 @@ const ApplicationSuccessMsg = "Your application has been sent";
 const ApplicationFailedMsg = "Your application attempt has failed";
 
 interface JobFullviewProps {
-  readOnly: boolean;
+  userType: UiDevOrEmployer;
 }
 
-export default function JobFullview({ readOnly }: JobFullviewProps) {
+export default function JobFullview({ userType }: JobFullviewProps) {
   const [applicationMsg, setApplicationMsg] = useState(ApplicationSuccessMsg);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const toggleIsPopupOpen = () => setIsPopupOpen(!isPopupOpen);
@@ -233,13 +234,16 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
     secondaryLangId: 0,
   });
   const [devOrEmp] = useDevOrEmployer();
-  const [submitDisabled, setSubmitDisabled] = useState(true);
+  const [submitDisabled, setSubmitDisabled] = useState(false);
+  const [validationMessage, setValidationMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
 
   useEffect(() => {
     let currentJobPost: JobPost | undefined = undefined;
     if (routeJobPost) {
       currentJobPost = routeJobPost as JobPost;
       setJobPostStates(currentJobPost);
+      console.log("description from url", currentJobPost.description);
     }
   }, [routeJobPost]);
 
@@ -254,11 +258,12 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
         type: FormActionTypes.Desc,
         payload: "",
       });
+      mdRef.current?.setMarkdown("");
     }
   }, [profile]);
 
   useEffect(() => {
-    if (!readOnly) {
+    if (userType === UiDevOrEmployer.Employer) {
       getJobPostOptions().then((jobPostOptions) => {
         getJobPostDisplayComponents(jobPostOptions).then(
           (jobPostDisplayComponentItems) =>
@@ -273,28 +278,8 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
     }
   }, [currentJobPost, profile]);
 
-  const onJobApply = async (e: MouseEvent<HTMLButtonElement>) => {
-    e.preventDefault();
-    // show login or register if not logged in
-    if (!profile || !profile.accessToken) {
-      console.log("access token is empty");
-      setLoginOpen(!loginOpen);
-      return;
-    }
-    // email employer of application
-    // update db that user applied
-    try {
-      await applyJob(
-        Number(currentJobPost.id),
-        Number(profile.id),
-        profile.accessToken
-      );
-      setApplicationMsg(ApplicationSuccessMsg);
-    } catch (e) {
-      setApplicationMsg(ApplicationFailedMsg);
-    } finally {
-      toggleIsPopupOpen();
-    }
+  const getMarkdownText = (markdown: string) => {
+    currentJobPost.description = markdown;
   };
 
   const setJobPostStates = (jobPost: JobPost) => {
@@ -308,6 +293,7 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
       type: FormActionTypes.Desc,
       payload: jobPost.description,
     });
+    mdRef.current?.setMarkdown(jobPost.description);
     setCurrentJobPost({
       type: FormActionTypes.EmployerId,
       payload: jobPost.employerId,
@@ -380,13 +366,12 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
     jobPostOptions: JobPostOptions | undefined
   ) => {
     let disableApplyBtn = true;
-    if (profile) {
+    if (profile && userType === UiDevOrEmployer.Developer) {
       disableApplyBtn = await developerAppliedToJob(
         currentJobPost.id,
         Number(profile.id)
       );
     }
-    console.log("disableApplyBtn", disableApplyBtn);
 
     let _title: JSX.Element;
     let _companyName: JSX.Element;
@@ -411,7 +396,7 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
       </div>
     );
 
-    if (readOnly) {
+    if (userType === UiDevOrEmployer.Developer) {
       _title = <div className="title-font">{currentJobPost.title}</div>;
       _isRemoteOrCountry = (
         <div className="sub-title-font job-full-view-subtitle-item-primary">
@@ -426,8 +411,8 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
       _buttons = (
         <>
           <PrimaryButton
+            type="submit"
             containerStyle={{ marginBottom: ".5em" }}
-            onClick={onJobApply}
             disabled={!profile || disableApplyBtn ? true : false}
           >
             apply
@@ -504,22 +489,16 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
       _buttons = (
         <>
           <button
+            type="submit"
             className="primary-btn small-btn"
             style={{
               marginBottom: ".5em",
               cursor: submitDisabled ? "not-allowed" : "pointer",
             }}
             name="save"
-            onClick={onClickSubmit}
             disabled={submitDisabled}
           >
             save
-          </button>
-          <button
-            className="secondary-btn small-btn"
-            onClick={onClickSaveCancel}
-          >
-            cancel
           </button>
         </>
       );
@@ -585,11 +564,6 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
       industry: _industry,
       salary: _salary,
     };
-  };
-
-  const onClickSaveCancel = () => {
-    setInTextEditMode(false);
-    navigate(-1);
   };
 
   const toggleIsRemote = () => {
@@ -688,12 +662,48 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
     setInTextEditMode(true);
   };
 
-  const onClickSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
+  const onJobSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    console.log("userType", userType);
+    if (userType === UiDevOrEmployer.Developer) {
+      await onJobApply();
+    } else {
+      await onJobSave();
+    }
+  };
+
+  const onJobApply = async () => {
+    console.log("apply job");
+    // show login or register if not logged in
+    if (!profile || !profile.accessToken) {
+      setLoginOpen(!loginOpen);
+      return;
+    }
+    // email employer of application
+    // update db that user applied
+    try {
+      await applyJob(
+        Number(currentJobPost.id),
+        Number(profile.id),
+        profile.accessToken
+      );
+      setApplicationMsg(ApplicationSuccessMsg);
+    } catch (e) {
+      setApplicationMsg(ApplicationFailedMsg);
+    } finally {
+      toggleIsPopupOpen();
+    }
+  };
+
+  const onJobSave = async () => {
+    console.log("save job");
 
     try {
       setSubmitDisabled(true);
       setFormValues();
+      setValidationMessage("");
+      setSuccessMessage("");
+      if (!validateFormValues()) return;
 
       if (!profile || !profile.accessToken) {
         throw new Error(
@@ -701,6 +711,7 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
         );
       }
 
+      console.log("save description", formValues.current.description);
       if (formValues.current.id === 0) {
         await insertJobPost(formValues.current, profile.accessToken);
       } else {
@@ -713,6 +724,8 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
       navigate(".", { state, replace: true });
       setSubmitDisabled(false);
       setInTextEditMode(false);
+      setValidationMessage("");
+      setSuccessMessage("Job saved successfully");
     }
   };
 
@@ -724,9 +737,7 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
       employerId: currentJobPost.employerId,
       employerName: currentJobPost.employerName,
       title: currentJobPost.title,
-      description: currentJobPost.description
-        ? JSON.stringify(currentJobPost.description)
-        : "",
+      description: currentJobPost.description || "",
       isRemote: currentJobPost.isRemote,
       companyId: currentJobPost.companyId,
       companyName: currentJobPost.companyName,
@@ -745,12 +756,41 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
     return state;
   };
 
+  const validateFormValues = () => {
+    let result = true;
+    if (
+      formValues.current.title.length < 3 ||
+      formValues.current.title.length > 100
+    ) {
+      setValidationMessage(
+        "Title must be greater than 3 characters and less than 100"
+      );
+      setSuccessMessage("");
+      result = false;
+    } else if (
+      formValues.current.description.length < 3 ||
+      formValues.current.description.length > 5000
+    ) {
+      setValidationMessage(
+        "Description must be greater than 3 characters and less than 5000"
+      );
+      setSuccessMessage("");
+      result = false;
+    } else if (formValues.current.isRemote && formValues.current.countryId) {
+      setValidationMessage("Country cannot be selected when Remote is checked");
+      setSuccessMessage("");
+      result = false;
+    }
+    console.log("result", result);
+    return result;
+  };
+
   const setFormValues = () => {
     formValues.current = {
       id: currentJobPost.id,
       employerId: currentJobPost.employerId,
       title: currentJobPost.title,
-      description: JSON.stringify(currentJobPost.description || ""),
+      description: currentJobPost.description || "",
       isRemote: currentJobPost.isRemote,
       primaryLangId: currentJobPost.primaryLangId,
       secondaryLangId: currentJobPost.secondaryLangId,
@@ -775,7 +815,11 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
           {applicationMsg}
         </div>
       </Popup>
-      <form className="userhome-main" style={{ margin: "auto" }}>
+      <form
+        className="userhome-main"
+        style={{ margin: "auto", marginBottom: "2em" }}
+        onSubmit={onJobSubmit}
+      >
         <div className="header-container job-full-view-header">
           <GoBack
             label={
@@ -813,13 +857,6 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
               </div>
             </div>
           </div>
-
-          <div
-            className="stack"
-            style={{ alignItems: "flex-end", textAlign: "right" }}
-          >
-            {jobPostDisplayComponents?.buttons}
-          </div>
         </div>
 
         <div
@@ -839,19 +876,35 @@ export default function JobFullview({ readOnly }: JobFullviewProps) {
         <div
           className="normal-font dev-post-preview-container job-full-view-section"
           style={{
+            width: "100%",
             padding: "2em",
           }}
         >
           <span className="title-font" style={{ marginBottom: "1em" }}>
             Description
           </span>
-          {currentJobPost.description ? (
-            <MarkdownEditor
-              mdRef={mdRef}
-              readOnly={readOnly}
-              markdown={currentJobPost.description}
-            />
-          ) : null}
+          <MarkdownEditor
+            mdRef={mdRef}
+            readOnly={userType === UiDevOrEmployer.Developer}
+            markdown={currentJobPost.description || ""}
+            getChangedText={getMarkdownText}
+          />
+        </div>
+        <section
+          className="form-section"
+          style={{
+            width: "100%",
+            justifyContent: "flex-end",
+            padding: "2em",
+          }}
+        >
+          {jobPostDisplayComponents?.buttons}
+        </section>
+        <div style={{ padding: "2em" }}>
+          <ValidationMsgView
+            validationMessage={validationMessage}
+            successMessage={successMessage}
+          />
         </div>
       </form>
     </>

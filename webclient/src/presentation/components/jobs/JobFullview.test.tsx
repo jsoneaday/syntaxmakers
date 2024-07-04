@@ -12,14 +12,14 @@ import { UiDevOrEmployer } from "../../models/DevOrEmployer";
 const routerWithReadonlyJobFullview = createBrowserRouter([
   {
     path: "/",
-    element: <JobFullview readOnly={true} />,
+    element: <JobFullview userType={true} />,
   },
 ]);
 
 const routerWithWriteableJobFullview = createBrowserRouter([
   {
     path: "/",
-    element: <JobFullview readOnly={false} />,
+    element: <JobFullview userType={false} />,
   },
 ]);
 

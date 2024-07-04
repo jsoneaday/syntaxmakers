@@ -1,13 +1,13 @@
 use async_trait::async_trait;
 use sqlx::error::Error;
-use sqlx::{Postgres, Pool, query_as};
+use sqlx::{Postgres, Pool, query_as, query};
 use crate::common::repository::base::{DbRepo, ConnGetter};
 use crate::common::repository::employers::models::{NewEmployer, Employer};
 use crate::common::repository::base::EntityId;
+use crate::common::{authentication::password_hash::hash_password, repository::{employers::models::UpdateEmployer, error::SqlxError}};
 use log::error;
 
 mod internal {
-    use crate::common::authentication::password_hash::hash_password;
     use super::*;    
 
     pub async fn insert_employer(conn: &Pool<Postgres>, new_employer: NewEmployer) -> Result<EntityId, Error> {
@@ -27,6 +27,42 @@ mod internal {
                 Err(e)
             }
         }
+    }
+
+    /// note: Does NOT change password!
+    pub async fn update_employer(conn: &Pool<Postgres>, update_employer: UpdateEmployer) -> Result<(), Error> {
+        let update_result = query::<_>(
+            r"
+                update employer
+                set full_name = $2, email = $3, company_id = $4
+                where id = $1
+            ")
+            .bind(update_employer.id)
+            .bind(update_employer.full_name)
+            .bind(update_employer.email)
+            .bind(update_employer.company_id)
+            .execute(conn)
+            .await;
+
+        let update_result = match update_result {
+            Ok(row) => {
+                if row.rows_affected() > 0 {
+                    Ok(row)
+                } else {
+                    error!("update employer has failed");
+                    Err(SqlxError::QueryFailed)
+                }
+            },
+            Err(e) => {
+                error!("update employer error: {:?}", e);
+                Err(SqlxError::QueryFailed)
+            }
+        };
+        if let Err(e) = update_result {
+            return Err(e.into());
+        };
+
+        Ok(())
     }
 
     pub async fn query_employer(conn: &Pool<Postgres>, id: i64) -> Result<Option<Employer>, Error> {
@@ -74,6 +110,18 @@ pub trait InsertEmployerFn {
 impl InsertEmployerFn for DbRepo {
     async fn insert_employer(&self, new_employer: NewEmployer) -> Result<EntityId, Error> {
         internal::insert_employer(self.get_conn(), new_employer).await
+    }
+}
+
+#[async_trait]
+pub trait UpdateEmployerFn {
+    async fn update_employer(&self, update_employer: UpdateEmployer) -> Result<(), Error>;
+}
+
+#[async_trait]
+impl UpdateEmployerFn for DbRepo {
+    async fn update_employer(&self, update_employer: UpdateEmployer) -> Result<(), Error> {
+        internal::update_employer(self.get_conn(), update_employer).await
     }
 }
 

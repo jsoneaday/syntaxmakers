@@ -4,11 +4,12 @@ import "../../theme/userhome.css";
 import { v4 as uuidv4 } from "uuid";
 import DeveloperHome from "./DeveloperHome";
 import JobFullview from "../../components/jobs/JobFullview";
+import { UiDevOrEmployer } from "../../models/DevOrEmployer";
 
 export default function DevJobFullview() {
   return (
     <DeveloperHome>
-      <JobFullview readOnly={true} />
+      <JobFullview userType={UiDevOrEmployer.Developer} />
     </DeveloperHome>
   );
 }
