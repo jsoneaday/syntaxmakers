@@ -55,12 +55,16 @@ mod internal {
         ")
         .bind(job_id)
         .bind(dev_id)
-        .fetch_one(conn)
+        .fetch_optional(conn)
         .await;
 
         match result {
-            Ok(_) => {
-                Ok(true)
+            Ok(has_applied) => {
+                if let None = has_applied {
+                    Ok(false)
+                } else {
+                    Ok(true)
+                }                
             },
             Err(e) => {
                 Err(e)

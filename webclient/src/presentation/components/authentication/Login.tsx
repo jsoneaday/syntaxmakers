@@ -1,4 +1,8 @@
-import { LoginResult, login } from "../../../domain/repository/AuthRepo";
+import {
+  DevOrEmployer,
+  LoginResult,
+  login,
+} from "../../../domain/repository/AuthRepo";
 import { getDeveloperByEmail } from "../../../domain/repository/DeveloperRepo";
 import { useProfile } from "../../common/redux/profile/ProfileHooks";
 import "../../theme/login.css";
@@ -36,7 +40,13 @@ export default function Login({ toggleOpen }: LoginProps) {
   const onClickLogin = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
 
-    login(devOrEmp, email, password)
+    login(
+      devOrEmp === UiDevOrEmployer.Developer
+        ? DevOrEmployer.Developer
+        : DevOrEmployer.Employer,
+      email,
+      password
+    )
       .then(({ message, status }: LoginResult) => {
         if (status === 200) {
           if (devOrEmp === UiDevOrEmployer.Developer) {

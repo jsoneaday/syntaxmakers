@@ -13,7 +13,6 @@ export function ValidationMsgView({
     <section
       className="form-section"
       style={{
-        marginTop: "1.5em",
         color: validationMessage ? "var(--error-cl)" : "",
       }}
     >

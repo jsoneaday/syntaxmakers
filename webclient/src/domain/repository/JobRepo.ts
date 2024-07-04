@@ -5,6 +5,7 @@ import {
   JOBS_SEARCH_URL,
   JOB_UPDATE_URL,
   JOB_URL,
+  OutputId,
 } from "./Api";
 
 export class Job {
@@ -43,6 +44,18 @@ export interface JobFormState {
   primaryLangId: number;
   secondaryLangId?: number;
   countryId?: number;
+}
+
+export async function getJob(id: number) {
+  const result = await fetch(`${JOBS_APPLIED_URL}/${id}`, {
+    method: "get",
+  });
+
+  if (result.ok) {
+    const jobs: Job = await result.json();
+    return jobs;
+  }
+  return null;
 }
 
 export async function getJobsByApplier(
@@ -169,9 +182,10 @@ export async function insertJobPost(
 
   if (response.ok) {
     if (response.status === 204) {
-      return "";
+      return null;
     }
-    return await response.json();
+    const result: OutputId = await response.json();
+    return result;
   }
   throw new Error("Failed to update job");
 }
@@ -205,7 +219,7 @@ export async function updateJobPost(
 
   if (response.ok) {
     if (response.status === 204) {
-      return "";
+      return null;
     }
     return await response.json();
   }

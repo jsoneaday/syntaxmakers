@@ -8,6 +8,8 @@ use crate::common::repository::{error::SqlxError, developers::models::Developer,
 use log::error;
 
 mod internal {    
+    use chrono::Utc;
+
     use super::*;    
 
     pub async fn insert_job(conn: &Pool<Postgres>, new_job: NewJob) -> Result<EntityId, Error> {
@@ -86,15 +88,16 @@ mod internal {
         let update_result = query::<_>(
             r"
             update job 
-            set employer_id = $1, 
+            set employer_id = $1,                 
                 title = $2, 
                 description = $3, 
                 is_remote = $4, 
                 primary_lang_id = $5, 
                 secondary_lang_id = $6, 
                 industry_id = $7, 
-                salary_id = $8
-            where id = $9   
+                salary_id = $8,
+                updated_at = $9
+            where id = $10   
             ")
             .bind(update_job.employer_id)
             .bind(update_job.title)
@@ -104,6 +107,7 @@ mod internal {
             .bind(update_job.secondary_lang_id)
             .bind(update_job.industry_id)
             .bind(update_job.salary_id)
+            .bind(Utc::now())
             .bind(job_id)
             .execute(&mut *tx)
             .await;

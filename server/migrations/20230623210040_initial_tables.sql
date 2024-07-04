@@ -79,7 +79,7 @@ create table job (
     "updated_at" timestamptz(3) not null default current_timestamp,
     "employer_id" bigserial not null,
     "title" varchar(100) not null,
-    "description" varchar(5000) not null,
+    "description" varchar(8000) not null,
     "is_remote" boolean not null,
     "primary_lang_id" bigserial not null,
     "secondary_lang_id" bigserial,

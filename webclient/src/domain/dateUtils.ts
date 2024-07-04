@@ -1,8 +1,8 @@
-export function shortenFormattedDateStr(date: string) {
+export function shortenDurationStr(date: string) {
   if (date.includes("seconds")) {
     return date.replace("seconds", "sec");
-  } else if (date.includes("minutes")) {
-    return date.replace("minutes", "min");
+  } else if (date.includes("minute")) {
+    return date.replace("minute", "min");
   } else if (date.includes("hours")) {
     return date.replace("hours", "hr");
   } else if (date.includes("days")) {

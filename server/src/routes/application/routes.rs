@@ -25,7 +25,7 @@ pub async fn create_application<T: InsertApplicationFn + Repository + QueryEmplo
     }
 }
 
-pub async fn developer_applied<T: DevHasAppliedFn + Repository, U: Authenticator>(app_data: Data<AppState<T, U>>, json: Json<NewApplicationForRoute>) -> Result<OutputBool, UserError> {
+pub async fn developer_applied<T: DevHasAppliedFn + Repository, U: Authenticator>(app_data: Data<AppState<T, U>>, json: Json<NewApplicationForRoute>) -> Result<OutputBool, UserError> {    
     match app_data.repo.dev_has_applied(json.job_id, json.developer_id).await {
         Ok(applied) => Ok(OutputBool { result: applied }),
         Err(e) => Err(e.into())
