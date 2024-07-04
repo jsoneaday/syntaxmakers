@@ -118,19 +118,21 @@ const WritePlugins = [
         <BoldItalicUnderlineToggles />
         <ListsToggle />
         <ConditionalContents
-          options={[
-            {
-              when: (editor) => editor?.editorType === "codeblock",
-              contents: () => <ChangeCodeMirrorLanguage />,
-            },
-            {
-              fallback: () => (
-                <>
-                  <InsertCodeBlock />
-                </>
-              ),
-            },
-          ]}
+          options={
+            [
+              // {
+              //   when: (editor) => editor?.editorType === "codeblock",
+              //   contents: () => <ChangeCodeMirrorLanguage />,
+              // },
+              // {
+              //   fallback: () => (
+              //     <>
+              //       <InsertCodeBlock />
+              //     </>
+              //   ),
+              // },
+            ]
+          }
         />
       </>
     ),

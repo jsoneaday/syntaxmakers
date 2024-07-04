@@ -449,7 +449,7 @@ export default function JobFullview({ userType }: JobFullviewProps) {
             onChange={onChangeTitle}
             className="input normal-font"
             name="title"
-            style={{ width: "20em", textAlign: "right" }}
+            style={{ width: "20em" }}
           />
         </div>
       );
@@ -479,7 +479,7 @@ export default function JobFullview({ userType }: JobFullviewProps) {
           ) : null}
         </>
       );
-      console.log("updatedat", currentJobPost.updatedAt);
+
       _updatedAt = (
         <div
           className="small-font job-full-view-subtitle-item-primary"
