@@ -12,6 +12,7 @@ export class Developer {
     public userName: string,
     public fullName: string,
     public email: string,
+    public description: string,
     public primaryLangId: number,
     public secondaryLangId?: number | null
   ) {}
@@ -21,6 +22,7 @@ export async function createDeveloper(newDev: {
   userName: string;
   fullName: string;
   email: string;
+  description: string;
   password: string;
   primaryLangId: number;
   secondaryLangId?: number | null;
@@ -46,6 +48,7 @@ export async function updateDeveloper(updateDev: {
   id: number; // dev id
   fullName: string;
   email: string;
+  description: string;
   primaryLangId: number;
   secondaryLangId?: number | null;
   access_token: string;
@@ -67,7 +70,7 @@ export async function updateDeveloper(updateDev: {
   return false;
 }
 
-export async function getDeveloper(id: string) {
+export async function getDeveloper(id: number) {
   const response = await fetch(`${DEVELOPER_URL}/${id}`, {
     method: "get",
   });

@@ -47,13 +47,13 @@ export default function Login({ toggleOpen }: LoginProps) {
       email,
       password
     )
-      .then(({ message, status }: LoginResult) => {
+      .then(({ message: accessToken, status }: LoginResult) => {
         if (status === 200) {
           if (devOrEmp === UiDevOrEmployer.Developer) {
-            getDeveloperByEmail(email, message)
+            getDeveloperByEmail(email, accessToken)
               .then((dev) => {
                 if (dev) {
-                  const profile = convertDev(dev, message);
+                  const profile = convertDev(dev, accessToken);
 
                   startTransition(() => {
                     setProfile(profile);
@@ -68,10 +68,10 @@ export default function Login({ toggleOpen }: LoginProps) {
                 console.log("Developer: failed to get developer", error);
               });
           } else {
-            getEmployerByEmail(email, message)
+            getEmployerByEmail(email, accessToken)
               .then((emp) => {
                 if (emp) {
-                  const profile = convertEmp(emp, message);
+                  const profile = convertEmp(emp, accessToken);
 
                   setProfile(profile);
                   toggleOpen();

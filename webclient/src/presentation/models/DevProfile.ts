@@ -10,6 +10,7 @@ type DevProfile = {
   userName: string;
   fullName: string;
   email: string;
+  description: string;
   primaryLangId: number;
   secondaryLangId?: number | null;
   accessToken?: string | null;
@@ -24,6 +25,7 @@ export function convert(dev: Developer, accessToken?: string): DevProfile {
     userName: dev.userName,
     fullName: dev.fullName,
     email: dev.email,
+    description: dev.description,
     primaryLangId: dev.primaryLangId,
     secondaryLangId: dev.secondaryLangId,
     accessToken,

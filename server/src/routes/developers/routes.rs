@@ -78,7 +78,7 @@ pub async fn get_developer<T: QueryDeveloperFn + Repository, U: Authenticator>(
     app_data: Data<AppState<T, U>>, 
     path: Path<i64>,
     req: HttpRequest
-) -> Result<Option<DeveloperResponder>, UserError> {
+) -> Result<Option<DeveloperResponder>, UserError> {    
     let id = path.into_inner();
     let result = app_data.repo.query_developer(id).await;
 
@@ -104,12 +104,21 @@ pub async fn get_developer<T: QueryDeveloperFn + Repository, U: Authenticator>(
                             Err(UserError::AuthenticationFailed)
                         }
                     },
-                    Err(_) => Err(UserError::InternalError)
+                    Err(e) => {
+                        println!("get dev auth error {}", e);
+                        Err(UserError::InternalError)
+                    }
                 }
             },
-            None => Ok(None)
+            None => {
+                println!("dev not found by id {}", id);
+                Ok(None)
+            }
         },
-        Err(e) => Err(e.into())
+        Err(e) => {
+            println!("get dev error {}", e);
+            Err(e.into())
+        }
     }
 }
 

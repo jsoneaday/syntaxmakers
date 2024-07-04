@@ -1,16 +1,19 @@
-import { ChangeEvent, FormEvent, useEffect, useState } from "react";
+import { ChangeEvent, FormEvent, useEffect, useRef, useState } from "react";
 import { UiDevOrEmployer } from "../../models/DevOrEmployer";
 import DropDown, { OptionType } from "../controls/DropDown";
 import { getLanguages } from "../../../domain/repository/LanguageRepo";
 import {
   createDeveloper,
+  getDeveloperByEmail,
   updateDeveloper,
 } from "../../../domain/repository/DeveloperRepo";
 import { useProfile } from "../../common/redux/profile/ProfileHooks";
-import DevProfile from "../../models/DevProfile";
+import DevProfile, { convert } from "../../models/DevProfile";
 import { ValidationMsgView } from "../controls/ValidationMsgView";
 import { ChangePassword } from "./ChangePassword";
 import { PrimaryButton } from "../controls/Buttons";
+import { MarkdownEditor } from "../textEditor/MarkdownEditor";
+import { MDXEditorMethods } from "@mdxeditor/editor";
 
 export enum ProfileFormEditMode {
   Create,
@@ -21,6 +24,7 @@ interface ProfileFormData {
   userName: string;
   fullName: string;
   email: string;
+  description: string;
   password: string;
   primaryLangId: number;
   secondaryLangId?: number | null;
@@ -32,6 +36,7 @@ interface ProfileFormProps {
   userType: UiDevOrEmployer;
 }
 
+/// form to register or edit profile
 export function ProfileForm({
   isModalMode,
   editMode,
@@ -41,16 +46,18 @@ export function ProfileForm({
   const [successMessage, setSuccessMessage] = useState("");
   const [primaryLang, setPrimaryLang] = useState<OptionType[]>([]);
   const [secondaryLang, setSecondaryLang] = useState<OptionType[]>([]);
-  const [profile, _setProfile] = useProfile();
+  const [profile, setProfile] = useProfile();
   const [profileForm, setProfileForm] = useState<ProfileFormData>({
     userName: "",
     fullName: "",
     email: "",
+    description: "",
     password: "",
     primaryLangId: 0,
     secondaryLangId: undefined,
   });
   const [disableSubmit, setDisableSubmit] = useState(false);
+  const mdRef = useRef<MDXEditorMethods>(null);
 
   useEffect(() => {
     getLanguages().then((languages) => {
@@ -73,10 +80,12 @@ export function ProfileForm({
           userName: dev.userName,
           fullName: dev.fullName,
           email: dev.email,
+          description: dev.description,
           password: "**********",
           primaryLangId: dev.primaryLangId,
           secondaryLangId: dev.secondaryLangId,
         });
+        mdRef.current?.setMarkdown(dev.description);
       }
     }
   }, [profile]);
@@ -84,34 +93,39 @@ export function ProfileForm({
   const createOrEditProfile = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    if (!profile || !profile.accessToken) {
-      setValidationMessage(
-        "User must be logged in before making changes to profile"
-      );
-      return;
-    }
     if (!isValidateProfile()) return;
 
     try {
       setDisableSubmit(true);
       if (userType === UiDevOrEmployer.Developer) {
         if (editMode === ProfileFormEditMode.Create) {
+          if (profile) {
+            setValidationMessage(
+              "You cannot create a new profile when you already have one"
+            );
+            return;
+          }
           await createDeveloper({
             userName: profileForm.userName,
             fullName: profileForm.fullName,
             email: profileForm.email,
+            description: profileForm.description,
             password: profileForm.password,
             primaryLangId: profileForm.primaryLangId,
             secondaryLangId: profileForm.secondaryLangId,
           });
-          setSuccessMessage(
-            "Your profile has been created please check your email for confirmation."
-          );
         } else {
+          if (!profile || !profile.accessToken) {
+            setValidationMessage(
+              "User must be logged in before making changes to profile"
+            );
+            return;
+          }
           const result = await updateDeveloper({
             id: Number(profile.id),
             fullName: profileForm.fullName,
             email: profileForm.email,
+            description: profileForm.description,
             primaryLangId: profileForm.primaryLangId,
             secondaryLangId: profileForm.secondaryLangId,
             access_token: profile.accessToken,
@@ -119,6 +133,14 @@ export function ProfileForm({
           if (result) {
             setSuccessMessage("Your profile has been updated.");
             setValidationMessage("");
+            const dev = await getDeveloperByEmail(
+              profileForm.email,
+              profile.accessToken
+            );
+            if (dev) {
+              const updatedProfile = convert(dev, profile.accessToken);
+              setProfile(updatedProfile);
+            }
           } else {
             setValidationMessage("Failed to update your profile");
             setSuccessMessage("");
@@ -160,6 +182,15 @@ export function ProfileForm({
       );
       return false;
     }
+    if (
+      profileForm.description.length < 5 ||
+      profileForm.description.length > 5000
+    ) {
+      setValidationMessage(
+        "Description cannot be shorter than 5 or longer than 5000 characters"
+      );
+      return false;
+    }
     if (!profileForm.email) {
       setValidationMessage("Email cannot be empty");
       return false;
@@ -185,7 +216,6 @@ export function ProfileForm({
     }
 
     if (!profileForm.primaryLangId) {
-      console.log("failed");
       setValidationMessage("Primary Language must be selected");
       return false;
     }
@@ -245,6 +275,13 @@ export function ProfileForm({
     });
   };
 
+  const getMarkdownText = (markdown: string) => {
+    setProfileForm({
+      ...profileForm,
+      description: markdown,
+    });
+  };
+
   return (
     <div style={{ width: "100%" }}>
       <form className="login-form" onSubmit={createOrEditProfile}>
@@ -295,6 +332,21 @@ export function ProfileForm({
               onChange={onChangeFullName}
             />
           </section>
+          {userType === UiDevOrEmployer.Developer ? (
+            <section className="form-section">
+              <span>Description</span>
+              <div
+                style={{ marginTop: "1em", marginBottom: "3em", width: "75%" }}
+              >
+                <MarkdownEditor
+                  mdRef={mdRef}
+                  readOnly={false}
+                  markdown={profileForm.description}
+                  getChangedText={getMarkdownText}
+                />
+              </div>
+            </section>
+          ) : null}
           <section className="form-section">
             <span>Email</span>
             <input
