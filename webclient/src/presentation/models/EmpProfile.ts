@@ -23,7 +23,7 @@ export function convert(emp: Employer, accessToken?: string): EmpProfile {
     userName: emp.userName,
     fullName: emp.fullName,
     email: emp.email,
-    companyId: emp.company_id,
+    companyId: emp.companyId,
     accessToken,
   };
 }

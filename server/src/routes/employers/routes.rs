@@ -1,7 +1,13 @@
 use actix_web::{web::{Data, Json, Path}, HttpRequest};
 use crate::{
     app_state::AppState, common::{
-        authentication::auth_service::Authenticator, repository::{base::Repository, developers::repo::QueryDeveloperFn, employers::{models::{NewEmployer, UpdateEmployer}, repo::{InsertEmployerFn, QueryAllEmployersFn, QueryEmployerByEmailFn, QueryEmployerFn, UpdateEmployerFn}}}
+        authentication::auth_service::Authenticator, repository::{
+            base::Repository, 
+            companies::{models::NewCompany, repo::InsertCompanyFn}, 
+            countries::repo::QueryAllCountriesFn, 
+            developers::repo::QueryDeveloperFn, 
+            employers::{models::{NewEmployer, UpdateEmployer}, repo::{InsertEmployerFn, QueryAllEmployersFn, QueryEmployerByEmailFn, QueryEmployerFn, UpdateEmployerFn}}
+        }
     }, routes::{auth_helper::check_is_authenticated, base_model::{OutputBool, OutputId, PagingModel}, route_utils::get_header_strings, user_error::UserError}
 };
 use super::models::{EmployerResponder, EmployerResponders, NewEmployerForRoute, UpdateEmployerForRoute};
@@ -9,7 +15,7 @@ use crate::routes::authentication::models::DeveloperOrEmployer as AuthDeveloperO
 use log::error;
 
 /// register a new employer profile
-pub async fn create_employer<T: QueryEmployerByEmailFn + InsertEmployerFn + Repository, U: Authenticator>(
+pub async fn create_employer<T: QueryAllCountriesFn + InsertCompanyFn + QueryEmployerByEmailFn + InsertEmployerFn + Repository, U: Authenticator>(
     app_data: Data<AppState<T, U>>, 
     json: Json<NewEmployerForRoute>
 ) -> Result<OutputId, UserError> {
@@ -25,13 +31,27 @@ pub async fn create_employer<T: QueryEmployerByEmailFn + InsertEmployerFn + Repo
         Err(_) => ()
     };
 
-    let result = app_data.repo.insert_employer(NewEmployer {
-        user_name: json.user_name.to_owned(),
-        full_name: json.full_name.to_owned(),
-        email: json.email.to_owned(),
-        password: json.password.to_owned(),
-        company_id: json.company_id
-    }).await;
+    let new_emp = if let Ok(company_id) = json.company_id.clone().parse::<i64>() {
+        NewEmployer {
+            user_name: json.user_name.to_owned(),
+            full_name: json.full_name.to_owned(),
+            email: json.email.to_owned(),
+            password: json.password.to_owned(),
+            company_id
+        }
+    } else {
+        let countries = app_data.repo.query_all_countries().await.unwrap();
+        let company_entity = app_data.repo.insert_company(NewCompany { name: json.company_id.to_owned(), logo: None, headquarters_country_id: countries[0].id }).await.unwrap();
+        NewEmployer {
+            user_name: json.user_name.to_owned(),
+            full_name: json.full_name.to_owned(),
+            email: json.email.to_owned(),
+            password: json.password.to_owned(),
+            company_id: company_entity.id
+        }
+    };
+
+    let result = app_data.repo.insert_employer(new_emp).await;
 
     match result {
         Ok(entity) => Ok(OutputId { id: entity.id }),
@@ -39,23 +59,37 @@ pub async fn create_employer<T: QueryEmployerByEmailFn + InsertEmployerFn + Repo
     }
 }
 
-pub async fn update_employer<T: QueryDeveloperFn + QueryEmployerFn + UpdateEmployerFn + Repository, U: Authenticator>(
+pub async fn update_employer<T: QueryAllCountriesFn + InsertCompanyFn + QueryDeveloperFn + QueryEmployerFn + UpdateEmployerFn + Repository, U: Authenticator>(
     app_data: Data<AppState<T, U>>, 
     json: Json<UpdateEmployerForRoute>,
     req: HttpRequest
 ) -> Result<OutputBool, UserError> {
-    let is_auth = check_is_authenticated(app_data.clone(), json.id, AuthDeveloperOrEmployer::Developer, req).await;
+    let is_auth = check_is_authenticated(app_data.clone(), json.id, AuthDeveloperOrEmployer::Employer, req).await;
     if !is_auth {
         error!("Authorization failed");
         return Err(UserError::AuthenticationFailed);
     }
+
+    let updated_employer = if let Ok(company_id) = json.company_id.parse::<i64>() {
+        UpdateEmployer {
+            id: json.id,
+            full_name: json.full_name.to_owned(),
+            email: json.email.to_owned(),
+            company_id
+        }        
+    } else {
+        let countries = app_data.repo.query_all_countries().await.unwrap();
+        let company_entity = app_data.repo.insert_company(NewCompany { name: json.company_id.to_owned(), logo: None, headquarters_country_id: countries[0].id }).await.unwrap();
+       
+        UpdateEmployer {
+            id: json.id,
+            full_name: json.full_name.to_owned(),
+            email: json.email.to_owned(),
+            company_id: company_entity.id
+        }        
+    };
     
-    let result = app_data.repo.update_employer(UpdateEmployer {
-        id: json.id,
-        full_name: json.full_name.to_owned(),
-        email: json.email.to_owned(),
-        company_id: json.company_id
-    }).await;
+    let result = app_data.repo.update_employer(updated_employer).await;
 
     match result {
         Ok(_) => Ok(OutputBool { result: true }),
@@ -249,7 +283,7 @@ mod tests {
                 full_name: get_fake_fullname(), 
                 email, 
                 password: "test1234".to_string(),
-                company_id: 1 
+                company_id: "1".to_string()
             })).await;
             assert!(result.err().unwrap() == UserError::EmailAlreadyInUse)
         }
@@ -267,7 +301,7 @@ mod tests {
             id: 1, 
             full_name: get_fake_fullname(), 
             email, 
-            company_id: 1 
+            company_id: "1".to_string()
         }),
         req).await;
 

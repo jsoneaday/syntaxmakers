@@ -11,7 +11,7 @@ create table company (
     "id" bigserial primary key,
     "created_at" timestamptz(3) not null default current_timestamp,
     "updated_at" timestamptz(3) not null default current_timestamp,
-    "name" varchar(120) not null,
+    "name" varchar(120) not null unique,
     "logo" bytea,
     "headquarters_country_id" bigserial not null,
 

@@ -27,7 +27,7 @@ mod internal {
         query_as::<_, Company>(
             r"
             select * from company 
-            order by updated_at desc 
+            order by name asc 
             "
         )
         .fetch_all(conn).await

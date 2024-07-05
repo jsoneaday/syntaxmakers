@@ -10,7 +10,10 @@ pub struct NewEmployerForRoute {
     pub full_name: String,
     pub email: String,
     pub password: String,
-    pub company_id: i64
+    /// note: this field is string and not number because user may try and create a new company 
+    /// and if they do this value will come in as the new company name, 
+    /// else it will be an existing company id and so needs to be converted to a number
+    pub company_id: String
 }
 
 #[derive(Deserialize, Serialize)]
@@ -19,7 +22,10 @@ pub struct UpdateEmployerForRoute {
     pub id: i64,
     pub full_name: String,
     pub email: String,
-    pub company_id: i64
+    /// note: this field is string and not number because user may try and create a new company 
+    /// and if they do this value will come in as the new company name, 
+    /// else it will be an existing company id and so needs to be converted to a number
+    pub company_id: String
 }
 
 #[derive(Serialize)]

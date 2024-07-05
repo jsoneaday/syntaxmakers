@@ -6,18 +6,23 @@ import Layout from "../../components/Layout";
 import LeftMenuEmp from "../../components/navigation/leftMenu/LeftMenuEmp";
 import { ReactNode } from "react";
 import { UiDevOrEmployer } from "../../models/DevOrEmployer";
+import { useProfile } from "../../common/redux/profile/ProfileHooks";
 
 interface EmployerHomeProps {
   children: ReactNode;
 }
 
 export default function EmployerHome({ children }: EmployerHomeProps) {
+  const [profile] = useProfile();
+
   return (
     <Layout userType={UiDevOrEmployer.Employer}>
-      <div className="userhome-container" data-testid="employer-page">
-        <LeftMenuEmp />
-        {children}
-      </div>
+      {profile ? (
+        <div className="userhome-container" data-testid="employer-page">
+          <LeftMenuEmp />
+          {children}
+        </div>
+      ) : null}
     </Layout>
   );
 }
