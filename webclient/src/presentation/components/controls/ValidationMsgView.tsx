@@ -10,13 +10,12 @@ export function ValidationMsgView({
   successMessage,
 }: ValidationMsgViewProps) {
   return (
-    <section
-      className="form-section"
+    <div
       style={{
         color: validationMessage ? "var(--error-cl)" : "",
       }}
     >
       <span>{validationMessage ? validationMessage : successMessage}</span>
-    </section>
+    </div>
   );
 }

@@ -3,29 +3,30 @@ use actix_web::{Responder, HttpResponse, http::header::ContentType};
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
-#[derive(Deserialize, Serialize)]
+
+/// If company_id is none new_company_name must have a value,
+/// as that situation is considered a request to create a new company
+#[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct NewEmployerForRoute {
     pub user_name: String,
     pub full_name: String,
     pub email: String,
     pub password: String,
-    /// note: this field is string and not number because user may try and create a new company 
-    /// and if they do this value will come in as the new company name, 
-    /// else it will be an existing company id and so needs to be converted to a number
-    pub company_id: String
+    pub company_id: Option<i64>,
+    pub new_company_name: Option<String>
 }
 
-#[derive(Deserialize, Serialize)]
+/// If company_id is none new_company_name must have a value,
+/// as that situation is considered a request to create a new company
+#[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct UpdateEmployerForRoute {
     pub id: i64,
     pub full_name: String,
     pub email: String,
-    /// note: this field is string and not number because user may try and create a new company 
-    /// and if they do this value will come in as the new company name, 
-    /// else it will be an existing company id and so needs to be converted to a number
-    pub company_id: String
+    pub company_id: Option<i64>,
+    pub new_company_name: Option<String>
 }
 
 #[derive(Serialize)]

@@ -5,7 +5,7 @@ use crate::{
         repository::{
             base::Repository, 
             developers::{
-                models::{NewDeveloper, UpdateDeveloper}, repo::{InsertDeveloperFn, QueryAllDevelopersFn, QueryDeveloperByEmailFn, QueryDeveloperFn, UpdateDeveloperFn}
+                models::{NewDeveloper, UpdateDeveloper}, repo::{InsertDeveloperFn, QueryAllDevelopersFn, QueryDeveloperByEmailFn, QueryDeveloperByUserNameFn, QueryDeveloperFn, UpdateDeveloperFn}
             }, 
             employers::repo::QueryEmployerFn
         }
@@ -18,7 +18,7 @@ use crate::routes::authentication::models::DeveloperOrEmployer as AuthDeveloperO
 use log::error;
 
 /// register a new developer profile
-pub async fn create_developer<T: QueryDeveloperByEmailFn + InsertDeveloperFn + Repository, U: Authenticator>(
+pub async fn create_developer<T: QueryDeveloperByUserNameFn + QueryDeveloperByEmailFn + InsertDeveloperFn + Repository, U: Authenticator>(
     app_data: Data<AppState<T, U>>, 
     json: Json<NewDeveloperForRoute>
 ) -> Result<OutputId, UserError> {
@@ -26,6 +26,16 @@ pub async fn create_developer<T: QueryDeveloperByEmailFn + InsertDeveloperFn + R
         Ok(result) => match result {
             Some(_) => {
                 return Err(UserError::EmailAlreadyInUse);
+            },
+            None => ()
+        },
+        Err(_) => ()
+    };
+    match app_data.repo.query_developer_by_user_name(json.user_name.clone()).await {
+        Ok(result) => match result {
+            Some(emp) => {
+                println!("user_name already used{:?}", emp);
+                return Err(UserError::UsernameAlreadyInUse);
             },
             None => ()
         },
@@ -48,7 +58,7 @@ pub async fn create_developer<T: QueryDeveloperByEmailFn + InsertDeveloperFn + R
     }
 }
 
-pub async fn update_developer<T: QueryDeveloperFn + QueryEmployerFn + UpdateDeveloperFn + Repository, U: Authenticator>(
+pub async fn update_developer<T: QueryDeveloperByEmailFn + QueryDeveloperFn + QueryEmployerFn + UpdateDeveloperFn + Repository, U: Authenticator>(
     app_data: Data<AppState<T, U>>, 
     json: Json<UpdateDeveloperForRoute>,
     req: HttpRequest
@@ -69,7 +79,10 @@ pub async fn update_developer<T: QueryDeveloperFn + QueryEmployerFn + UpdateDeve
     }).await;
 
     match result {
-        Ok(_) => Ok(OutputBool { result: true }),
+        Ok(_) => {
+            // todo: if email changed need to create a confirm email record
+            Ok(OutputBool { result: true })
+        },
         Err(e) => Err(e.into())
     }
 }
@@ -315,6 +328,13 @@ mod tests {
         #[async_trait]
         impl QueryDeveloperByEmailFn for CreateDevMockDbRepo {
             async fn query_developer_by_email(&self, _: String) -> Result<Option<Developer>, sqlx::Error> {
+                Ok(None)
+            }
+        }
+
+        #[async_trait]
+        impl QueryDeveloperByUserNameFn for CreateDevMockDbRepo {
+            async fn query_developer_by_user_name(&self, _: String) -> Result<Option<Developer>, sqlx::Error> {
                 Ok(None)
             }
         }

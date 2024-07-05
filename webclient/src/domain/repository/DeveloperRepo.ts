@@ -35,9 +35,11 @@ export async function createDeveloper(newDev: {
     body: JSON.stringify(newDev),
   });
 
+  if (!response.ok) {
+    throw new Error(await response.text());
+  }
   if (response.ok) {
     const newDev: { id: number } = await response.json();
-    console.log("newDevId", newDev.id);
     return newDev.id;
   } else {
     throw new Error(await response.text());
@@ -63,6 +65,9 @@ export async function updateDeveloper(updateDev: {
     body: JSON.stringify(updateDev),
   });
 
+  if (!response.ok) {
+    throw new Error(await response.text());
+  }
   if (response.ok) {
     const changePassResult: OutputBool = await response.json();
     return changePassResult.result;

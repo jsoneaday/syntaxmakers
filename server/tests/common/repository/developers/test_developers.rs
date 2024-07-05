@@ -5,7 +5,7 @@ use syntaxmakers_server::common::repository::developers::models::{NewDeveloper, 
 use syntaxmakers_server::common::repository::developers::repo::{InsertDeveloperFn, QueryAllDevelopersFn, QueryDeveloperByEmailFn, QueryDeveloperFn, UpdateDeveloperFn};
 use syntaxmakers_server::common::repository::user::models::{ChangePassword, DeveloperOrEmployer};
 use syntaxmakers_server::common::repository::user::repo::ChangePasswordFn;
-use syntaxmakers_server::common_test::fixtures::{ get_fake_dev_desc, get_fake_email, get_fake_fullname, init_fixtures, LANGUAGES};
+use syntaxmakers_server::common_test::fixtures::{ get_fake_dev_desc, get_fake_email, get_fake_fullname, get_fake_user_name, init_fixtures, LANGUAGES};
 
 #[tokio::test]
 async fn test_create_developer_and_get_back() {
@@ -14,7 +14,7 @@ async fn test_create_developer_and_get_back() {
     
     let user_name = Username().fake::<String>();
     let full_name = get_fake_fullname();
-    let email = SafeEmail().fake::<String>();
+    let email = get_fake_email();
     let primary_lang_id = 1;
 
     let create_result = repo.insert_developer(NewDeveloper {
@@ -33,6 +33,72 @@ async fn test_create_developer_and_get_back() {
     assert!(get_result.clone().full_name == full_name);
     assert!(get_result.clone().email == email);
     assert!(get_result.clone().primary_lang_id == primary_lang_id);
+}
+
+#[tokio::test]
+async fn test_create_developers_and_check_does_not_allow_duplicate_email() {
+    let repo = DbRepo::init().await;
+    init_fixtures().await;
+    
+    let user_name = Username().fake::<String>();
+    let full_name = get_fake_fullname();
+    let email = get_fake_email();
+    let primary_lang_id = 1;
+
+    _ = repo.insert_developer(NewDeveloper {
+        user_name: user_name.clone(),
+        full_name: full_name.clone(),
+        email: email.clone(),
+        description: get_fake_dev_desc(),
+        password: "test1234".to_string(),
+        primary_lang_id,
+        secondary_lang_id: None
+    }).await.unwrap();
+    let create_result = repo.insert_developer(NewDeveloper {
+        user_name: get_fake_user_name(),
+        full_name: full_name.clone(),
+        email: email.clone(),
+        description: get_fake_dev_desc(),
+        password: "test1234".to_string(),
+        primary_lang_id,
+        secondary_lang_id: None
+    }).await;
+    
+    assert!(create_result.is_err());
+    assert!(create_result.err().unwrap().as_database_error().unwrap().is_unique_violation());
+}
+
+#[tokio::test]
+async fn test_create_developers_and_check_does_not_allow_duplicate_user_name() {
+    let repo = DbRepo::init().await;
+    init_fixtures().await;
+    
+    let user_name = Username().fake::<String>();
+    let full_name = get_fake_fullname();
+    let email = get_fake_email();
+    let primary_lang_id = 1;
+
+    _ = repo.insert_developer(NewDeveloper {
+        user_name: user_name.clone(),
+        full_name: full_name.clone(),
+        email: email.clone(),
+        description: get_fake_dev_desc(),
+        password: "test1234".to_string(),
+        primary_lang_id,
+        secondary_lang_id: None
+    }).await.unwrap();
+    let create_result = repo.insert_developer(NewDeveloper {
+        user_name: user_name,
+        full_name: full_name,
+        email: get_fake_email(),
+        description: get_fake_dev_desc(),
+        password: "test1234".to_string(),
+        primary_lang_id,
+        secondary_lang_id: None
+    }).await;
+    
+    assert!(create_result.is_err());
+    assert!(create_result.err().unwrap().as_database_error().unwrap().is_unique_violation());
 }
 
 #[tokio::test]

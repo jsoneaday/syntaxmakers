@@ -6,7 +6,7 @@ use crate::{
             companies::{models::NewCompany, repo::InsertCompanyFn}, 
             countries::repo::QueryAllCountriesFn, 
             developers::repo::QueryDeveloperFn, 
-            employers::{models::{NewEmployer, UpdateEmployer}, repo::{InsertEmployerFn, QueryAllEmployersFn, QueryEmployerByEmailFn, QueryEmployerFn, UpdateEmployerFn}}
+            employers::{models::{NewEmployer, UpdateEmployer}, repo::{InsertEmployerFn, QueryAllEmployersFn, QueryEmployerByEmailFn, QueryEmployerByUsernameFn, QueryEmployerFn, UpdateEmployerFn}}
         }
     }, routes::{auth_helper::check_is_authenticated, base_model::{OutputBool, OutputId, PagingModel}, route_utils::get_header_strings, user_error::UserError}
 };
@@ -15,23 +15,38 @@ use crate::routes::authentication::models::DeveloperOrEmployer as AuthDeveloperO
 use log::error;
 
 /// register a new employer profile
-pub async fn create_employer<T: QueryAllCountriesFn + InsertCompanyFn + QueryEmployerByEmailFn + InsertEmployerFn + Repository, U: Authenticator>(
+pub async fn create_employer<T: QueryAllCountriesFn + InsertCompanyFn + QueryEmployerByUsernameFn + QueryEmployerByEmailFn + InsertEmployerFn + Repository, U: Authenticator>(
     app_data: Data<AppState<T, U>>, 
     json: Json<NewEmployerForRoute>
 ) -> Result<OutputId, UserError> {
-    println!("email {}", json.email);
+    println!("start create emp {}", json.email);
     match app_data.repo.query_employer_by_email(json.email.clone()).await {
         Ok(result) => match result {
             Some(emp) => {
-                println!("found emp {:?}", emp);
+                println!("email already used{:?}", emp);
                 return Err(UserError::EmailAlreadyInUse);
             },
             None => ()
         },
         Err(_) => ()
     };
+    match app_data.repo.query_employer_by_user_name(json.user_name.clone()).await {
+        Ok(result) => match result {
+            Some(emp) => {
+                println!("user_name already used{:?}", emp);
+                return Err(UserError::UsernameAlreadyInUse);
+            },
+            None => ()
+        },
+        Err(_) => ()
+    };
 
-    let new_emp = if let Ok(company_id) = json.company_id.clone().parse::<i64>() {
+    if (json.company_id.is_none() && json.new_company_name.clone().is_none()) || (json.company_id.is_some() && json.new_company_name.is_some()){
+        println!("company_id and new_company_name cannot both have or not have values");
+        return Err(UserError::ValidationError { field: "company_id".to_string() });
+    }
+
+    let new_emp = if let Some(company_id) = json.company_id {
         NewEmployer {
             user_name: json.user_name.to_owned(),
             full_name: json.full_name.to_owned(),
@@ -41,25 +56,42 @@ pub async fn create_employer<T: QueryAllCountriesFn + InsertCompanyFn + QueryEmp
         }
     } else {
         let countries = app_data.repo.query_all_countries().await.unwrap();
-        let company_entity = app_data.repo.insert_company(NewCompany { name: json.company_id.to_owned(), logo: None, headquarters_country_id: countries[0].id }).await.unwrap();
-        NewEmployer {
-            user_name: json.user_name.to_owned(),
-            full_name: json.full_name.to_owned(),
-            email: json.email.to_owned(),
-            password: json.password.to_owned(),
-            company_id: company_entity.id
-        }
+        match app_data.repo.insert_company(NewCompany { 
+            name: json.new_company_name.as_ref().unwrap().to_owned(), 
+            logo: None, 
+            headquarters_country_id: countries[0].id 
+        }).await {
+            Ok(company_entity) => {
+                NewEmployer {
+                    user_name: json.user_name.to_owned(),
+                    full_name: json.full_name.to_owned(),
+                    email: json.email.to_owned(),
+                    password: json.password.to_owned(),
+                    company_id: company_entity.id
+                }
+            },
+            Err(e) => {
+                if let Some(db_err) = e.as_database_error() {
+                    if db_err.is_unique_violation() {
+                        return Err(UserError::NameAlreadyInUse);
+                    }
+                }
+                return Err(e.into());
+            }
+        }        
     };
 
     let result = app_data.repo.insert_employer(new_emp).await;
-
     match result {
         Ok(entity) => Ok(OutputId { id: entity.id }),
-        Err(e) => Err(e.into())
+        Err(e) => {
+            error!("create emp error {}", e);
+            Err(e.into())
+        }
     }
 }
 
-pub async fn update_employer<T: QueryAllCountriesFn + InsertCompanyFn + QueryDeveloperFn + QueryEmployerFn + UpdateEmployerFn + Repository, U: Authenticator>(
+pub async fn update_employer<T: QueryAllCountriesFn + QueryEmployerByEmailFn + InsertCompanyFn + QueryDeveloperFn + QueryEmployerFn + UpdateEmployerFn + Repository, U: Authenticator>(
     app_data: Data<AppState<T, U>>, 
     json: Json<UpdateEmployerForRoute>,
     req: HttpRequest
@@ -70,7 +102,11 @@ pub async fn update_employer<T: QueryAllCountriesFn + InsertCompanyFn + QueryDev
         return Err(UserError::AuthenticationFailed);
     }
 
-    let updated_employer = if let Ok(company_id) = json.company_id.parse::<i64>() {
+    if (json.company_id.is_none() && json.new_company_name.clone().is_none()) || (json.company_id.is_some() && json.new_company_name.is_some()){
+        return Err(UserError::ValidationError { field: "company_id".to_string() });
+    }
+
+    let updated_employer = if let Some(company_id) = json.company_id {
         UpdateEmployer {
             id: json.id,
             full_name: json.full_name.to_owned(),
@@ -79,20 +115,36 @@ pub async fn update_employer<T: QueryAllCountriesFn + InsertCompanyFn + QueryDev
         }        
     } else {
         let countries = app_data.repo.query_all_countries().await.unwrap();
-        let company_entity = app_data.repo.insert_company(NewCompany { name: json.company_id.to_owned(), logo: None, headquarters_country_id: countries[0].id }).await.unwrap();
-       
-        UpdateEmployer {
-            id: json.id,
-            full_name: json.full_name.to_owned(),
-            email: json.email.to_owned(),
-            company_id: company_entity.id
-        }        
+        match app_data.repo.insert_company(NewCompany { 
+            name: json.new_company_name.as_ref().unwrap().to_owned(), 
+            logo: None, 
+            headquarters_country_id: countries[0].id 
+        }).await {
+            Ok(company_entity) => {
+                UpdateEmployer {
+                    id: json.id,
+                    full_name: json.full_name.to_owned(),
+                    email: json.email.to_owned(),
+                    company_id: company_entity.id
+                }
+            },
+            Err(e) => {
+                if let Some(db_err) = e.as_database_error() {
+                    if db_err.is_unique_violation() {
+                        return Err(UserError::NameAlreadyInUse);
+                    }
+                }
+                return Err(e.into());
+            }
+        }                  
     };
     
     let result = app_data.repo.update_employer(updated_employer).await;
-
     match result {
-        Ok(_) => Ok(OutputBool { result: true }),
+        Ok(_) => {
+            // todo: if email changed need to create a confirm email record
+            Ok(OutputBool { result: true })
+        },
         Err(e) => Err(e.into())
     }
 }
@@ -271,6 +323,22 @@ mod tests {
             }
         }
 
+        #[async_trait]
+        impl QueryEmployerByUsernameFn for MockDbRepo {
+            async fn query_employer_by_user_name(&self, _: String) -> Result<Option<Employer>, sqlx::Error> {
+                Ok(Some(Employer::new(
+                    1,
+                    Utc::now(),
+                    Utc::now(),
+                    Username().fake::<String>(),
+                    get_fake_fullname(),                
+                    "".to_string(),
+                    FreeEmail().fake::<String>(),
+                    1
+                )))
+            }
+        }
+
         #[tokio::test]
         async fn test_create_employer_route() {
             let repo = MockDbRepo::init().await;
@@ -283,7 +351,8 @@ mod tests {
                 full_name: get_fake_fullname(), 
                 email, 
                 password: "test1234".to_string(),
-                company_id: "1".to_string()
+                company_id: Some(1),
+                new_company_name: None
             })).await;
             assert!(result.err().unwrap() == UserError::EmailAlreadyInUse)
         }
@@ -301,7 +370,8 @@ mod tests {
             id: 1, 
             full_name: get_fake_fullname(), 
             email, 
-            company_id: "1".to_string()
+            company_id: Some(1),
+            new_company_name: None
         }),
         req).await;
 

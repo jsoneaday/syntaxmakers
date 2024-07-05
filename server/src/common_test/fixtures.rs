@@ -73,7 +73,10 @@ pub async fn init_fixtures() {
                 "Senior C# Developer",
                 "Full-Stack Engineer",
                 "Staff Engineer",
-                "Principle Engineer"
+                "Principle Engineer",
+                "Cloud Architect",
+                "Frontend Lead",
+                "Lead Full-Stack"
             ]
         });
     }

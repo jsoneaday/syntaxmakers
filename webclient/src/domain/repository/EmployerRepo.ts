@@ -32,12 +32,15 @@ export async function getEmployerByEmail(email: string, access_token: string) {
   return null;
 }
 
+/// todo: if email is changed confirmation email must go out
+/// When creating a new company, newCompanyName must have a value but companyId must be null
 export async function createEmployer(newEmp: {
   userName: string;
   fullName: string;
   email: string;
   password: string;
-  companyId: string;
+  companyId: string | null;
+  newCompanyName: string | null;
 }) {
   const response = await fetch(EMPLOYER_URL, {
     method: "POST",
@@ -47,9 +50,11 @@ export async function createEmployer(newEmp: {
     body: JSON.stringify(newEmp),
   });
 
+  if (!response.ok) {
+    throw new Error(await response.text());
+  }
   if (response.ok) {
     const entity: { id: number } = await response.json();
-    console.log("entity", entity.id);
     return entity.id;
   } else {
     throw new Error(await response.text());
@@ -60,7 +65,8 @@ export async function updateEmployer(updateEmp: {
   id: number; // dev id
   fullName: string;
   email: string;
-  companyId: string;
+  companyId: string | null;
+  newCompanyName: string | null;
   access_token: string;
 }) {
   console.log("update emp", updateEmp);
@@ -74,6 +80,9 @@ export async function updateEmployer(updateEmp: {
     body: JSON.stringify(updateEmp),
   });
 
+  if (!response.ok) {
+    throw new Error(await response.text());
+  }
   if (response.ok) {
     const result: OutputBool = await response.json();
     return result.result;

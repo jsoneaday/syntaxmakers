@@ -49,7 +49,8 @@ interface EmpFormData {
   fullName: string;
   email: string;
   password: string;
-  companyId: string;
+  companyId: string | null;
+  newCompanyName: string | null;
 }
 
 interface ProfileFormProps {
@@ -69,8 +70,22 @@ export function ProfileForm({
   const [primaryLang, setPrimaryLang] = useState<OptionType[]>([]);
   const [secondaryLang, setSecondaryLang] = useState<OptionType[]>([]);
   const [profile, setProfile] = useProfile();
-  const [devForm, setDevForm] = useState<DevFormData | null>(null);
-  const [empForm, setEmpForm] = useState<EmpFormData | null>(null);
+  const [devForm, setDevForm] = useState<DevFormData>({
+    userName: "",
+    fullName: "",
+    email: "",
+    description: "",
+    password: "",
+    primaryLangId: 0,
+  });
+  const [empForm, setEmpForm] = useState<EmpFormData>({
+    userName: "emp1",
+    fullName: "Employer1",
+    email: `${Math.round(Math.random() * 100)}@test.com`,
+    password: "test1234",
+    companyId: null,
+    newCompanyName: null,
+  });
   const [disableSubmit, setDisableSubmit] = useState(false);
   const mdRef = useRef<MDXEditorMethods>(null);
   const [companySelectOptions, setCompanySelectOptions] = useState<
@@ -89,6 +104,14 @@ export function ProfileForm({
         ...languages.map((l) => ({ name: l.name, value: l.id })),
       ]);
     });
+    getCompanies().then((companies) =>
+      setCompanySelectOptions(
+        companies.map((company) => ({
+          value: company.id,
+          label: company.name,
+        }))
+      )
+    );
   }, []);
 
   useEffect(() => {
@@ -127,6 +150,7 @@ export function ProfileForm({
             email: emp.email,
             password: "**********",
             companyId: emp.companyId,
+            newCompanyName: null,
           });
         });
       }
@@ -138,7 +162,7 @@ export function ProfileForm({
       ...provided,
       backgroundColor: "white",
       borderColor: state.isFocused ? "gray" : "gray",
-      minWidth: isModalMode ? "100%" : "250px",
+      width: isModalMode ? "192px" : "250px",
       "div:focus": "none",
     }),
     option: (provided, state) => ({
@@ -168,15 +192,26 @@ export function ProfileForm({
             return;
           }
 
-          await createDeveloper({
-            userName: devForm.userName,
-            fullName: devForm.fullName,
-            email: devForm.email,
-            description: devForm.description,
-            password: devForm.password,
-            primaryLangId: devForm.primaryLangId,
-            secondaryLangId: devForm.secondaryLangId,
-          });
+          try {
+            await createDeveloper({
+              userName: devForm.userName,
+              fullName: devForm.fullName,
+              email: devForm.email,
+              description: devForm.description,
+              password: devForm.password,
+              primaryLangId: devForm.primaryLangId,
+              secondaryLangId: devForm.secondaryLangId,
+            });
+            setValidationMessage("");
+            setSuccessMessage(
+              "Profile successfully created. Check your email for a confirmation message."
+            );
+          } catch (e) {
+            if (e instanceof Error) {
+              setValidationMessage(e.message);
+              setSuccessMessage("");
+            }
+          }
         } else {
           if (!profile || !profile.accessToken) {
             setValidationMessage(
@@ -184,29 +219,41 @@ export function ProfileForm({
             );
             return;
           }
-          const updateResult = await updateDeveloper({
-            id: Number(profile.id),
-            fullName: devForm.fullName,
-            email: devForm.email,
-            description: devForm.description,
-            primaryLangId: devForm.primaryLangId,
-            secondaryLangId: devForm.secondaryLangId,
-            access_token: profile.accessToken,
-          });
-          if (updateResult) {
-            setSuccessMessage("Your profile has been updated.");
-            setValidationMessage("");
-            const dev = await getDeveloperByEmail(
-              devForm.email,
-              profile.accessToken
-            );
-            if (dev) {
-              const updatedProfile = convertDev(dev, profile.accessToken);
-              setProfile(updatedProfile);
+
+          try {
+            const updateResult = await updateDeveloper({
+              id: Number(profile.id),
+              fullName: devForm.fullName,
+              email: devForm.email,
+              description: devForm.description,
+              primaryLangId: devForm.primaryLangId,
+              secondaryLangId: devForm.secondaryLangId,
+              access_token: profile.accessToken,
+            });
+            if (updateResult) {
+              setSuccessMessage(
+                profile.email !== devForm.email
+                  ? "Your email was changed. Check your email for a confirmation message."
+                  : "Your profile has been updated."
+              );
+              setValidationMessage("");
+              const dev = await getDeveloperByEmail(
+                devForm.email,
+                profile.accessToken
+              );
+              if (dev) {
+                const updatedProfile = convertDev(dev, profile.accessToken);
+                setProfile(updatedProfile);
+              }
+            } else {
+              setValidationMessage("Failed to update your profile");
+              setSuccessMessage("");
             }
-          } else {
-            setValidationMessage("Failed to update your profile");
-            setSuccessMessage("");
+          } catch (e) {
+            if (e instanceof Error) {
+              setValidationMessage(e.message);
+              setSuccessMessage("");
+            }
           }
         }
       } else {
@@ -221,13 +268,25 @@ export function ProfileForm({
             return;
           }
 
-          await createEmployer({
-            userName: empForm.userName,
-            fullName: empForm.fullName,
-            email: empForm.email,
-            password: empForm.password,
-            companyId: empForm.companyId,
-          });
+          try {
+            await createEmployer({
+              userName: empForm.userName,
+              fullName: empForm.fullName,
+              email: empForm.email,
+              password: empForm.password,
+              companyId: empForm.companyId,
+              newCompanyName: empForm.newCompanyName,
+            });
+            setValidationMessage("");
+            setSuccessMessage(
+              "Profile successfully created. Check your email for a confirmation message."
+            );
+          } catch (e) {
+            if (e instanceof Error) {
+              setValidationMessage(e.message);
+              setSuccessMessage("");
+            }
+          }
         } else {
           if (!profile || !profile.accessToken) {
             setValidationMessage(
@@ -235,27 +294,40 @@ export function ProfileForm({
             );
             return;
           }
-          const updateResult = await updateEmployer({
-            id: Number(profile.id),
-            fullName: empForm.fullName,
-            email: empForm.email,
-            companyId: empForm.companyId,
-            access_token: profile.accessToken,
-          });
-          if (updateResult) {
-            setSuccessMessage("Your profile has been updated.");
-            setValidationMessage("");
-            const emp = await getEmployerByEmail(
-              empForm.email,
-              profile.accessToken
-            );
-            if (emp) {
-              const updatedProfile = convertEmp(emp, profile.accessToken);
-              setProfile(updatedProfile);
+
+          try {
+            const updateResult = await updateEmployer({
+              id: Number(profile.id),
+              fullName: empForm.fullName,
+              email: empForm.email,
+              companyId: empForm.companyId,
+              newCompanyName: empForm.newCompanyName,
+              access_token: profile.accessToken,
+            });
+            if (updateResult) {
+              setSuccessMessage(
+                profile.email !== empForm.email
+                  ? "Your email was changed. Check your email for a confirmation message"
+                  : "Your profile has been updated."
+              );
+              setValidationMessage("");
+              const emp = await getEmployerByEmail(
+                empForm.email,
+                profile.accessToken
+              );
+              if (emp) {
+                const updatedProfile = convertEmp(emp, profile.accessToken);
+                setProfile(updatedProfile);
+              }
+            } else {
+              setValidationMessage("Failed to update your profile");
+              setSuccessMessage("");
             }
-          } else {
-            setValidationMessage("Failed to update your profile");
-            setSuccessMessage("");
+          } catch (e) {
+            if (e instanceof Error) {
+              setValidationMessage(e.message);
+              setSuccessMessage("");
+            }
           }
         }
       }
@@ -333,15 +405,27 @@ export function ProfileForm({
     } else {
       if (!empForm) throw new Error("Employer form is null");
 
+      if (empForm.userName.length < 2 || empForm.userName.length > 60) {
+        setValidationMessage(
+          "Username cannot be shorter than 2 or longer than 60 characters"
+        );
+        return false;
+      }
       if (empForm.fullName.length < 5 || empForm.userName.length > 100) {
         setValidationMessage(
           "Fullname cannot be shorter than 5 or longer than 100 characters"
         );
         return false;
       }
-      if (empForm.companyId.length === 0 || empForm.companyId.length > 120) {
+      if (!empForm.companyId && !empForm.newCompanyName) {
         setValidationMessage(
-          "Company name cannot be less than one character or longer than 120 characters"
+          "A company must be selected or a new company name must be entered"
+        );
+        return false;
+      }
+      if (empForm.companyId && empForm.companyId.length > 120) {
+        setValidationMessage(
+          "Company name cannot be shorter than 4 or longer than 120 characters"
         );
         return false;
       }
@@ -379,7 +463,6 @@ export function ProfileForm({
         [name]: value,
       });
     } else {
-      if (!empForm) throw new Error("Employer form is null");
       setEmpForm({
         ...empForm,
         [name]: value,
@@ -435,7 +518,6 @@ export function ProfileForm({
     newValue: SingleValue<SelectOptionType>,
     _actionMeta: ActionMeta<SelectOptionType>
   ) => {
-    if (!empForm) throw new Error("Employer form is null");
     console.log("newValue", newValue);
     console.log("actionMeta", _actionMeta);
     const newSelected = {
@@ -445,7 +527,10 @@ export function ProfileForm({
     setSelectedCompany(newSelected);
     setEmpForm({
       ...empForm,
-      companyId: newSelected.value,
+      companyId:
+        newSelected.value === newSelected.label ? null : newSelected.value,
+      newCompanyName:
+        newSelected.value === newSelected.label ? newSelected.label : null,
     });
   };
 
@@ -478,9 +563,7 @@ export function ProfileForm({
                   ? devForm
                     ? devForm.userName
                     : ""
-                  : empForm
-                  ? empForm.userName
-                  : ""
+                  : empForm.userName
               }`}{" "}
               Profile
             </strong>
@@ -495,7 +578,7 @@ export function ProfileForm({
               className="input normal-font input-spacing"
               style={
                 isModalMode
-                  ? { width: "45%" }
+                  ? { width: "50%" }
                   : {
                       width: "75%",
                       backgroundColor: "var(--border-cl)",
@@ -507,9 +590,7 @@ export function ProfileForm({
                   ? devForm
                     ? devForm.userName
                     : ""
-                  : empForm
-                  ? empForm.userName
-                  : ""
+                  : empForm.userName || ""
               }
               onChange={onChangeUserName}
               disabled={isModalMode ? false : true}
@@ -521,15 +602,13 @@ export function ProfileForm({
               type="text"
               name="fullName"
               className="input normal-font input-spacing"
-              style={isModalMode ? { width: "45%" } : { width: "75%" }}
+              style={isModalMode ? { width: "50%" } : { width: "75%" }}
               value={
                 userType === UiDevOrEmployer.Developer
                   ? devForm
                     ? devForm.fullName
                     : ""
-                  : empForm
-                  ? empForm.fullName
-                  : ""
+                  : empForm.fullName || ""
               }
               onChange={onChangeFullName}
             />
@@ -540,7 +619,7 @@ export function ProfileForm({
               <div
                 style={
                   isModalMode
-                    ? { marginTop: "1em", marginBottom: "3em", width: "45%" }
+                    ? { marginTop: "1em", marginBottom: "3em", width: "50%" }
                     : { marginTop: "1em", marginBottom: "3em", width: "75%" }
                 }
               >
@@ -571,15 +650,13 @@ export function ProfileForm({
               type="text"
               name="email"
               className="input normal-font input-spacing"
-              style={isModalMode ? { width: "45%" } : { width: "75%" }}
+              style={isModalMode ? { width: "50%" } : { width: "75%" }}
               value={
                 userType === UiDevOrEmployer.Developer
                   ? devForm
                     ? devForm.email
                     : ""
-                  : empForm
-                  ? empForm.email
-                  : ""
+                  : empForm.email || ""
               }
               onChange={onChangeEmail}
             />
@@ -591,15 +668,13 @@ export function ProfileForm({
                 type="password"
                 name="password"
                 className="input normal-font input-spacing"
-                style={isModalMode ? { width: "45%" } : { width: "75%" }}
+                style={isModalMode ? { width: "50%" } : { width: "75%" }}
                 value={
                   userType === UiDevOrEmployer.Developer
                     ? devForm
                       ? devForm.password
                       : ""
-                    : empForm
-                    ? empForm.password
-                    : ""
+                    : empForm.password || ""
                 }
                 onChange={onChangePassword}
               />
@@ -618,7 +693,7 @@ export function ProfileForm({
                   onChange={onChangePrimaryLang}
                   selectStyle={
                     isModalMode
-                      ? { marginLeft: ".5em", width: "45%" }
+                      ? { marginLeft: ".5em", width: "50%" }
                       : { width: "75%" }
                   }
                   isHorizontal={true}
@@ -634,7 +709,7 @@ export function ProfileForm({
                   onChange={onChangeSecondaryLang}
                   selectStyle={
                     isModalMode
-                      ? { marginLeft: ".5em", width: "45%" }
+                      ? { marginLeft: ".5em", width: "50%" }
                       : { width: "75%" }
                   }
                   isHorizontal={true}
@@ -651,10 +726,12 @@ export function ProfileForm({
               {editMode === ProfileFormEditMode.Edit ? "edit" : "create"}
             </PrimaryButton>
           </section>
-          <ValidationMsgView
-            validationMessage={validationMessage}
-            successMessage={successMessage}
-          />
+          <section className="form-section" style={{ marginTop: "1em" }}>
+            <ValidationMsgView
+              validationMessage={validationMessage}
+              successMessage={successMessage}
+            />
+          </section>
         </div>
       </form>
       {!isModalMode ? (
