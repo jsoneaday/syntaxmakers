@@ -16,8 +16,8 @@ pub enum UserError {
     EmailAlreadyInUse,
     #[display(fmt = "Username already in use.")]
     UsernameAlreadyInUse,
-    #[display(fmt = "Name already in use.")]
-    NameAlreadyInUse,
+    #[display(fmt = "Company name already in use.")]
+    CompanyNameAlreadyInUse,
 }
 
 impl UserError {
@@ -50,7 +50,7 @@ impl ResponseError for UserError {
             UserError::AuthenticationFailed => StatusCode::UNAUTHORIZED,
             UserError::AuthorizationFailed => StatusCode::UNAUTHORIZED,
             UserError::EmailAlreadyInUse => StatusCode::NOT_ACCEPTABLE,
-            UserError::NameAlreadyInUse => StatusCode::NOT_ACCEPTABLE,
+            UserError::CompanyNameAlreadyInUse => StatusCode::NOT_ACCEPTABLE,
             UserError::UsernameAlreadyInUse => StatusCode::NOT_ACCEPTABLE
         }
     }

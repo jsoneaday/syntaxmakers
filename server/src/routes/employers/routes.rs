@@ -73,7 +73,7 @@ pub async fn create_employer<T: QueryAllCountriesFn + InsertCompanyFn + QueryEmp
             Err(e) => {
                 if let Some(db_err) = e.as_database_error() {
                     if db_err.is_unique_violation() {
-                        return Err(UserError::NameAlreadyInUse);
+                        return Err(UserError::CompanyNameAlreadyInUse);
                     }
                 }
                 return Err(e.into());
@@ -131,7 +131,7 @@ pub async fn update_employer<T: QueryAllCountriesFn + QueryEmployerByEmailFn + I
             Err(e) => {
                 if let Some(db_err) = e.as_database_error() {
                     if db_err.is_unique_violation() {
-                        return Err(UserError::NameAlreadyInUse);
+                        return Err(UserError::CompanyNameAlreadyInUse);
                     }
                 }
                 return Err(e.into());
