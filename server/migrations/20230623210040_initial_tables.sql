@@ -68,7 +68,6 @@ create table dev_email_confirmation (
     "developer_id" bigserial not null,
     "is_confirmed" boolean not null,
     "is_valid" boolean not null,
-    "old_email" varchar(120) not null,
     "new_email" varchar(120) not null,
 
     constraint fk_developer foreign key(developer_id) references developer(id)

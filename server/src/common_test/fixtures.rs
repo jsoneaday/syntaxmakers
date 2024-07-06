@@ -76,7 +76,8 @@ pub async fn init_fixtures() {
                 "Principle Engineer",
                 "Cloud Architect",
                 "Frontend Lead",
-                "Lead Full-Stack"
+                "Lead Full-Stack",
+                "Lead Swift Engineer"
             ]
         });
     }

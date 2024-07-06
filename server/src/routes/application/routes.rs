@@ -38,7 +38,7 @@ mod tests {
         common::{
             authentication::auth_keys_service::AuthenticationError, repository::{
                 base::EntityId, 
-                developers::{models::Developer, repo::HasUnconfirmedEmailConfirmFn}, 
+                developers::{models::Developer, repo::HasUnconfirmedEmailFn}, 
                 employers::models::Employer, 
                 jobs::models::Job, 
                 user::{models::{AuthenticateResult, DeveloperOrEmployer as UserDeveloperOrEmployer}, repo::AuthenticateDbFn}
@@ -156,8 +156,8 @@ mod tests {
     }
 
     #[async_trait]
-    impl HasUnconfirmedEmailConfirmFn for MockDbRepo {
-        async fn has_unconfirmed_email_confirm(&self, _: String) -> Result<bool, sqlx::Error> {
+    impl HasUnconfirmedEmailFn for MockDbRepo {
+        async fn has_unconfirmed_email(&self, _: String) -> Result<bool, sqlx::Error> {
             Ok(false)
         }
     }  

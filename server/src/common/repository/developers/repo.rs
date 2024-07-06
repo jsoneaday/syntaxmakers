@@ -8,7 +8,7 @@ use log::error;
 
 mod internal {
     use chrono::Utc;
-    use sqlx::query;
+    use sqlx::{query, PgConnection};
     use crate::common::{authentication::password_hash::hash_password, repository::{developers::models::DevEmailConfirm, error::SqlxError}};
     use super::*;    
 
@@ -27,7 +27,7 @@ mod internal {
             ")
             .bind(new_developer.user_name)
             .bind(new_developer.full_name)
-            .bind(new_developer.email)
+            .bind(new_developer.email.clone())
             .bind(new_developer.description)
             .bind(hashed_password)
             .bind(new_developer.primary_lang_id)
@@ -62,6 +62,11 @@ mod internal {
             .await;
         }
 
+        match insert_email_confirm(&mut *tx, dev_id, new_developer.email).await {
+            Ok(_) => (),
+            Err(e) => return Err(e)
+        };
+
         _ = tx.commit().await;
 
         Ok(EntityId { id: dev_id })
@@ -71,16 +76,17 @@ mod internal {
     pub async fn update_developer(conn: &Pool<Postgres>, update_developer: UpdateDeveloper) -> Result<(), Error> {
         let mut tx = conn.begin().await.unwrap();
              
+        // note: NOT updating email here
+        // requires email confirmation by user first
         let update_result = query::<_>(
             r"
                 update developer
-                set updated_at = $2, full_name = $3, email = $4, description = $5, primary_lang_id = $6
+                set updated_at = $2, full_name = $3, description = $4, primary_lang_id = $5
                 where id = $1
             ")
             .bind(update_developer.id)
             .bind(Utc::now())
             .bind(update_developer.full_name)
-            .bind(update_developer.email)
             .bind(update_developer.description)
             .bind(update_developer.primary_lang_id)
             .execute(&mut *tx)
@@ -158,6 +164,11 @@ mod internal {
             },
             Err(e) => return Err(e)
         }
+
+        match insert_email_confirm(&mut *tx, update_developer.id, update_developer.email).await {
+            Ok(_) => (),
+            Err(e) => return Err(e)
+        };
         
         _ = tx.commit().await;
 
@@ -212,7 +223,7 @@ mod internal {
         .fetch_all(conn).await
     }
 
-    pub async fn has_unconfirmed_email_confirm(conn: &Pool<Postgres>, email: String) -> Result<bool, Error> {
+    pub async fn has_unconfirmed_email(conn: &Pool<Postgres>, email: String) -> Result<bool, Error> {
         match query_as::<_, EntityId>(r"
             select id from dev_email_confirmation where is_valid = true and is_confirmed = false and new_email = $1
         ")
@@ -230,32 +241,34 @@ mod internal {
 
     // todo: need to add logic to login code to prevent logins when an email change confirmation is ongoing,
     // whether the user is attempting to use their old email or their new email
-    pub async fn insert_email_confirm(conn: &Pool<Postgres>, dev_id: i64, old_email: String, new_email: String) -> Result<EntityId, Error> {
+    pub async fn insert_email_confirm(tx: &mut PgConnection, dev_id: i64, new_email: String) -> Result<EntityId, Error> {
         query_as::<_, EntityId>(r"
             insert into dev_email_confirmation
-            (developer_id, is_confirmed, is_valid, old_email, new_email)
+            (developer_id, is_confirmed, is_valid, new_email)
             values
-            ($1, false, true, $2, $3)
+            ($1, false, true, $2)
             returning id
         ")
         .bind(dev_id)
-        .bind(old_email)
         .bind(new_email)
-        .fetch_one(conn)
+        .fetch_one(tx)
         .await
     }
 
-    pub async fn confirm_email_confirmation(conn: &Pool<Postgres>, dev_email_confirm_id: i64, dev_id: i64) -> Result<(), Error> {
+    pub async fn confirm_email(conn: &Pool<Postgres>, email: String, dev_id: i64) -> Result<(), Error> {
         let mut tx = conn.begin().await.unwrap();
 
+        #[allow(unused)]
+        let mut current_email_confirm: Option<DevEmailConfirm> = None;
         match query_as::<_, DevEmailConfirm>(
-            "select * from dev_email_confirmation where is_valid = true and id = $1 and developer_id = $2"
+            "select * from dev_email_confirmation where is_confirmed = false and is_valid = true and developer_id = $1 and new_email = $2 order by updated_at desc limit 1"
         )
-        .bind(dev_email_confirm_id)
         .bind(dev_id)
+        .bind(email)
         .fetch_one(&mut *tx)
         .await {
             Ok(confirm) => if confirm.is_valid {
+                current_email_confirm = Some(confirm.clone());
                 // see if later email confirm exists
                 match query_as::<_, DevEmailConfirm>(
                     "select * from dev_email_confirmation where developer_id = $1 and updated_at > $2"                
@@ -265,7 +278,7 @@ mod internal {
                 .fetch_all(&mut *tx)
                 .await {
                     Ok(found_newer_confirms) => if found_newer_confirms.len() > 0 {
-                        return Err(SqlxError::EmailConfirmFailed.into());
+                        return Err(SqlxError::NewerEmailConfirmExist.into());
                     },
                     Err(e) => return Err(e)
                 }                
@@ -275,16 +288,18 @@ mod internal {
             Err(e) => return Err(e)
         };
 
+        let current_email_confirm_id = current_email_confirm.clone().unwrap().id;
         // get all email change attempts prior to this one and invalidate them
         match query::<_>(
             r"
             update dev_email_confirmation 
-            set is_valid = false
+            set is_valid = false, updated_at = $3
             where developer_id = $2 and id <> $1
             "
         )
-        .bind(dev_email_confirm_id)
+        .bind(current_email_confirm_id)
         .bind(dev_id)
+        .bind(Utc::now())
         .execute(&mut *tx)
         .await {
             Ok(_) => (),
@@ -293,21 +308,35 @@ mod internal {
         
         match query::<_>(r"
             update dev_email_confirmation
-            set is_confirmed = true, is_valid = false
+            set is_confirmed = true, is_valid = false, updated_at = $2
             where id = $1
         ")
-        .bind(dev_email_confirm_id)
+        .bind(current_email_confirm_id)
+        .bind(Utc::now())
         .execute(&mut *tx)
         .await {
             Ok(row) => {
-                if row.rows_affected() > 0 {
-                    _ = tx.commit().await;
-                    return Ok(());
+                if row.rows_affected() == 0 {                                        
+                    return Err(SqlxError::EmailConfirmFailed.into())
                 }
-                Err(SqlxError::EmailConfirmFailed.into())
             },
-            Err(e) => Err(e)
-        }
+            Err(e) => return Err(e)
+        };
+
+        match query::<_>("update developer set email = $2, updated_at = $3 where id = $1")
+            .bind(dev_id)
+            .bind(current_email_confirm.unwrap().new_email)
+            .bind(Utc::now())
+            .execute(&mut *tx)
+            .await {
+                Ok(row) => if row.rows_affected() > 0 {
+                    _ = tx.commit().await;
+                    Ok(())
+                } else {
+                    Err(SqlxError::UpdateProfileEmailFailed.into())
+                },
+                Err(e) => Err(e)
+            }
     }
 }
 
@@ -384,37 +413,25 @@ impl QueryAllDevelopersFn for DbRepo {
 }
 
 #[async_trait]
-pub trait HasUnconfirmedEmailConfirmFn {
-    async fn has_unconfirmed_email_confirm(&self, email: String) -> Result<bool, Error>;
+pub trait HasUnconfirmedEmailFn {
+    async fn has_unconfirmed_email(&self, email: String) -> Result<bool, Error>;
 }
 
 #[async_trait]
-impl HasUnconfirmedEmailConfirmFn for DbRepo {
-    async fn has_unconfirmed_email_confirm(&self, email: String) -> Result<bool, Error> {
-        internal::has_unconfirmed_email_confirm(self.get_conn(), email).await
+impl HasUnconfirmedEmailFn for DbRepo {
+    async fn has_unconfirmed_email(&self, email: String) -> Result<bool, Error> {
+        internal::has_unconfirmed_email(self.get_conn(), email).await
     }
 }
 
 #[async_trait]
-pub trait InsertEmailConfirmFn {
-    async fn insert_email_confirm(&self, dev_id: i64, old_email: String, new_email: String) -> Result<EntityId, Error>;
+pub trait ConfirmEmailFn {
+    async fn confirm_email(&self, email: String, dev_id: i64) -> Result<(), Error>;
 }
 
 #[async_trait]
-impl InsertEmailConfirmFn for DbRepo {
-    async fn insert_email_confirm(&self, dev_id: i64, old_email: String, new_email: String) -> Result<EntityId, Error> {
-        internal::insert_email_confirm(self.get_conn(), dev_id, old_email, new_email).await
-    }
-}
-
-#[async_trait]
-pub trait ConfirmEmailConfirmFn {
-    async fn confirm_email_confirmation(&self, dev_email_confirm_id: i64, dev_id: i64) -> Result<(), Error>;
-}
-
-#[async_trait]
-impl ConfirmEmailConfirmFn for DbRepo {
-    async fn confirm_email_confirmation(&self, dev_email_confirm_id: i64, dev_id: i64) -> Result<(), Error> {
-        internal::confirm_email_confirmation(self.get_conn(), dev_email_confirm_id, dev_id).await
+impl ConfirmEmailFn for DbRepo {
+    async fn confirm_email(&self, email: String, dev_id: i64) -> Result<(), Error> {
+        internal::confirm_email(self.get_conn(), email, dev_id).await
     }
 }

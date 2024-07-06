@@ -10,7 +10,7 @@ use crate::{
     app_state::AppState, 
     common::{
         authentication::auth_keys_service::{decode_token, get_token, Authenticator, REFRESH_TOKEN_LABEL, STANDARD_ACCESS_TOKEN_EXPIRATION, STANDARD_REFRESH_TOKEN_EXPIRATION}, repository::{
-            base::Repository, developers::repo::{HasUnconfirmedEmailConfirmFn, QueryDeveloperFn}, employers::repo::QueryEmployerFn, user::{models::{AuthenticateResult, DeveloperOrEmployer as UserDeveloperOrEmployer}, repo::AuthenticateDbFn}
+            base::Repository, developers::repo::{HasUnconfirmedEmailFn, QueryDeveloperFn}, employers::repo::QueryEmployerFn, user::{models::{AuthenticateResult, DeveloperOrEmployer as UserDeveloperOrEmployer}, repo::AuthenticateDbFn}
         }
     }, 
     routes::authentication::models::DeveloperOrEmployer as AuthDeveloperOrEmployer
@@ -54,10 +54,9 @@ pub async fn refresh_access_token<T: Repository, U: Authenticator>(app_data: Dat
     };
 }
 
-
-pub async fn login<T: HasUnconfirmedEmailConfirmFn + AuthenticateDbFn + QueryDeveloperFn + QueryEmployerFn + Repository, U: Authenticator>(app_data: Data<AppState<T, U>>, json: Json<LoginCredential>) 
+pub async fn login<T: HasUnconfirmedEmailFn + AuthenticateDbFn + QueryDeveloperFn + QueryEmployerFn + Repository, U: Authenticator>(app_data: Data<AppState<T, U>>, json: Json<LoginCredential>) 
     -> HttpResponse {    
-    match app_data.repo.has_unconfirmed_email_confirm(json.email.clone()).await {
+    match app_data.repo.has_unconfirmed_email(json.email.clone()).await {
         Ok(has_unconfirmed) => if has_unconfirmed {
             error!("Has unconfirmed email");
             return HttpResponse::Unauthorized()
@@ -243,8 +242,8 @@ mod tests {
     }   
 
     #[async_trait]
-    impl HasUnconfirmedEmailConfirmFn for MockDbRepo {
-        async fn has_unconfirmed_email_confirm(&self, _: String) -> Result<bool, sqlx::Error> {
+    impl HasUnconfirmedEmailFn for MockDbRepo {
+        async fn has_unconfirmed_email(&self, _: String) -> Result<bool, sqlx::Error> {
             Ok(false)
         }
     }    

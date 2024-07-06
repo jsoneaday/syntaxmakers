@@ -49,6 +49,9 @@ impl Developer {
     }
 }
 
+/// When user profile is first created user must confirm email before profile can be used to login
+/// When user updates their email their profile keeps the old email until they confirm the new email,
+/// once they confirm new email, their profile is then updated with new email
 #[derive(FromRow, Debug, Clone)]
 pub struct DevEmailConfirm {
     pub id: i64,
@@ -57,7 +60,6 @@ pub struct DevEmailConfirm {
     pub developer_id: i64,
     pub is_confirmed: bool,
     pub is_valid: bool,
-    pub old_email: String,
     pub new_email: String,
 }
 

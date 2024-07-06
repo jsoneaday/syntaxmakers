@@ -7,7 +7,10 @@ pub enum SqlxError {
     IsRemoteContstraintError,
     QueryFailed,
     PasswordChangeFailed,
-    EmailConfirmFailed
+    EmailConfirmFailed,
+    #[display(fmt = "Newer email confirmations exist than the one presented")]
+    NewerEmailConfirmExist,
+    UpdateProfileEmailFailed
 }
 
 impl sqlx::error::DatabaseError for SqlxError {

@@ -220,7 +220,7 @@ mod tests {
     use crate::{
         common::{
             authentication::auth_keys_service::AuthenticationError, repository::{
-                developers::{models::Developer, repo::HasUnconfirmedEmailConfirmFn}, employers::models::Employer, jobs::models::Job, user::{models::{AuthenticateResult, DeveloperOrEmployer as UserDeveloperOrEmployer}, repo::AuthenticateDbFn}
+                developers::{models::Developer, repo::HasUnconfirmedEmailFn}, employers::models::Employer, jobs::models::Job, user::{models::{AuthenticateResult, DeveloperOrEmployer as UserDeveloperOrEmployer}, repo::AuthenticateDbFn}
             }            
         }, 
         common_test::fixtures::{get_fake_dev_desc, get_fake_email, get_fake_fullname, get_fake_httprequest_with_bearer_token, init_fixtures, COUNTRIES, INDUSTRIES, LANGUAGES, SALARY_BASE}, routes::authentication::{models::LoginCredential, routes::login}
@@ -381,8 +381,8 @@ mod tests {
     }
 
     #[async_trait]
-    impl HasUnconfirmedEmailConfirmFn for MockDbRepo {
-        async fn has_unconfirmed_email_confirm(&self, _: String) -> Result<bool, sqlx::Error> {
+    impl HasUnconfirmedEmailFn for MockDbRepo {
+        async fn has_unconfirmed_email(&self, _: String) -> Result<bool, sqlx::Error> {
             Ok(false)
         }
     }  

@@ -3,7 +3,7 @@ use fake::faker::internet::en::{Username, SafeEmail};
 use syntaxmakers_server::common::repository::base::{Repository, DbRepo};
 use syntaxmakers_server::common::repository::developers::models::{NewDeveloper, UpdateDeveloper};
 use syntaxmakers_server::common::repository::developers::repo::{
-    InsertDeveloperFn, InsertEmailConfirmFn, ConfirmEmailConfirmFn, QueryAllDevelopersFn, QueryDeveloperByEmailFn, QueryDeveloperFn, UpdateDeveloperFn
+    InsertDeveloperFn, ConfirmEmailFn, QueryAllDevelopersFn, QueryDeveloperByEmailFn, QueryDeveloperFn, UpdateDeveloperFn
 };
 use syntaxmakers_server::common::repository::user::models::{ChangePassword, DeveloperOrEmployer};
 use syntaxmakers_server::common::repository::user::repo::ChangePasswordFn;
@@ -261,14 +261,14 @@ async fn test_update_developer_updates_fields() {
     
     let user_name = Username().fake::<String>();
     let full_name = get_fake_fullname();
-    let email = get_fake_email();
+    let old_email = get_fake_email();
     let old_password = "test1234".to_string();
     let primary_lang_id = LANGUAGES.get().unwrap()[0].id;
 
     let create_result = repo.insert_developer(NewDeveloper {
         user_name: user_name.clone(),
         full_name: full_name.clone(),
-        email: email.clone(),
+        email: old_email.clone(),
         description: get_fake_dev_desc(),
         password: old_password.clone(),
         primary_lang_id,
@@ -291,7 +291,8 @@ async fn test_update_developer_updates_fields() {
     
     assert!(update_result.is_ok());
     assert!(get_result.clone().full_name == new_full_name);
-    assert!(get_result.clone().email == new_email);
+    // updating user does not immediately update email, as it requires confirmation
+    assert!(get_result.clone().email == old_email); 
     assert!(get_result.clone().primary_lang_id == new_primary_lang_id);
     assert!(get_result.clone().secondary_lang_id == new_secondary_lang_id);
 }
@@ -374,12 +375,35 @@ async fn test_update_developer_succeeds_on_remove_new_secondary_lang() {
 }
 
 #[tokio::test]
-async fn test_insert_email_confirm_and_confirm_it() {
+async fn test_insert_dev_and_confirm_email() {
+    let repo = DbRepo::init().await;
+    init_fixtures().await;
+    let email = get_fake_email();
+    
+    // insert_developer should create a new email confirm
+    let create_result1 = repo.insert_developer(NewDeveloper {
+        user_name: Username().fake::<String>(),
+        full_name: get_fake_fullname(),
+        email: email.clone(),
+        description: get_fake_dev_desc(),
+        password: "test1234".to_string(),
+        primary_lang_id: 1,
+        secondary_lang_id: None
+    }).await.unwrap();
+
+    match repo.confirm_email(email, create_result1.id).await {
+        Ok(_) => (),
+        Err(e) => panic!("{}", e)
+    }
+}
+
+#[tokio::test]
+async fn test_update_dev_email_and_confirm_it() {
     let repo = DbRepo::init().await;
     init_fixtures().await;
     let old_email = get_fake_email();
     
-    let create_result1 = repo.insert_developer(NewDeveloper {
+    let created_result1 = repo.insert_developer(NewDeveloper {
         user_name: Username().fake::<String>(),
         full_name: get_fake_fullname(),
         email: old_email.clone(),
@@ -390,10 +414,25 @@ async fn test_insert_email_confirm_and_confirm_it() {
     }).await.unwrap();
 
     let new_email = get_fake_email();
-    let email_confirm = repo.insert_email_confirm(create_result1.id, old_email, new_email.clone()).await.unwrap();
-
-    match repo.confirm_email_confirmation(email_confirm.id, create_result1.id).await {
+    _ = repo.update_developer(UpdateDeveloper {
+        id: created_result1.id,
+        full_name: get_fake_fullname(),
+        email: new_email.clone(),
+        description: get_fake_dev_desc(),
+        primary_lang_id: 2,
+        secondary_lang_id: None
+    }).await.unwrap();
+    
+    match repo.confirm_email(new_email.clone(), created_result1.id).await {
         Ok(_) => (),
         Err(e) => panic!("{}", e)
     }
+
+    match repo.query_developer(created_result1.id).await {
+        Ok(dev) => match dev {
+            Some(dev) => dev.email == new_email,
+            None => panic!("Developer's email does not match after email confirm")
+        },
+        Err(e) => panic!("{}", e)
+    };
 }
