@@ -1,6 +1,8 @@
 use actix_web::{web::Data, HttpRequest};
 use log::{error, info};
-use crate::{common::{repository::{developers::repo::QueryDeveloperFn, employers::repo::QueryEmployerFn, base::Repository}, authentication::auth_service::Authenticator}, app_state::AppState};
+use crate::{
+    common::{repository::{developers::repo::QueryDeveloperFn, employers::repo::QueryEmployerFn, base::Repository}, authentication::auth_keys_service::Authenticator}, app_state::AppState
+};
 use super::{authentication::models::DeveloperOrEmployer as AuthDeveloperOrEmployer, route_utils::get_header_strings};
 
 
@@ -72,8 +74,8 @@ mod tests {
     use jsonwebtoken::DecodingKey;
     use crate::{
         common::{
-            authentication::auth_service::{AuthenticationError, Authenticator}, 
-            repository::{developers::models::Developer, employers::models::Employer, user::{models::{AuthenticateResult, DeveloperOrEmployer as UserDeveloperOrEmployer}, repo::AuthenticateDbFn}}
+            authentication::auth_keys_service::{AuthenticationError, Authenticator}, 
+            repository::{developers::{models::Developer, repo::HasUnconfirmedEmailConfirmFn}, employers::models::Employer, user::{models::{AuthenticateResult, DeveloperOrEmployer as UserDeveloperOrEmployer}, repo::AuthenticateDbFn}}
         }, 
         common_test::fixtures::{get_app_data, get_fake_dev_desc, get_fake_email, get_fake_httprequest_with_bearer_token}, routes::authentication::{models::LoginCredential, routes::login}
     };
@@ -136,6 +138,13 @@ mod tests {
             )))
         }
     }    
+
+    #[async_trait]
+    impl HasUnconfirmedEmailConfirmFn for MockDbRepo {
+        async fn has_unconfirmed_email_confirm(&self, _: String) -> Result<bool, sqlx::Error> {
+            Ok(false)
+        }
+    }  
 
     #[tokio::test]
    async fn test_check_is_authenticated() {

@@ -1,4 +1,4 @@
-use crate::common::{repository::base::Repository, authentication::auth_service::{AuthKeys, Authenticator}};
+use crate::common::{repository::base::Repository, authentication::auth_keys_service::{AuthKeys, Authenticator}};
 
 pub struct AppState<T: Repository, U: Authenticator> {
     pub repo: T,

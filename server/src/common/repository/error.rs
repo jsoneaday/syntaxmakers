@@ -6,7 +6,8 @@ pub enum SqlxError {
     #[display(fmt = "When is_remote is true country_id must be None")]
     IsRemoteContstraintError,
     QueryFailed,
-    PasswordChangeFailed
+    PasswordChangeFailed,
+    EmailConfirmFailed
 }
 
 impl sqlx::error::DatabaseError for SqlxError {

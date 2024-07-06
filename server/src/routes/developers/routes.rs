@@ -1,7 +1,7 @@
 use actix_web::{web::{Data, Json, Path}, HttpRequest};
 use crate::{
     app_state::AppState, common::{
-        authentication::auth_service::Authenticator, 
+        authentication::auth_keys_service::Authenticator, 
         repository::{
             base::Repository, 
             developers::{
@@ -227,7 +227,7 @@ pub async fn get_all_developers<T: QueryAllDevelopersFn + QueryDeveloperFn + Rep
 mod tests {
     use crate::{
         common::{
-            authentication::auth_service::AuthenticationError, 
+            authentication::auth_keys_service::AuthenticationError, 
             repository::{base::EntityId, developers::models::Developer, user::{models::{ChangePassword, DeveloperOrEmployer}, repo::ChangePasswordFn}}
         }, 
         common_test::fixtures::{get_app_data, get_fake_dev_desc, get_fake_email, get_fake_fullname, get_fake_httprequest_with_bearer_token, init_fixtures, MockDbRepo}, 

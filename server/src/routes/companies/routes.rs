@@ -1,5 +1,5 @@
 use actix_web::web::{Json, Data};
-use crate::{common::{repository::{companies::{repo::{InsertCompanyFn, QueryAllCompaniesFn}, models::NewCompany}, base::Repository}, authentication::auth_service::Authenticator}, app_state::AppState, routes::{base_model::OutputId, user_error::UserError}};
+use crate::{common::{repository::{companies::{repo::{InsertCompanyFn, QueryAllCompaniesFn}, models::NewCompany}, base::Repository}, authentication::auth_keys_service::Authenticator}, app_state::AppState, routes::{base_model::OutputId, user_error::UserError}};
 use super::models::{NewCompanyForRoute, CompanyResponder, CompanyResponders};
 
 pub async fn create_company<T: InsertCompanyFn + Repository, U: Authenticator>(
@@ -42,7 +42,7 @@ mod tests {
     use chrono::Utc;
     use super::*;
     use crate::{
-        common::{repository::{companies::{repo::{InsertCompanyFn, QueryAllCompaniesFn}, models::Company}, base::EntityId}, authentication::auth_service::AuthenticationError}, 
+        common::{repository::{companies::{repo::{InsertCompanyFn, QueryAllCompaniesFn}, models::Company}, base::EntityId}, authentication::auth_keys_service::AuthenticationError}, 
         common_test::fixtures::{get_app_data, MockDbRepo, get_company_logo_randomly}
     };
     use async_trait::async_trait;

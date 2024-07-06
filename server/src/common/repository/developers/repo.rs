@@ -9,7 +9,7 @@ use log::error;
 mod internal {
     use chrono::Utc;
     use sqlx::query;
-    use crate::common::{authentication::password_hash::hash_password, repository::error::SqlxError};
+    use crate::common::{authentication::password_hash::hash_password, repository::{developers::models::DevEmailConfirm, error::SqlxError}};
     use super::*;    
 
     pub async fn insert_developer(conn: &Pool<Postgres>, new_developer: NewDeveloper) -> Result<EntityId, Error> {
@@ -211,6 +211,104 @@ mod internal {
         .bind(last_offset)
         .fetch_all(conn).await
     }
+
+    pub async fn has_unconfirmed_email_confirm(conn: &Pool<Postgres>, email: String) -> Result<bool, Error> {
+        match query_as::<_, EntityId>(r"
+            select id from dev_email_confirmation where is_valid = true and is_confirmed = false and new_email = $1
+        ")
+        .bind(email)
+        .fetch_all(conn)
+        .await {
+            Ok(rows) => if rows.len() > 0 {
+                Ok(true)
+            } else {
+                Ok(false)
+            },
+            Err(e) => Err(e)
+        }
+    }
+
+    // todo: need to add logic to login code to prevent logins when an email change confirmation is ongoing,
+    // whether the user is attempting to use their old email or their new email
+    pub async fn insert_email_confirm(conn: &Pool<Postgres>, dev_id: i64, old_email: String, new_email: String) -> Result<EntityId, Error> {
+        query_as::<_, EntityId>(r"
+            insert into dev_email_confirmation
+            (developer_id, is_confirmed, is_valid, old_email, new_email)
+            values
+            ($1, false, true, $2, $3)
+            returning id
+        ")
+        .bind(dev_id)
+        .bind(old_email)
+        .bind(new_email)
+        .fetch_one(conn)
+        .await
+    }
+
+    pub async fn confirm_email_confirmation(conn: &Pool<Postgres>, dev_email_confirm_id: i64, dev_id: i64) -> Result<(), Error> {
+        let mut tx = conn.begin().await.unwrap();
+
+        match query_as::<_, DevEmailConfirm>(
+            "select * from dev_email_confirmation where is_valid = true and id = $1 and developer_id = $2"
+        )
+        .bind(dev_email_confirm_id)
+        .bind(dev_id)
+        .fetch_one(&mut *tx)
+        .await {
+            Ok(confirm) => if confirm.is_valid {
+                // see if later email confirm exists
+                match query_as::<_, DevEmailConfirm>(
+                    "select * from dev_email_confirmation where developer_id = $1 and updated_at > $2"                
+                )
+                .bind(dev_id)
+                .bind(confirm.updated_at)
+                .fetch_all(&mut *tx)
+                .await {
+                    Ok(found_newer_confirms) => if found_newer_confirms.len() > 0 {
+                        return Err(SqlxError::EmailConfirmFailed.into());
+                    },
+                    Err(e) => return Err(e)
+                }                
+            } else {
+                return Err(SqlxError::EmailConfirmFailed.into());
+            },
+            Err(e) => return Err(e)
+        };
+
+        // get all email change attempts prior to this one and invalidate them
+        match query::<_>(
+            r"
+            update dev_email_confirmation 
+            set is_valid = false
+            where developer_id = $2 and id <> $1
+            "
+        )
+        .bind(dev_email_confirm_id)
+        .bind(dev_id)
+        .execute(&mut *tx)
+        .await {
+            Ok(_) => (),
+            Err(e) => return Err(e)
+        };
+        
+        match query::<_>(r"
+            update dev_email_confirmation
+            set is_confirmed = true, is_valid = false
+            where id = $1
+        ")
+        .bind(dev_email_confirm_id)
+        .execute(&mut *tx)
+        .await {
+            Ok(row) => {
+                if row.rows_affected() > 0 {
+                    _ = tx.commit().await;
+                    return Ok(());
+                }
+                Err(SqlxError::EmailConfirmFailed.into())
+            },
+            Err(e) => Err(e)
+        }
+    }
 }
 
 #[async_trait]
@@ -282,5 +380,41 @@ pub trait QueryAllDevelopersFn {
 impl QueryAllDevelopersFn for DbRepo {
     async fn query_all_developers(&self, page_size: i32, last_offset: i64) -> Result<Vec<Developer>, Error> {
         internal::query_all_developers(self.get_conn(), page_size, last_offset).await
+    }
+}
+
+#[async_trait]
+pub trait HasUnconfirmedEmailConfirmFn {
+    async fn has_unconfirmed_email_confirm(&self, email: String) -> Result<bool, Error>;
+}
+
+#[async_trait]
+impl HasUnconfirmedEmailConfirmFn for DbRepo {
+    async fn has_unconfirmed_email_confirm(&self, email: String) -> Result<bool, Error> {
+        internal::has_unconfirmed_email_confirm(self.get_conn(), email).await
+    }
+}
+
+#[async_trait]
+pub trait InsertEmailConfirmFn {
+    async fn insert_email_confirm(&self, dev_id: i64, old_email: String, new_email: String) -> Result<EntityId, Error>;
+}
+
+#[async_trait]
+impl InsertEmailConfirmFn for DbRepo {
+    async fn insert_email_confirm(&self, dev_id: i64, old_email: String, new_email: String) -> Result<EntityId, Error> {
+        internal::insert_email_confirm(self.get_conn(), dev_id, old_email, new_email).await
+    }
+}
+
+#[async_trait]
+pub trait ConfirmEmailConfirmFn {
+    async fn confirm_email_confirmation(&self, dev_email_confirm_id: i64, dev_id: i64) -> Result<(), Error>;
+}
+
+#[async_trait]
+impl ConfirmEmailConfirmFn for DbRepo {
+    async fn confirm_email_confirmation(&self, dev_email_confirm_id: i64, dev_id: i64) -> Result<(), Error> {
+        internal::confirm_email_confirmation(self.get_conn(), dev_email_confirm_id, dev_id).await
     }
 }

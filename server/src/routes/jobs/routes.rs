@@ -2,7 +2,7 @@ use actix_web::{web::{Data, Json, Path}, HttpResponse, HttpRequest};
 use log::error;
 use crate::{
     app_state::AppState, common::{
-        authentication::auth_service::Authenticator, repository::{
+        authentication::auth_keys_service::Authenticator, repository::{
             base::Repository, developers::repo::QueryDeveloperFn, employers::repo::QueryEmployerFn, jobs::{models::{Job, JobApplied, NewJob, UpdateJob}, repo::{InsertJobFn, QueryAllJobsFn, QueryJobFn, QueryJobsByApplierFn, QueryJobsByDeveloperFn, QueryJobsByEmployerFn, QueryJobsBySearchTermsFn, UpdateJobFn}}
         }
     }, routes::{
@@ -219,8 +219,8 @@ fn convert_job_applied(job: &JobApplied) -> JobAppliedResponder {
 mod tests {
     use crate::{
         common::{
-            authentication::auth_service::AuthenticationError, repository::{
-                developers::models::Developer, employers::models::Employer, jobs::models::Job, user::{models::{AuthenticateResult, DeveloperOrEmployer as UserDeveloperOrEmployer}, repo::AuthenticateDbFn}
+            authentication::auth_keys_service::AuthenticationError, repository::{
+                developers::{models::Developer, repo::HasUnconfirmedEmailConfirmFn}, employers::models::Employer, jobs::models::Job, user::{models::{AuthenticateResult, DeveloperOrEmployer as UserDeveloperOrEmployer}, repo::AuthenticateDbFn}
             }            
         }, 
         common_test::fixtures::{get_fake_dev_desc, get_fake_email, get_fake_fullname, get_fake_httprequest_with_bearer_token, init_fixtures, COUNTRIES, INDUSTRIES, LANGUAGES, SALARY_BASE}, routes::authentication::{models::LoginCredential, routes::login}
@@ -379,6 +379,13 @@ mod tests {
             ])
         }
     }
+
+    #[async_trait]
+    impl HasUnconfirmedEmailConfirmFn for MockDbRepo {
+        async fn has_unconfirmed_email_confirm(&self, _: String) -> Result<bool, sqlx::Error> {
+            Ok(false)
+        }
+    }  
 
     #[tokio::test]
     async fn test_create_job_route() {

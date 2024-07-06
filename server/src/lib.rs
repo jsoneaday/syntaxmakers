@@ -48,7 +48,7 @@ pub mod common {
     }
     pub mod authentication {
         pub mod password_hash;
-        pub mod auth_service;
+        pub mod auth_keys_service;
     }
 }
 pub mod common_test {
@@ -108,7 +108,7 @@ pub mod routes {
 
 use actix_cors::Cors;
 use actix_web::{HttpServer, http::header, App, middleware::Logger, web};
-use common::authentication::auth_service::{init_auth_keys, AuthService};
+use common::authentication::auth_keys_service::{init_auth_keys, AuthService};
 use common::repository::base::{DbRepo, Repository};
 use routes::application::routes::{create_application, developer_applied};
 use routes::authentication::routes::{login, refresh_access_token};

@@ -2,7 +2,9 @@ use fake::Fake;
 use fake::faker::internet::en::{Username, SafeEmail};
 use syntaxmakers_server::common::repository::base::{Repository, DbRepo};
 use syntaxmakers_server::common::repository::developers::models::{NewDeveloper, UpdateDeveloper};
-use syntaxmakers_server::common::repository::developers::repo::{InsertDeveloperFn, QueryAllDevelopersFn, QueryDeveloperByEmailFn, QueryDeveloperFn, UpdateDeveloperFn};
+use syntaxmakers_server::common::repository::developers::repo::{
+    InsertDeveloperFn, InsertEmailConfirmFn, ConfirmEmailConfirmFn, QueryAllDevelopersFn, QueryDeveloperByEmailFn, QueryDeveloperFn, UpdateDeveloperFn
+};
 use syntaxmakers_server::common::repository::user::models::{ChangePassword, DeveloperOrEmployer};
 use syntaxmakers_server::common::repository::user::repo::ChangePasswordFn;
 use syntaxmakers_server::common_test::fixtures::{ get_fake_dev_desc, get_fake_email, get_fake_fullname, get_fake_user_name, init_fixtures, LANGUAGES};
@@ -369,4 +371,29 @@ async fn test_update_developer_succeeds_on_remove_new_secondary_lang() {
     let get_result = repo.query_developer(create_result.id).await.unwrap().unwrap();
     
     assert!(get_result.clone().secondary_lang_id == None);
+}
+
+#[tokio::test]
+async fn test_insert_email_confirm_and_confirm_it() {
+    let repo = DbRepo::init().await;
+    init_fixtures().await;
+    let old_email = get_fake_email();
+    
+    let create_result1 = repo.insert_developer(NewDeveloper {
+        user_name: Username().fake::<String>(),
+        full_name: get_fake_fullname(),
+        email: old_email.clone(),
+        description: get_fake_dev_desc(),
+        password: "test1234".to_string(),
+        primary_lang_id: 1,
+        secondary_lang_id: None
+    }).await.unwrap();
+
+    let new_email = get_fake_email();
+    let email_confirm = repo.insert_email_confirm(create_result1.id, old_email, new_email.clone()).await.unwrap();
+
+    match repo.confirm_email_confirmation(email_confirm.id, create_result1.id).await {
+        Ok(_) => (),
+        Err(e) => panic!("{}", e)
+    }
 }

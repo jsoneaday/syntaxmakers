@@ -49,6 +49,18 @@ impl Developer {
     }
 }
 
+#[derive(FromRow, Debug, Clone)]
+pub struct DevEmailConfirm {
+    pub id: i64,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
+    pub developer_id: i64,
+    pub is_confirmed: bool,
+    pub is_valid: bool,
+    pub old_email: String,
+    pub new_email: String,
+}
+
 pub struct NewDeveloper {
     pub user_name: String,
     pub full_name: String,

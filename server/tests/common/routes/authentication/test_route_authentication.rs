@@ -5,7 +5,7 @@ use syntaxmakers_server::{
     common::{
         repository::base::{Repository, DbRepo}, 
         repository::user::models::DeveloperOrEmployer as UserDeveloperOrEmployer,
-        authentication::auth_service::{AuthService, STANDARD_ACCESS_TOKEN_EXPIRATION, decode_token, REFRESH_TOKEN_LABEL}
+        authentication::auth_keys_service::{AuthService, STANDARD_ACCESS_TOKEN_EXPIRATION, decode_token, REFRESH_TOKEN_LABEL}
     }, 
     routes::authentication::{
         models::{LoginCredential, DeveloperOrEmployer as AuthDeveloperOrEmployer, RefreshToken}, routes::{login, refresh_access_token}
@@ -30,6 +30,7 @@ async fn test_refresh_access_token_route() {
         app_data.clone(), Json(LoginCredential { dev_or_emp: AuthDeveloperOrEmployer::Developer, email, password })
     ).await;    
     let (login_header, login_body) = login_token_result.into_parts();
+    
     let refresh_cookie = login_header.cookies().find(|cookie| {
         cookie.name() == REFRESH_TOKEN_LABEL
     }).unwrap();

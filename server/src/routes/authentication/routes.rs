@@ -9,12 +9,9 @@ use log::error;
 use crate::{
     app_state::AppState, 
     common::{
-        repository::{
-            base::Repository, 
-            user::{repo::AuthenticateDbFn, models::{AuthenticateResult, DeveloperOrEmployer as UserDeveloperOrEmployer}}, 
-            developers::repo::QueryDeveloperFn, employers::repo::QueryEmployerFn
-        }, 
-        authentication::auth_service::{get_token, STANDARD_REFRESH_TOKEN_EXPIRATION, Authenticator, STANDARD_ACCESS_TOKEN_EXPIRATION, REFRESH_TOKEN_LABEL, decode_token}
+        authentication::auth_keys_service::{decode_token, get_token, Authenticator, REFRESH_TOKEN_LABEL, STANDARD_ACCESS_TOKEN_EXPIRATION, STANDARD_REFRESH_TOKEN_EXPIRATION}, repository::{
+            base::Repository, developers::repo::{HasUnconfirmedEmailConfirmFn, QueryDeveloperFn}, employers::repo::QueryEmployerFn, user::{models::{AuthenticateResult, DeveloperOrEmployer as UserDeveloperOrEmployer}, repo::AuthenticateDbFn}
+        }
     }, 
     routes::authentication::models::DeveloperOrEmployer as AuthDeveloperOrEmployer
 };
@@ -58,8 +55,23 @@ pub async fn refresh_access_token<T: Repository, U: Authenticator>(app_data: Dat
 }
 
 
-pub async fn login<T: AuthenticateDbFn + QueryDeveloperFn + QueryEmployerFn + Repository, U: Authenticator>(app_data: Data<AppState<T, U>>, json: Json<LoginCredential>) 
-    -> HttpResponse {
+pub async fn login<T: HasUnconfirmedEmailConfirmFn + AuthenticateDbFn + QueryDeveloperFn + QueryEmployerFn + Repository, U: Authenticator>(app_data: Data<AppState<T, U>>, json: Json<LoginCredential>) 
+    -> HttpResponse {    
+    match app_data.repo.has_unconfirmed_email_confirm(json.email.clone()).await {
+        Ok(has_unconfirmed) => if has_unconfirmed {
+            error!("Has unconfirmed email");
+            return HttpResponse::Unauthorized()
+            .content_type(ContentType::json())
+            .body("Email change confirmation has not been approved yet. You must approve the confirmation before logging in.");
+        },
+        Err(e) => {
+            error!("Has unconfirmed email {}", e);
+            return HttpResponse::Unauthorized()
+            .content_type(ContentType::json())
+            .body("Something has gone wrong while checking for unconfirmed emails confirmations");
+        }
+    };
+
     let dev_or_emp = if json.dev_or_emp == AuthDeveloperOrEmployer::Developer {
         UserDeveloperOrEmployer::Developer
     } else {
@@ -166,7 +178,7 @@ mod tests {
     use jsonwebtoken::DecodingKey;
     use crate::{
         common::{
-            authentication::auth_service::{AuthenticationError, STANDARD_REFRESH_TOKEN_EXPIRATION}, repository::{developers::models::Developer, employers::models::Employer, user::repo::AuthenticateDbFn}
+            authentication::auth_keys_service::{AuthenticationError, STANDARD_REFRESH_TOKEN_EXPIRATION}, repository::{developers::models::Developer, employers::models::Employer, user::repo::AuthenticateDbFn}
         }, 
         common_test::fixtures::{get_app_data, get_fake_dev_desc, get_fake_email}
     };
@@ -228,6 +240,13 @@ mod tests {
                 1
             )))
         }
+    }   
+
+    #[async_trait]
+    impl HasUnconfirmedEmailConfirmFn for MockDbRepo {
+        async fn has_unconfirmed_email_confirm(&self, _: String) -> Result<bool, sqlx::Error> {
+            Ok(false)
+        }
     }    
 
     #[tokio::test]
@@ -236,7 +255,9 @@ mod tests {
         let auth_service = MockAuthService;
         let app_data = get_app_data(repo, auth_service).await;
 
-        let result = login(app_data.clone(), Json(LoginCredential { dev_or_emp: AuthDeveloperOrEmployer::Developer, email: FreeEmail().fake::<String>(), password: "test1234".to_string() })).await;
+        let result = login(app_data.clone(), Json(LoginCredential { 
+            dev_or_emp: AuthDeveloperOrEmployer::Developer, email: FreeEmail().fake::<String>(), password: "test1234".to_string() 
+        })).await;
 
         assert!(result.status() == StatusCode::OK);
         let cookie = result.cookies().last().unwrap();

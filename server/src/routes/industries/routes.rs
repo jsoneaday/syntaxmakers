@@ -1,5 +1,5 @@
 use actix_web::web::Data;
-use crate::{routes::user_error::UserError, app_state::AppState, common::{repository::{industries::repo::QueryAllIndustriesFn, base::Repository}, authentication::auth_service::Authenticator}};
+use crate::{routes::user_error::UserError, app_state::AppState, common::{repository::{industries::repo::QueryAllIndustriesFn, base::Repository}, authentication::auth_keys_service::Authenticator}};
 use super::models::{IndustryResponders, IndustryResponder};
 
 #[allow(unused)]
@@ -29,7 +29,7 @@ mod tests {
     use async_trait::async_trait;
     use jsonwebtoken::DecodingKey;
     use super::*;
-    use crate::{common::{repository::industries::{repo::QueryAllIndustriesFn, models::Industry}, authentication::auth_service::AuthenticationError}, common_test::fixtures::{MockDbRepo, get_app_data}};
+    use crate::{common::{repository::industries::{repo::QueryAllIndustriesFn, models::Industry}, authentication::auth_keys_service::AuthenticationError}, common_test::fixtures::{MockDbRepo, get_app_data}};
 
     struct MockAuthService;
     #[async_trait]

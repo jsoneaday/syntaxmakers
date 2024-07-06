@@ -12,7 +12,7 @@ use rand::Rng;
 use serde::Serialize;
 use log::{info, error};
 use crate::app_state::AppState;
-use crate::common::authentication::auth_service::{init_auth_keys, get_token, Authenticator, AuthenticationError};
+use crate::common::authentication::auth_keys_service::{init_auth_keys, get_token, Authenticator, AuthenticationError};
 use crate::common::fs_utils::get_file_buffer;
 use crate::common::rand_utils::get_random_no_from_range;
 use crate::common::repository::base::{Repository, DbRepo};

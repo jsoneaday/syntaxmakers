@@ -1,7 +1,7 @@
 use actix_web::{web::{Data, Json, Path}, HttpRequest};
 use crate::{
     app_state::AppState, common::{
-        authentication::auth_service::Authenticator, repository::{
+        authentication::auth_keys_service::Authenticator, repository::{
             base::Repository, 
             companies::{models::NewCompany, repo::InsertCompanyFn}, 
             countries::repo::QueryAllCountriesFn, 
@@ -232,7 +232,7 @@ mod tests {
     use std::vec;
     use crate::{
         common::{
-            authentication::auth_service::AuthenticationError, 
+            authentication::auth_keys_service::AuthenticationError, 
             repository::{
                 base::EntityId, employers::{models::Employer, repo::QueryAllEmployersFn}, user::models::DeveloperOrEmployer
             }

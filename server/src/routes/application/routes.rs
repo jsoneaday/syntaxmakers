@@ -2,7 +2,7 @@ use actix_web::{web::{Data, Json}, HttpRequest};
 use log::error;
 use crate::{
     app_state::AppState, common::{
-        authentication::auth_service::Authenticator, 
+        authentication::auth_keys_service::Authenticator, 
         repository::{application::{models::NewApplication, repo::{DevHasAppliedFn, InsertApplicationFn}}, base::Repository, developers::repo::QueryDeveloperFn, employers::repo::QueryEmployerFn}
     }, 
     routes::{auth_helper::check_is_authenticated, base_model::{OutputBool, OutputId}, user_error::UserError}
@@ -36,8 +36,12 @@ pub async fn developer_applied<T: DevHasAppliedFn + Repository, U: Authenticator
 mod tests {
     use crate::{
         common::{
-            authentication::auth_service::AuthenticationError, repository::{
-                base::EntityId, developers::models::Developer, employers::models::Employer, jobs::models::Job, user::{models::{AuthenticateResult, DeveloperOrEmployer as UserDeveloperOrEmployer}, repo::AuthenticateDbFn}
+            authentication::auth_keys_service::AuthenticationError, repository::{
+                base::EntityId, 
+                developers::{models::Developer, repo::HasUnconfirmedEmailConfirmFn}, 
+                employers::models::Employer, 
+                jobs::models::Job, 
+                user::{models::{AuthenticateResult, DeveloperOrEmployer as UserDeveloperOrEmployer}, repo::AuthenticateDbFn}
             }            
         }, 
         common_test::fixtures::{get_fake_dev_desc, get_fake_email, get_fake_fullname, get_fake_httprequest_with_bearer_token, init_fixtures, COUNTRIES, INDUSTRIES, LANGUAGES, SALARY_BASE}, 
@@ -149,7 +153,14 @@ mod tests {
         async fn dev_has_applied(&self, _: i64, _:i64) -> Result<bool, sqlx::Error> {
             Ok(true)
         }
-    }   
+    }
+
+    #[async_trait]
+    impl HasUnconfirmedEmailConfirmFn for MockDbRepo {
+        async fn has_unconfirmed_email_confirm(&self, _: String) -> Result<bool, sqlx::Error> {
+            Ok(false)
+        }
+    }  
 
     #[tokio::test]
     async fn test_create_job_application_route() {

@@ -1,6 +1,6 @@
 use actix_web::web::Data;
 use crate::{
-    common::{repository::{base::Repository, salaries::repo::QueryAllSalariesFn}, authentication::auth_service::Authenticator}, 
+    common::{repository::{base::Repository, salaries::repo::QueryAllSalariesFn}, authentication::auth_keys_service::Authenticator}, 
     app_state::AppState, 
     routes::user_error::UserError
 };
@@ -30,7 +30,7 @@ pub async fn get_all_salaries<T: QueryAllSalariesFn + Repository, U: Authenticat
 
 #[cfg(test)]
 mod tests {
-    use crate::{common_test::fixtures::{MockDbRepo, get_app_data}, common::{repository::salaries::models::Salary, authentication::auth_service::AuthenticationError}};
+    use crate::{common_test::fixtures::{MockDbRepo, get_app_data}, common::{repository::salaries::models::Salary, authentication::auth_keys_service::AuthenticationError}};
     use super::*;
     use async_trait::async_trait;
     use chrono::Utc;

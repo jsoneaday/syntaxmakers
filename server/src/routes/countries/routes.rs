@@ -1,4 +1,4 @@
-use crate::{common::{repository::{countries::repo::QueryAllCountriesFn, base::Repository}, authentication::auth_service::Authenticator}, app_state::AppState, routes::user_error::UserError};
+use crate::{common::{repository::{countries::repo::QueryAllCountriesFn, base::Repository}, authentication::auth_keys_service::Authenticator}, app_state::AppState, routes::user_error::UserError};
 use actix_web::web::Data;
 use super::models::{CountryResponder, CountryResponders};
 
@@ -21,7 +21,7 @@ pub async fn get_all_countries<T: QueryAllCountriesFn + Repository, U: Authentic
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{common::{repository::{base::Repository, countries::models::Country}, authentication::auth_service::AuthenticationError}, common_test::fixtures::{get_app_data, MockDbRepo}};
+    use crate::{common::{repository::{base::Repository, countries::models::Country}, authentication::auth_keys_service::AuthenticationError}, common_test::fixtures::{get_app_data, MockDbRepo}};
     use async_trait::async_trait;
     use chrono::Utc;
     use fake::{faker::address::en::CountryName, Fake};

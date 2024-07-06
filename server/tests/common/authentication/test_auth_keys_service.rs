@@ -2,7 +2,7 @@ use syntaxmakers_server::{
     common_test::fixtures::{init_fixtures, get_app_data, get_fake_httprequest_with_bearer_token}, 
     common::{
         repository::{base::{DbRepo, Repository}, user::models::DeveloperOrEmployer}, 
-        authentication::auth_service::{AuthService, Authenticator}
+        authentication::auth_keys_service::{AuthService, Authenticator}
     }, routes::route_utils::get_header_strings
 };
 

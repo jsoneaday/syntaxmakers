@@ -1,5 +1,5 @@
 use actix_web::web::Data;
-use crate::{common::{repository::{languages::repo::QueryAllLanguagesFn, base::Repository}, authentication::auth_service::Authenticator}, routes::user_error::UserError, app_state::AppState};
+use crate::{common::{repository::{languages::repo::QueryAllLanguagesFn, base::Repository}, authentication::auth_keys_service::Authenticator}, routes::user_error::UserError, app_state::AppState};
 use super::models::{LanguageResponders, LanguageResponder};
 
 pub async fn get_all_languages<T: QueryAllLanguagesFn + Repository, U: Authenticator>(app_data: Data<AppState<T, U>>) -> Result<LanguageResponders, UserError> {
@@ -23,7 +23,7 @@ pub async fn get_all_languages<T: QueryAllLanguagesFn + Repository, U: Authentic
 
 #[cfg(test)]
 mod tests {
-    use crate::{common_test::fixtures::{MockDbRepo, get_app_data}, common::{repository::languages::models::Language, authentication::auth_service::AuthenticationError}};
+    use crate::{common_test::fixtures::{MockDbRepo, get_app_data}, common::{repository::languages::models::Language, authentication::auth_keys_service::AuthenticationError}};
     use super::*;
     use async_trait::async_trait;
     use chrono::Utc;
