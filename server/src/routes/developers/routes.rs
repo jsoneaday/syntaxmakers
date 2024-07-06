@@ -33,8 +33,7 @@ pub async fn create_developer<T: QueryDeveloperByUserNameFn + QueryDeveloperByEm
     };
     match app_data.repo.query_developer_by_user_name(json.user_name.clone()).await {
         Ok(result) => match result {
-            Some(emp) => {
-                println!("user_name already used{:?}", emp);
+            Some(_) => {
                 return Err(UserError::UsernameAlreadyInUse);
             },
             None => ()

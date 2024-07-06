@@ -19,11 +19,9 @@ pub async fn create_employer<T: QueryAllCountriesFn + InsertCompanyFn + QueryEmp
     app_data: Data<AppState<T, U>>, 
     json: Json<NewEmployerForRoute>
 ) -> Result<OutputId, UserError> {
-    println!("start create emp {}", json.email);
     match app_data.repo.query_employer_by_email(json.email.clone()).await {
         Ok(result) => match result {
-            Some(emp) => {
-                println!("email already used{:?}", emp);
+            Some(_) => {
                 return Err(UserError::EmailAlreadyInUse);
             },
             None => ()
@@ -32,8 +30,7 @@ pub async fn create_employer<T: QueryAllCountriesFn + InsertCompanyFn + QueryEmp
     };
     match app_data.repo.query_employer_by_user_name(json.user_name.clone()).await {
         Ok(result) => match result {
-            Some(emp) => {
-                println!("user_name already used{:?}", emp);
+            Some(_) => {
                 return Err(UserError::UsernameAlreadyInUse);
             },
             None => ()

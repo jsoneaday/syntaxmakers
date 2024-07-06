@@ -61,6 +61,19 @@ create table developers_secondary_langs (
     "secondary_lang_id" bigserial not null
 );
 
+create table dev_email_confirmation (
+    "id" bigserial primary key,
+    "created_at" timestamptz(3) not null default current_timestamp,
+    "updated_at" timestamptz(3) not null default current_timestamp,  
+    "developer_id" bigserial not null,
+    "is_confirmed" boolean not null,
+    "is_valid" boolean not null,
+    "old_email" varchar(120) not null,
+    "new_email" varchar(120) not null,
+
+    constraint fk_developer foreign key(developer_id) references developer(id)
+);
+
 create table employer (
     "id" bigserial primary key,
     "created_at" timestamptz(3) not null default current_timestamp,
@@ -72,6 +85,19 @@ create table employer (
     "company_id" bigserial not null,
 
     constraint fk_company foreign key(company_id) references company(id)
+);
+
+create table emp_email_confirmation (
+    "id" bigserial primary key,
+    "created_at" timestamptz(3) not null default current_timestamp,
+    "updated_at" timestamptz(3) not null default current_timestamp,  
+    "employer_id" bigserial not null,
+    "is_confirmed" boolean not null,
+    "is_valid" boolean not null,
+    "old_email" varchar(120) not null,
+    "new_email" varchar(120) not null,
+
+    constraint fk_employer foreign key(employer_id) references employer(id)
 );
 
 create table job (
