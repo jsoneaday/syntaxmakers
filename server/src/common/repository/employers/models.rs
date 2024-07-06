@@ -33,6 +33,20 @@ impl Employer {
     }
 }
 
+/// When user profile is first created user must confirm email before profile can be used to login
+/// When user updates their email their profile keeps the old email until they confirm the new email,
+/// once they confirm new email, their profile is then updated with new email
+#[derive(FromRow, Debug, Clone)]
+pub struct EmpEmailConfirm {
+    pub id: i64,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
+    pub employer_id: i64,
+    pub is_confirmed: bool,
+    pub is_valid: bool,
+    pub new_email: String,
+}
+
 pub struct NewEmployer {
     pub user_name: String,
     pub full_name: String,

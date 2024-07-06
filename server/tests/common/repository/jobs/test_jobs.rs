@@ -19,7 +19,7 @@ use syntaxmakers_server::common::repository::languages::repo::QueryAllLanguagesF
 use syntaxmakers_server::common::repository::companies::repo::InsertCompanyFn;
 use syntaxmakers_server::common::repository::salaries::repo::QueryAllSalariesFn;
 use syntaxmakers_server::common_test::fixtures::{ 
-    get_company_logo_randomly, get_fake_desc, get_fake_dev_desc, get_fake_email, get_fake_fullname, get_fake_title, get_random_email, get_random_salary, init_fixtures, COUNTRIES, INDUSTRIES, LANGUAGES
+    get_company_logo_randomly, get_fake_company_name, get_fake_desc, get_fake_dev_desc, get_fake_email, get_fake_fullname, get_fake_title, get_random_email, get_random_salary, init_fixtures, COUNTRIES, INDUSTRIES, LANGUAGES
 };
 
 #[tokio::test]
@@ -184,7 +184,7 @@ async fn test_create_two_jobs_and_get_back_both_as_employer() {
     let email = get_fake_email();
     let logo = get_company_logo_randomly();
     
-    let company_create_result = repo.insert_company(NewCompany{ name: CompanyName().fake::<String>(), logo: Some(logo), headquarters_country_id: 1 }).await.unwrap();
+    let company_create_result = repo.insert_company(NewCompany{ name: get_fake_company_name(), logo: Some(logo), headquarters_country_id: 1 }).await.unwrap();
     let company_id = company_create_result.id;
     let insert_employer_result = repo.insert_employer(NewEmployer {
         user_name: user_name.clone(),

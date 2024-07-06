@@ -8,6 +8,8 @@ pub enum SqlxError {
     QueryFailed,
     PasswordChangeFailed,
     EmailConfirmFailed,
+    #[display(fmt = "Email confirm invalid")]
+    EmailConfirmInvalid,
     #[display(fmt = "Newer email confirmations exist than the one presented")]
     NewerEmailConfirmExist,
     UpdateProfileEmailFailed

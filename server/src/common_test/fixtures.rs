@@ -4,6 +4,7 @@ use actix_web::cookie::Cookie;
 use actix_web::http::header;
 use actix_web::web::Bytes;
 use actix_web::{HttpRequest, test};
+use fake::faker::company::en::CompanyName;
 use fake::Fake;
 use fake::faker::internet::en::SafeEmail;
 use fake::faker::name::en::{FirstName, LastName};
@@ -244,6 +245,11 @@ pub fn get_fake_fullname() -> String {
 pub fn get_fake_email() -> String {
     let rand: u64 = rand::thread_rng().gen();
     format!("{}{}", rand, SafeEmail().fake::<String>())
+}
+
+pub fn get_fake_company_name() -> String {
+    let rand: u64 = rand::thread_rng().gen();
+    format!("{}{}", rand, CompanyName().fake::<String>())
 }
 
 pub fn get_fake_title() -> &'static str {

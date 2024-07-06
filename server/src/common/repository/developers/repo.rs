@@ -74,8 +74,11 @@ mod internal {
     
     /// note: Does NOT change password!
     pub async fn update_developer(conn: &Pool<Postgres>, update_developer: UpdateDeveloper) -> Result<(), Error> {
+        // need later to confirm does request change email?
+        let existing_developer = query_developer(conn, update_developer.id).await.unwrap();
+
         let mut tx = conn.begin().await.unwrap();
-             
+                   
         // note: NOT updating email here
         // requires email confirmation by user first
         let update_result = query::<_>(
@@ -165,10 +168,12 @@ mod internal {
             Err(e) => return Err(e)
         }
 
-        match insert_email_confirm(&mut *tx, update_developer.id, update_developer.email).await {
-            Ok(_) => (),
-            Err(e) => return Err(e)
-        };
+        if existing_developer.unwrap().email != update_developer.email {
+            match insert_email_confirm(&mut *tx, update_developer.id, update_developer.email).await {
+                Ok(_) => (),
+                Err(e) => return Err(e)
+            };
+        }
         
         _ = tx.commit().await;
 
@@ -239,7 +244,6 @@ mod internal {
         }
     }
 
-    // todo: need to add logic to login code to prevent logins when an email change confirmation is ongoing,
     // whether the user is attempting to use their old email or their new email
     pub async fn insert_email_confirm(tx: &mut PgConnection, dev_id: i64, new_email: String) -> Result<EntityId, Error> {
         query_as::<_, EntityId>(r"

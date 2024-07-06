@@ -93,7 +93,6 @@ create table emp_email_confirmation (
     "employer_id" bigserial not null,
     "is_confirmed" boolean not null,
     "is_valid" boolean not null,
-    "old_email" varchar(120) not null,
     "new_email" varchar(120) not null,
 
     constraint fk_employer foreign key(employer_id) references employer(id)
