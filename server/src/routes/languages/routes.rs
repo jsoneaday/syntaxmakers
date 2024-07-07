@@ -1,8 +1,12 @@
 use actix_web::web::Data;
-use crate::{common::{repository::{languages::repo::QueryAllLanguagesFn, base::Repository}, authentication::auth_keys_service::Authenticator}, routes::user_error::UserError, app_state::AppState};
+use crate::{
+    app_state::AppState, common::{
+        authentication::auth_keys_service::Authenticator, emailer::emailer::EmailerService, repository::{base::Repository, languages::repo::QueryAllLanguagesFn}
+    }, routes::user_error::UserError
+};
 use super::models::{LanguageResponders, LanguageResponder};
 
-pub async fn get_all_languages<T: QueryAllLanguagesFn + Repository, U: Authenticator>(app_data: Data<AppState<T, U>>) -> Result<LanguageResponders, UserError> {
+pub async fn get_all_languages<T: QueryAllLanguagesFn + Repository, E: EmailerService, U: Authenticator>(app_data: Data<AppState<T, E, U>>) -> Result<LanguageResponders, UserError> {
     let result = app_data.repo.query_all_languages().await;
 
     match result {
@@ -23,18 +27,31 @@ pub async fn get_all_languages<T: QueryAllLanguagesFn + Repository, U: Authentic
 
 #[cfg(test)]
 mod tests {
-    use crate::{common_test::fixtures::{MockDbRepo, get_app_data}, common::{repository::languages::models::Language, authentication::auth_keys_service::AuthenticationError}};
+    use crate::{common::{authentication::auth_keys_service::AuthenticationError, emailer::model::EmailError, repository::languages::models::Language}, common_test::fixtures::{get_app_data, MockDbRepo}};
     use super::*;
     use async_trait::async_trait;
     use chrono::Utc;
     use fake::{faker::internet::en::Username, Fake};
     use jsonwebtoken::DecodingKey;
+    use uuid::Uuid;
 
     struct MockAuthService;
     #[async_trait]
     impl Authenticator for MockAuthService {
         async fn is_authenticated(&self, _: String, _: Vec<(&str, &str)>, _: &DecodingKey) -> Result<bool, AuthenticationError> {
             Ok(true)
+        }
+    }
+
+    struct MockEmailer;
+    #[async_trait]
+    impl EmailerService for MockEmailer {
+        async fn send_email_confirm_requirement(&self, _: i64, _: String, _: Uuid) -> Result<(), EmailError> {
+            Ok(())
+        }
+
+        async fn receive_email_confirm(&self, _: i64, _: String, _: Uuid) -> Result<(), EmailError> {
+            Ok(())
         }
     }
 
@@ -56,7 +73,8 @@ mod tests {
     async fn test_get_all_languages_route() {
         let repo = MockDbRepo::init().await;
         let auth_service = MockAuthService;
-        let app_data = get_app_data(repo, auth_service).await;
+        let emailer = MockEmailer;
+        let app_data = get_app_data(repo, emailer, auth_service).await; 
 
         let result = get_all_languages(app_data).await.unwrap();
 

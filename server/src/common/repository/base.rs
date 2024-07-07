@@ -3,6 +3,7 @@ use sqlx::{Pool, Postgres, migrate, FromRow};
 use std::env;
 use dotenv::dotenv;
 use async_trait::async_trait;
+use uuid::Uuid;
 
 #[derive(FromRow)]
 pub struct CountResult {
@@ -12,6 +13,12 @@ pub struct CountResult {
 #[derive(FromRow, Clone, Debug)]
 pub struct EntityId {
     pub id: i64
+}
+
+#[derive(Clone, Debug)]
+pub struct EmailConfirm {
+    pub entity: EntityId,
+    pub unique_key: Uuid
 }
 
 /// Migration version

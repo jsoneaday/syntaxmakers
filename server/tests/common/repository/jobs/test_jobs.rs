@@ -19,13 +19,16 @@ use syntaxmakers_server::common::repository::languages::repo::QueryAllLanguagesF
 use syntaxmakers_server::common::repository::companies::repo::InsertCompanyFn;
 use syntaxmakers_server::common::repository::salaries::repo::QueryAllSalariesFn;
 use syntaxmakers_server::common_test::fixtures::{ 
-    get_company_logo_randomly, get_fake_company_name, get_fake_desc, get_fake_dev_desc, get_fake_email, get_fake_fullname, get_fake_title, get_random_email, get_random_salary, init_fixtures, COUNTRIES, INDUSTRIES, LANGUAGES
+    get_company_logo_randomly, get_fake_company_name, get_fake_desc, get_fake_dev_desc, 
+    get_fake_email, get_fake_fullname, get_fake_title, get_random_email, get_random_salary, init_fixtures, 
+    MockEmailer, COUNTRIES, INDUSTRIES, LANGUAGES
 };
 
 #[tokio::test]
 async fn test_create_job_and_get_back() {
     let repo = DbRepo::init().await;
     init_fixtures().await;
+    let emailer = MockEmailer;
     let user_name = Username().fake::<String>();
     let full_name = get_fake_fullname();
     let email = get_fake_email();
@@ -39,7 +42,7 @@ async fn test_create_job_and_get_back() {
         email: email.clone(),
         password: "test1234".to_string(),
         company_id
-    }).await.unwrap();
+    }, &emailer).await.unwrap();
     let languages_result = repo.query_all_languages().await.unwrap();
     let industry_result = repo.query_all_industries().await.unwrap();
 
@@ -64,6 +67,7 @@ async fn test_create_job_and_get_back() {
 async fn test_create_two_jobs_and_get_back_both() {
     let repo = DbRepo::init().await;
     init_fixtures().await;
+    let emailer = MockEmailer;
     let user_name = Username().fake::<String>();
     let full_name = get_fake_fullname();
     let email = get_fake_email();
@@ -78,7 +82,7 @@ async fn test_create_two_jobs_and_get_back_both() {
         email: email.clone(),
         password: "test1234".to_string(),
         company_id
-    }).await.unwrap();
+    }, &emailer).await.unwrap();
     let languages_result = repo.query_all_languages().await.unwrap();
     let industry_result = repo.query_all_industries().await.unwrap();
 
@@ -117,6 +121,7 @@ async fn test_create_two_jobs_and_get_back_both() {
 async fn test_create_two_jobs_and_get_back_only_one_that_matches_dev_profile() {
     let repo = DbRepo::init().await;
     init_fixtures().await;
+    let emailer = MockEmailer;
     let user_name = Username().fake::<String>();
     let full_name = get_fake_fullname();
     let email = get_fake_email();
@@ -131,7 +136,7 @@ async fn test_create_two_jobs_and_get_back_only_one_that_matches_dev_profile() {
         email: email.clone(),
         password: "test1234".to_string(),
         company_id
-    }).await.unwrap();
+    }, &emailer).await.unwrap();
     let languages_result = repo.query_all_languages().await.unwrap();
     let industry_result = repo.query_all_industries().await.unwrap();
     let developer = repo.insert_developer(NewDeveloper {
@@ -142,7 +147,7 @@ async fn test_create_two_jobs_and_get_back_only_one_that_matches_dev_profile() {
         password: "test1234".to_string(),
         primary_lang_id: languages_result.get(0).unwrap().id,
         secondary_lang_id: Some(languages_result.get(1).unwrap().id)
-    }).await.unwrap();
+    }, &emailer).await.unwrap();
 
     // create two jobs
     let create_result1 = repo.insert_job(NewJob {
@@ -179,6 +184,7 @@ async fn test_create_two_jobs_and_get_back_only_one_that_matches_dev_profile() {
 async fn test_create_two_jobs_and_get_back_both_as_employer() {
     let repo = DbRepo::init().await;
     init_fixtures().await;
+    let emailer = MockEmailer;
     let user_name = Username().fake::<String>();
     let full_name = get_fake_fullname();
     let email = get_fake_email();
@@ -192,7 +198,7 @@ async fn test_create_two_jobs_and_get_back_both_as_employer() {
         email: email.clone(),
         password: "test1234".to_string(),
         company_id
-    }).await.unwrap();
+    }, &emailer).await.unwrap();
     let languages_result = LANGUAGES.get().unwrap();
     let industry_result = INDUSTRIES.get().unwrap();
     let emp_id = insert_employer_result.id;
@@ -235,6 +241,7 @@ async fn test_create_two_jobs_and_get_back_both_as_employer() {
 async fn test_update_job_that_is_remote_and_get_back() {
     let repo = DbRepo::init().await;
     init_fixtures().await;
+    let emailer = MockEmailer;
     let user_name = Username().fake::<String>();
     let full_name = get_fake_fullname();
     let email = get_random_email();
@@ -248,7 +255,7 @@ async fn test_update_job_that_is_remote_and_get_back() {
         email: email.clone(),
         password: "test1234".to_string(),
         company_id
-    }).await.unwrap();
+    }, &emailer).await.unwrap();
     let countries_result = repo.query_all_countries().await.unwrap();
     let languages_result = repo.query_all_languages().await.unwrap();
     let industry_result = repo.query_all_industries().await.unwrap();
@@ -273,7 +280,7 @@ async fn test_update_job_that_is_remote_and_get_back() {
         email: get_fake_email(),
         password: "test1234".to_string(),
         company_id
-    }).await.unwrap();
+    }, &emailer).await.unwrap();
     let employer_id = insert_employer_b_result.id;
     let title = get_fake_title().to_string();
     let description = get_fake_desc().to_string();
@@ -321,6 +328,7 @@ async fn test_update_job_that_is_remote_and_get_back() {
 async fn test_create_two_distinct_jobs_and_run_search_on_them_to_get_correct_results() {
     let repo = DbRepo::init().await;
     init_fixtures().await;
+    let emailer = MockEmailer;
     let logo = get_company_logo_randomly();
     let languages_result = LANGUAGES.get().unwrap();
     let industry_result = INDUSTRIES.get().unwrap();
@@ -336,7 +344,7 @@ async fn test_create_two_distinct_jobs_and_run_search_on_them_to_get_correct_res
         email: get_fake_email(),
         password: "test1234".to_string(),
         company_id: company_id1
-    }).await.unwrap();
+    }, &emailer).await.unwrap();
     let company_name2 = CompanyName().fake::<String>();
     let company_create_result2 = repo.insert_company(NewCompany{ name: company_name2, logo: Some(logo), headquarters_country_id: 1 }).await.unwrap();
     let company_id2 = company_create_result2.id;
@@ -346,7 +354,7 @@ async fn test_create_two_distinct_jobs_and_run_search_on_them_to_get_correct_res
         email: get_fake_email(),
         password: "test1234".to_string(),
         company_id: company_id2
-    }).await.unwrap();
+    }, &emailer).await.unwrap();
     
     
     let _developer = repo.insert_developer(NewDeveloper {
@@ -357,7 +365,7 @@ async fn test_create_two_distinct_jobs_and_run_search_on_them_to_get_correct_res
         password: "test1234".to_string(),
         primary_lang_id: languages_result.get(0).unwrap().id,
         secondary_lang_id: Some(languages_result.get(1).unwrap().id)
-    }).await.unwrap();
+    }, &emailer).await.unwrap();
 
     let title1 = get_fake_title().to_string();    
     let primary_lang1 = languages_result.get(0).unwrap();
@@ -412,6 +420,7 @@ async fn test_create_two_distinct_jobs_and_run_search_on_them_to_get_correct_res
 async fn test_create_two_distinct_jobs_and_have_same_dev_apply_both_then_get_back_devs_applied_jobs() {
     let repo = DbRepo::init().await;
     init_fixtures().await;
+    let emailer = MockEmailer;
     let logo = get_company_logo_randomly();
     let languages_result = LANGUAGES.get().unwrap();
     let industry_result = INDUSTRIES.get().unwrap();
@@ -427,7 +436,7 @@ async fn test_create_two_distinct_jobs_and_have_same_dev_apply_both_then_get_bac
         email: get_fake_email(),
         password: "test1234".to_string(),
         company_id: company_id1
-    }).await.unwrap();
+    }, &emailer).await.unwrap();
     let company_name2 = CompanyName().fake::<String>();
     let company_create_result2 = repo.insert_company(NewCompany{ name: company_name2, logo: Some(logo), headquarters_country_id: 1 }).await.unwrap();
     let company_id2 = company_create_result2.id;
@@ -437,7 +446,7 @@ async fn test_create_two_distinct_jobs_and_have_same_dev_apply_both_then_get_bac
         email: get_fake_email(),
         password: "test1234".to_string(),
         company_id: company_id2
-    }).await.unwrap();    
+    }, &emailer).await.unwrap();    
     
     let developer = repo.insert_developer(NewDeveloper {
         user_name: Username().fake::<String>(),
@@ -447,7 +456,7 @@ async fn test_create_two_distinct_jobs_and_have_same_dev_apply_both_then_get_bac
         password: "test1234".to_string(),
         primary_lang_id: languages_result.get(0).unwrap().id,
         secondary_lang_id: Some(languages_result.get(1).unwrap().id)
-    }).await.unwrap();
+    }, &emailer).await.unwrap();
 
     let title1 = get_fake_title().to_string();    
     let primary_lang1 = languages_result.get(0).unwrap();

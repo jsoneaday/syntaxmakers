@@ -1,3 +1,4 @@
+use std::borrow::Borrow;
 use std::sync::OnceLock;
 use actix_http::header::HeaderValue;
 use actix_web::cookie::Cookie;
@@ -12,8 +13,11 @@ use jsonwebtoken::{EncodingKey, DecodingKey};
 use rand::Rng;
 use serde::Serialize;
 use log::{info, error};
+use uuid::Uuid;
 use crate::app_state::AppState;
 use crate::common::authentication::auth_keys_service::{init_auth_keys, get_token, Authenticator, AuthenticationError};
+use crate::common::emailer::emailer::{Emailer, EmailerService};
+use crate::common::emailer::model::EmailError;
 use crate::common::fs_utils::get_file_buffer;
 use crate::common::rand_utils::get_random_no_from_range;
 use crate::common::repository::base::{Repository, DbRepo};
@@ -157,6 +161,7 @@ pub async fn init_fixtures() {
 
 async fn setup_data() {
     let repo = DbRepo::init().await;
+    let emailer = Emailer;
 
     let devs_count = repo.query_all_developers(1000, 0).await.unwrap().len();
     if devs_count == 0 {
@@ -168,39 +173,39 @@ async fn setup_data() {
             primary_lang_id: LANGUAGES.get().unwrap()[0].id,
             secondary_lang_id: Some(LANGUAGES.get().unwrap()[1].id),
             description: get_fake_dev_desc()
-        }).await;
+        }, emailer.borrow()).await;
     }
 
     let emp_count = repo.query_all_employers(1000, 0).await.unwrap().len();
-    if emp_count < 5 {
+    if emp_count < 5 {        
         _ = repo.insert_employer(NewEmployer {
             user_name: "jim".to_string(),
             full_name: "Jim Tim".to_string(),
             email: "jon@FantasticStuff.com".to_string(),
             password: "test1234".to_string(),
             company_id: 1
-        }).await;
+        }, emailer.borrow()).await;
         _ = repo.insert_employer(NewEmployer {
             user_name: "linda".to_string(),
             full_name: "Linda Shin".to_string(),
             email: "lshin@AmazingAndCo.com".to_string(),
             password: "test1234".to_string(),
             company_id: 2
-        }).await;
+        }, emailer.borrow()).await;
         _ = repo.insert_employer(NewEmployer {
             user_name: "dave".to_string(),
             full_name: "David Waver".to_string(),
             email: "jon@SuperDuperCorp.com".to_string(),
             password: "test1234".to_string(),
             company_id: 3
-        }).await;
+        }, emailer.borrow()).await;
         _ = repo.insert_employer(NewEmployer {
             user_name: "dawn".to_string(),
             full_name: "Dawn Happ".to_string(),
             email: "jon@acmecorp.com".to_string(),
             password: "test1234".to_string(),
             company_id: 4
-        }).await;
+        }, emailer.borrow()).await;
     }
 
     let jobs_count = repo.query_all_jobs_count().await.unwrap().count;    
@@ -230,8 +235,8 @@ async fn setup_data() {
     }
 }
 
-pub async fn get_app_data<T: Repository, U: Authenticator>(repo: T, auth_service: U) -> actix_web::web::Data<AppState<T, U>> {
-    actix_web::web::Data::new(AppState { repo, auth_service, auth_keys: init_auth_keys().await })
+pub async fn get_app_data<T: Repository, E: EmailerService, U: Authenticator>(repo: T, emailer: E, auth_service: U) -> actix_web::web::Data<AppState<T, E, U>> {
+    actix_web::web::Data::new(AppState { repo, emailer, auth_service, auth_keys: init_auth_keys().await })
 }
 
 pub fn get_fake_user_name() -> String {
@@ -275,11 +280,23 @@ impl Authenticator for MockAuthService {
 }
 
 pub struct MockDbRepo;
-
 #[async_trait]
 impl Repository for MockDbRepo {
     async fn init() -> Self {
         MockDbRepo
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct MockEmailer;
+#[async_trait]
+impl EmailerService for MockEmailer {
+    async fn send_email_confirm_requirement(&self, _: i64, _: String, _: Uuid) -> Result<(), EmailError> {
+        Ok(())
+    }
+
+    async fn receive_email_confirm(&self, _: i64, _: String, _: Uuid) -> Result<(), EmailError> {
+        Ok(())
     }
 }
 

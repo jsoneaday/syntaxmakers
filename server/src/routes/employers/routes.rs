@@ -1,12 +1,15 @@
 use actix_web::{web::{Data, Json, Path}, HttpRequest};
 use crate::{
     app_state::AppState, common::{
-        authentication::auth_keys_service::Authenticator, repository::{
+        authentication::auth_keys_service::Authenticator, emailer::emailer::EmailerService, repository::{
             base::Repository, 
             companies::{models::NewCompany, repo::InsertCompanyFn}, 
             countries::repo::QueryAllCountriesFn, 
             developers::repo::QueryDeveloperFn, 
-            employers::{models::{NewEmployer, UpdateEmployer}, repo::{InsertEmployerFn, QueryAllEmployersFn, QueryEmployerByEmailFn, QueryEmployerByUsernameFn, QueryEmployerFn, UpdateEmployerFn}}
+            employers::{
+                models::{NewEmployer, UpdateEmployer}, 
+                repo::{InsertEmployerFn, QueryAllEmployersFn, QueryEmployerByEmailFn, QueryEmployerByUsernameFn, QueryEmployerFn, UpdateEmployerFn}
+            }
         }
     }, routes::{auth_helper::check_is_authenticated, base_model::{OutputBool, OutputId, PagingModel}, route_utils::get_header_strings, user_error::UserError}
 };
@@ -15,8 +18,12 @@ use crate::routes::authentication::models::DeveloperOrEmployer as AuthDeveloperO
 use log::error;
 
 /// register a new employer profile
-pub async fn create_employer<T: QueryAllCountriesFn + InsertCompanyFn + QueryEmployerByUsernameFn + QueryEmployerByEmailFn + InsertEmployerFn + Repository, U: Authenticator>(
-    app_data: Data<AppState<T, U>>, 
+pub async fn create_employer<
+    T: QueryAllCountriesFn + InsertCompanyFn + QueryEmployerByUsernameFn + QueryEmployerByEmailFn + InsertEmployerFn<E> + Repository, 
+    E: EmailerService + Send + Sync, 
+    U: Authenticator
+>(
+    app_data: Data<AppState<T, E, U>>, 
     json: Json<NewEmployerForRoute>
 ) -> Result<OutputId, UserError> {
     match app_data.repo.query_employer_by_email(json.email.clone()).await {
@@ -78,7 +85,7 @@ pub async fn create_employer<T: QueryAllCountriesFn + InsertCompanyFn + QueryEmp
         }        
     };
 
-    let result = app_data.repo.insert_employer(new_emp).await;
+    let result = app_data.repo.insert_employer(new_emp, &app_data.emailer).await;
     match result {
         Ok(entity) => Ok(OutputId { id: entity.id }),
         Err(e) => {
@@ -88,8 +95,12 @@ pub async fn create_employer<T: QueryAllCountriesFn + InsertCompanyFn + QueryEmp
     }
 }
 
-pub async fn update_employer<T: QueryAllCountriesFn + QueryEmployerByEmailFn + InsertCompanyFn + QueryDeveloperFn + QueryEmployerFn + UpdateEmployerFn + Repository, U: Authenticator>(
-    app_data: Data<AppState<T, U>>, 
+pub async fn update_employer<
+    T: QueryAllCountriesFn + QueryEmployerByEmailFn + InsertCompanyFn + QueryDeveloperFn + QueryEmployerFn + UpdateEmployerFn<E> + Repository, 
+    E: EmailerService + Send + Sync,
+    U: Authenticator
+    >(
+    app_data: Data<AppState<T, E, U>>, 
     json: Json<UpdateEmployerForRoute>,
     req: HttpRequest
 ) -> Result<OutputBool, UserError> {
@@ -136,7 +147,7 @@ pub async fn update_employer<T: QueryAllCountriesFn + QueryEmployerByEmailFn + I
         }                  
     };
     
-    let result = app_data.repo.update_employer(updated_employer).await;
+    let result = app_data.repo.update_employer(updated_employer, &app_data.emailer).await;
     match result {
         Ok(_) => {
             // todo: if email changed need to create a confirm email record
@@ -146,7 +157,8 @@ pub async fn update_employer<T: QueryAllCountriesFn + QueryEmployerByEmailFn + I
     }
 }
 
-pub async fn get_employer<T: QueryEmployerFn + Repository, U: Authenticator>(app_data: Data<AppState<T, U>>, path: Path<i64>) -> Result<Option<EmployerResponder>, UserError> {
+pub async fn get_employer<T: QueryEmployerFn + Repository, E: EmailerService, U: Authenticator>(app_data: Data<AppState<T, E, U>>, path: Path<i64>) 
+    -> Result<Option<EmployerResponder>, UserError> {
     let result = app_data.repo.query_employer(path.into_inner()).await;
 
     match result {
@@ -165,8 +177,8 @@ pub async fn get_employer<T: QueryEmployerFn + Repository, U: Authenticator>(app
     }
 }
 
-pub async fn get_employer_by_email<T: QueryEmployerByEmailFn + Repository, U: Authenticator>(
-    app_data: Data<AppState<T, U>>, 
+pub async fn get_employer_by_email<T: QueryEmployerByEmailFn + Repository, E: EmailerService, U: Authenticator>(
+    app_data: Data<AppState<T, E, U>>, 
     path: Path<String>,
     req: HttpRequest
 ) -> Result<Option<EmployerResponder>, UserError> {
@@ -202,8 +214,8 @@ pub async fn get_employer_by_email<T: QueryEmployerByEmailFn + Repository, U: Au
     }
 }
 
-pub async fn get_all_employers<T: QueryAllEmployersFn + Repository, U: Authenticator>(
-    app_data: Data<AppState<T, U>>, 
+pub async fn get_all_employers<T: QueryAllEmployersFn + Repository, E: EmailerService, U: Authenticator>(
+    app_data: Data<AppState<T, E, U>>, 
     json: Json<PagingModel>
 ) -> Result<EmployerResponders, UserError> {
     let result = app_data.repo.query_all_employers(json.page_size, json.last_offset).await;
@@ -232,8 +244,7 @@ mod tests {
     use std::vec;
     use crate::{
         common::{
-            authentication::auth_keys_service::AuthenticationError, 
-            repository::{
+            authentication::auth_keys_service::AuthenticationError, emailer::model::EmailError, repository::{
                 base::EntityId, employers::{models::Employer, repo::QueryAllEmployersFn}, user::models::DeveloperOrEmployer
             }
         }, 
@@ -244,6 +255,7 @@ mod tests {
     use chrono::Utc;
     use fake::{faker::internet::en::{Username, FreeEmail}, Fake};
     use jsonwebtoken::DecodingKey;
+    use uuid::Uuid;
 
     struct MockAuthService;
     #[async_trait]
@@ -253,16 +265,28 @@ mod tests {
         }
     }
 
+    struct MockEmailer;
     #[async_trait]
-    impl InsertEmployerFn for MockDbRepo {
-        async fn insert_employer(&self, _: NewEmployer) -> Result<EntityId, sqlx::Error> {
+    impl EmailerService for MockEmailer {
+        async fn send_email_confirm_requirement(&self, _: i64, _: String, _: Uuid) -> Result<(), EmailError> {
+            Ok(())
+        }
+
+        async fn receive_email_confirm(&self, _: i64, _: String, _: Uuid) -> Result<(), EmailError> {
+            Ok(())
+        }
+    }
+
+    #[async_trait]
+    impl<E: EmailerService + Send + Sync> InsertEmployerFn<E> for MockDbRepo {
+        async fn insert_employer(&self, _: NewEmployer, _: &E) -> Result<EntityId, sqlx::Error> {
             Ok(EntityId { id: 1 })
         }
     }
 
     #[async_trait]
-    impl UpdateEmployerFn for MockDbRepo {
-        async fn update_employer(&self, _: UpdateEmployer) -> Result<(), sqlx::Error> {
+    impl<E: EmailerService + Send + Sync> UpdateEmployerFn<E> for MockDbRepo {
+        async fn update_employer(&self, _: UpdateEmployer, _: &E) -> Result<(), sqlx::Error> {
             Ok(())
         }
     }
@@ -340,7 +364,8 @@ mod tests {
         async fn test_create_employer_route() {
             let repo = MockDbRepo::init().await;
             let auth_service = MockAuthService;
-            let app_data = get_app_data(repo, auth_service).await;        
+            let emailer = MockEmailer;
+            let app_data = get_app_data(repo, emailer, auth_service).await;        
             let email = get_fake_email();
     
             let result = create_employer(app_data, Json(NewEmployerForRoute { 
@@ -359,7 +384,8 @@ mod tests {
     async fn test_update_employer_route() {
         let repo = MockDbRepo::init().await;
         let auth_service = MockAuthService;
-        let app_data = get_app_data(repo, auth_service).await;        
+        let emailer = MockEmailer;
+            let app_data = get_app_data(repo, emailer, auth_service).await;        
         let email = get_fake_email();
         let req = get_fake_httprequest_with_bearer_token("linda".to_string(), DeveloperOrEmployer::Employer, &app_data.auth_keys.encoding_key, "/employer_email/{email}", "lshin@AmazingAndCo.com".to_string(), None, None);
 
@@ -379,7 +405,8 @@ mod tests {
     async fn test_get_employer_route() {
         let repo = MockDbRepo::init().await;
         let auth_service = MockAuthService;
-        let app_data = get_app_data(repo, auth_service).await;
+        let emailer = MockEmailer;
+        let app_data = get_app_data(repo, emailer, auth_service).await; 
 
         let result = get_employer(app_data, Path::from(1)).await.unwrap().unwrap();
 
@@ -390,9 +417,12 @@ mod tests {
     async fn test_get_employer_by_email_route() {
         let repo = MockDbRepo::init().await;
         let auth_service = MockAuthService;
-        let app_data = get_app_data(repo, auth_service).await;
+        let emailer = MockEmailer;
+        let app_data = get_app_data(repo, emailer, auth_service).await; 
 
-        let req = get_fake_httprequest_with_bearer_token("linda".to_string(), DeveloperOrEmployer::Employer, &app_data.auth_keys.encoding_key, "/employer_email/{email}", "lshin@AmazingAndCo.com".to_string(), None, None);
+        let req = get_fake_httprequest_with_bearer_token(
+            "linda".to_string(), DeveloperOrEmployer::Employer, &app_data.auth_keys.encoding_key, "/employer_email/{email}", "lshin@AmazingAndCo.com".to_string(), None, None
+        );
         let result = get_employer_by_email(app_data, Path::from("lshin@AmazingAndCo.com".to_string()), req).await.unwrap().unwrap();
 
         assert!(result.id == 1);
@@ -402,7 +432,8 @@ mod tests {
     async fn test_get_all_employers_route() {
         let repo = MockDbRepo::init().await;
         let auth_service = MockAuthService;
-        let app_data = get_app_data(repo, auth_service).await;
+        let emailer = MockEmailer;
+        let app_data = get_app_data(repo, emailer, auth_service).await; 
 
         let result = get_all_employers(app_data, Json(PagingModel { page_size: 10, last_offset: 1 })).await.unwrap();
 

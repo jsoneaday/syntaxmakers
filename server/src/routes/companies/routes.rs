@@ -1,9 +1,17 @@
 use actix_web::web::{Json, Data};
-use crate::{common::{repository::{companies::{repo::{InsertCompanyFn, QueryAllCompaniesFn}, models::NewCompany}, base::Repository}, authentication::auth_keys_service::Authenticator}, app_state::AppState, routes::{base_model::OutputId, user_error::UserError}};
+use crate::{
+    app_state::AppState, 
+    common::{
+        authentication::auth_keys_service::Authenticator, 
+        emailer::emailer::EmailerService, 
+        repository::{base::Repository, companies::{models::NewCompany, repo::{InsertCompanyFn, QueryAllCompaniesFn}}}
+    }, 
+    routes::{base_model::OutputId, user_error::UserError}
+};
 use super::models::{NewCompanyForRoute, CompanyResponder, CompanyResponders};
 
-pub async fn create_company<T: InsertCompanyFn + Repository, U: Authenticator>(
-    app_state: Data<AppState<T, U>>, 
+pub async fn create_company<T: InsertCompanyFn + Repository, E: EmailerService, U: Authenticator>(
+    app_state: Data<AppState<T, E, U>>, 
     json: Json<NewCompanyForRoute>
 ) -> Result<OutputId, UserError> {
     let result = app_state.repo.insert_company(NewCompany { name: json.name.clone(), logo: json.logo.clone(), headquarters_country_id: json.headquarters_country_id }).await;
@@ -14,7 +22,7 @@ pub async fn create_company<T: InsertCompanyFn + Repository, U: Authenticator>(
     }
 }
 
-pub async fn get_all_companies<T: QueryAllCompaniesFn + Repository, U: Authenticator>(app_state: Data<AppState<T, U>>) -> Result<CompanyResponders, UserError> {
+pub async fn get_all_companies<T: QueryAllCompaniesFn + Repository, E: EmailerService, U: Authenticator>(app_state: Data<AppState<T, E, U>>) -> Result<CompanyResponders, UserError> {
     let result = app_state.repo.query_all_companies().await;
 
     match result {
@@ -40,10 +48,11 @@ mod tests {
     use jsonwebtoken::DecodingKey;
     use sqlx::Error as SqlxError;
     use chrono::Utc;
+    use uuid::Uuid;
     use super::*;
     use crate::{
-        common::{repository::{companies::{repo::{InsertCompanyFn, QueryAllCompaniesFn}, models::Company}, base::EntityId}, authentication::auth_keys_service::AuthenticationError}, 
-        common_test::fixtures::{get_app_data, MockDbRepo, get_company_logo_randomly}
+        common::{authentication::auth_keys_service::AuthenticationError, emailer::model::EmailError, repository::{base::EntityId, companies::{models::Company, repo::{InsertCompanyFn, QueryAllCompaniesFn}}}}, 
+        common_test::fixtures::{get_app_data, get_company_logo_randomly, MockDbRepo}
     };
     use async_trait::async_trait;
     use fake::{faker::company::en::CompanyName, Fake};
@@ -54,6 +63,18 @@ mod tests {
     impl Authenticator for MockAuthService {
         async fn is_authenticated(&self, _: String, _: Vec<(&str, &str)>, _: &DecodingKey) -> Result<bool, AuthenticationError> {
             Ok(true)
+        }
+    }
+
+    struct MockEmailer;
+    #[async_trait]
+    impl EmailerService for MockEmailer {
+        async fn send_email_confirm_requirement(&self, _: i64, _: String, _: Uuid) -> Result<(), EmailError> {
+            Ok(())
+        }
+
+        async fn receive_email_confirm(&self, _: i64, _: String, _: Uuid) -> Result<(), EmailError> {
+            Ok(())
         }
     }
 
@@ -77,7 +98,8 @@ mod tests {
     async fn test_create_company_route() {
         let repo = MockDbRepo::init().await;
         let auth_service = MockAuthService;
-        let app_data = get_app_data(repo, auth_service).await;
+        let emailer = MockEmailer;
+        let app_data = get_app_data(repo, emailer, auth_service).await; 
 
         let logo = get_company_logo_randomly();
 
@@ -90,7 +112,8 @@ mod tests {
     async fn test_get_all_companies_route() {
         let repo = MockDbRepo::init().await;
         let auth_service = MockAuthService;
-        let app_data = get_app_data(repo, auth_service).await;
+        let emailer = MockEmailer;
+        let app_data = get_app_data(repo, emailer, auth_service).await; 
 
         let result = get_all_companies(app_data).await.unwrap();
 

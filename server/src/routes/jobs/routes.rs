@@ -2,8 +2,14 @@ use actix_web::{web::{Data, Json, Path}, HttpResponse, HttpRequest};
 use log::error;
 use crate::{
     app_state::AppState, common::{
-        authentication::auth_keys_service::Authenticator, repository::{
-            base::Repository, developers::repo::QueryDeveloperFn, employers::repo::QueryEmployerFn, jobs::{models::{Job, JobApplied, NewJob, UpdateJob}, repo::{InsertJobFn, QueryAllJobsFn, QueryJobFn, QueryJobsByApplierFn, QueryJobsByDeveloperFn, QueryJobsByEmployerFn, QueryJobsBySearchTermsFn, UpdateJobFn}}
+        authentication::auth_keys_service::Authenticator, emailer::emailer::EmailerService, repository::{
+            base::Repository, 
+            developers::repo::QueryDeveloperFn, 
+            employers::repo::QueryEmployerFn, 
+            jobs::{
+                models::{Job, JobApplied, NewJob, UpdateJob}, 
+                repo::{InsertJobFn, QueryAllJobsFn, QueryJobFn, QueryJobsByApplierFn, QueryJobsByDeveloperFn, QueryJobsByEmployerFn, QueryJobsBySearchTermsFn, UpdateJobFn}
+            }
         }
     }, routes::{
         auth_helper::check_is_authenticated, base_model::{IdAndPagingModel, OutputId, PagingModel, SearchAndPagingModel}, user_error::UserError
@@ -13,7 +19,7 @@ use super::models::{JobAppliedResponders, JobAppliedResponder, JobResponder, Job
 use crate::routes::authentication::models::DeveloperOrEmployer as AuthDeveloperOrEmployer;
 
 #[allow(unused)]
-pub async fn create_job<T: InsertJobFn + QueryEmployerFn + QueryDeveloperFn + Repository, U: Authenticator>(app_data: Data<AppState<T, U>>, json: Json<NewJobForRoute>, req: HttpRequest)
+pub async fn create_job<T: InsertJobFn + QueryEmployerFn + QueryDeveloperFn + Repository, E: EmailerService, U: Authenticator>(app_data: Data<AppState<T, E, U>>, json: Json<NewJobForRoute>, req: HttpRequest)
  -> Result<OutputId, UserError> {    
     let is_auth = check_is_authenticated(app_data.clone(), json.employer_id, AuthDeveloperOrEmployer::Employer, req).await;
     if !is_auth {
@@ -40,7 +46,7 @@ pub async fn create_job<T: InsertJobFn + QueryEmployerFn + QueryDeveloperFn + Re
 }
 
 #[allow(unused)]
-pub async fn update_job<T: UpdateJobFn + QueryEmployerFn + QueryDeveloperFn + Repository, U: Authenticator>(app_data: Data<AppState<T, U>>, json: Json<UpdateJobForRoute>, req: HttpRequest)
+pub async fn update_job<T: UpdateJobFn + QueryEmployerFn + QueryDeveloperFn + Repository, E: EmailerService, U: Authenticator>(app_data: Data<AppState<T, E, U>>, json: Json<UpdateJobForRoute>, req: HttpRequest)
  -> HttpResponse {
     let is_auth = check_is_authenticated(app_data.clone(), json.employer_id, AuthDeveloperOrEmployer::Employer, req).await;
     if !is_auth {
@@ -70,7 +76,7 @@ pub async fn update_job<T: UpdateJobFn + QueryEmployerFn + QueryDeveloperFn + Re
 }
 
 #[allow(unused)]
-pub async fn get_job<T: QueryJobFn + Repository, U: Authenticator>(app_data: Data<AppState<T, U>>, path: Path<i64>) -> Result<Option<JobResponder>, UserError> {
+pub async fn get_job<T: QueryJobFn + Repository, E: EmailerService, U: Authenticator>(app_data: Data<AppState<T, E, U>>, path: Path<i64>) -> Result<Option<JobResponder>, UserError> {
     let result = app_data.repo.query_job(path.into_inner()).await;
     
     match result {
@@ -83,14 +89,14 @@ pub async fn get_job<T: QueryJobFn + Repository, U: Authenticator>(app_data: Dat
 }
 
 #[allow(unused)]
-pub async fn get_all_jobs<T: QueryAllJobsFn + Repository, U: Authenticator>(app_data: Data<AppState<T, U>>, json: Json<PagingModel>) -> Result<JobResponders, UserError> {
+pub async fn get_all_jobs<T: QueryAllJobsFn + Repository, E: EmailerService, U: Authenticator>(app_data: Data<AppState<T, E, U>>, json: Json<PagingModel>) -> Result<JobResponders, UserError> {
     let result = app_data.repo.query_all_jobs(json.page_size, json.last_offset).await;
     
     return_jobs_result(result)
 }
 
 #[allow(unused)]
-pub async fn get_jobs_by_developer<T: QueryJobsByDeveloperFn + Repository, U: Authenticator>(app_data: Data<AppState<T, U>>, json: Json<IdAndPagingModel>) -> Result<JobResponders, UserError> {
+pub async fn get_jobs_by_developer<T: QueryJobsByDeveloperFn + Repository, E: EmailerService, U: Authenticator>(app_data: Data<AppState<T, E, U>>, json: Json<IdAndPagingModel>) -> Result<JobResponders, UserError> {
     let result = app_data.repo.query_jobs_by_developer(json.id, json.page_size, json.last_offset).await;
     // remove unneeded match
     match result {
@@ -102,7 +108,7 @@ pub async fn get_jobs_by_developer<T: QueryJobsByDeveloperFn + Repository, U: Au
 }
 
 #[allow(unused)]
-pub async fn get_jobs_by_employer<T: QueryJobsByEmployerFn + Repository, U: Authenticator>(app_data: Data<AppState<T, U>>, json: Json<IdAndPagingModel>) 
+pub async fn get_jobs_by_employer<T: QueryJobsByEmployerFn + Repository, E: EmailerService, U: Authenticator>(app_data: Data<AppState<T, E, U>>, json: Json<IdAndPagingModel>) 
     -> Result<JobResponders, UserError> {
     let result = app_data.repo.query_jobs_by_employer(json.id, json.page_size, json.last_offset).await;
     
@@ -110,7 +116,7 @@ pub async fn get_jobs_by_employer<T: QueryJobsByEmployerFn + Repository, U: Auth
 }
 
 #[allow(unused)]
-pub async fn get_jobs_by_search_terms<T: QueryJobsBySearchTermsFn + Repository, U: Authenticator>(app_data: Data<AppState<T, U>>, json: Json<SearchAndPagingModel>) 
+pub async fn get_jobs_by_search_terms<T: QueryJobsBySearchTermsFn + Repository, E: EmailerService, U: Authenticator>(app_data: Data<AppState<T, E, U>>, json: Json<SearchAndPagingModel>) 
     -> Result<JobResponders, UserError> {
     let result = app_data.repo.query_jobs_by_search_terms(json.search_terms.clone(), json.page_size, json.last_offset).await;
     
@@ -118,7 +124,7 @@ pub async fn get_jobs_by_search_terms<T: QueryJobsBySearchTermsFn + Repository, 
 }
 
 #[allow(unused)]
-pub async fn get_jobs_by_applier<T: QueryJobsByApplierFn + Repository, U: Authenticator>(app_data: Data<AppState<T, U>>, json: Json<IdAndPagingModel>) -> Result<JobAppliedResponders, UserError> {
+pub async fn get_jobs_by_applier<T: QueryJobsByApplierFn + Repository, E: EmailerService, U: Authenticator>(app_data: Data<AppState<T, E, U>>, json: Json<IdAndPagingModel>) -> Result<JobAppliedResponders, UserError> {
     let result = app_data.repo.query_jobs_by_applier(json.id, json.page_size, json.last_offset).await;
     // remove unneeded match
     match result {
@@ -219,7 +225,7 @@ fn convert_job_applied(job: &JobApplied) -> JobAppliedResponder {
 mod tests {
     use crate::{
         common::{
-            authentication::auth_keys_service::AuthenticationError, repository::{
+            authentication::auth_keys_service::AuthenticationError, emailer::model::EmailError, repository::{
                 developers::{models::Developer, repo::HasUnconfirmedDevEmailFn}, employers::{models::Employer, repo::HasUnconfirmedEmpEmailFn}, jobs::models::Job, user::{models::{AuthenticateResult, DeveloperOrEmployer as UserDeveloperOrEmployer}, repo::AuthenticateDbFn}
             }            
         }, 
@@ -230,6 +236,7 @@ mod tests {
     use chrono::Utc;
     use fake::{faker::{company::en::CompanyName, internet::en::FreeEmail}, Fake};
     use jsonwebtoken::DecodingKey;
+    use uuid::Uuid;
     use crate::{
         common::repository::{jobs::repo::InsertJobFn, base::EntityId}, common_test::fixtures::{get_app_data, get_fake_title, get_fake_desc}
     };
@@ -243,6 +250,18 @@ mod tests {
     impl Authenticator for MockAuthService {
         async fn is_authenticated(&self, _: String, _: Vec<(&str, &str)>, _: &DecodingKey) -> Result<bool, AuthenticationError> {
             Ok(true)
+        }
+    }
+
+    struct MockEmailer;
+    #[async_trait]
+    impl EmailerService for MockEmailer {
+        async fn send_email_confirm_requirement(&self, _: i64, _: String, _: Uuid) -> Result<(), EmailError> {
+            Ok(())
+        }
+    
+        async fn receive_email_confirm(&self,  _: i64, _: String, _: Uuid) -> Result<(), EmailError> {
+            Ok(())
         }
     }
 
@@ -399,7 +418,8 @@ mod tests {
         init_fixtures().await;
         let repo = MockDbRepo::init().await;
         let auth_service = MockAuthService;
-        let app_data = get_app_data(repo, auth_service).await;
+        let emailer = MockEmailer;
+        let app_data = get_app_data(repo, emailer, auth_service).await;
 
         let login_result = login(app_data.clone(), Json(LoginCredential { dev_or_emp: AuthDeveloperOrEmployer::Employer, email: FreeEmail().fake::<String>(), password: "test1234".to_string() })).await;
         let cookie = login_result.cookies().last().unwrap();
@@ -425,7 +445,8 @@ mod tests {
         init_fixtures().await;
         let repo = MockDbRepo::init().await;
         let auth_service = MockAuthService;
-        let app_data = get_app_data(repo, auth_service).await;
+        let emailer = MockEmailer;
+        let app_data = get_app_data(repo, emailer, auth_service).await;
 
         let login_result = login(app_data.clone(), Json(LoginCredential { dev_or_emp: AuthDeveloperOrEmployer::Employer, email: FreeEmail().fake::<String>(), password: "test1234".to_string() })).await;
         let cookie = login_result.cookies().last().unwrap();
@@ -451,7 +472,8 @@ mod tests {
         init_fixtures().await;
         let repo = MockDbRepo::init().await;
         let auth_service = MockAuthService;
-        let app_data = get_app_data(repo, auth_service).await;
+        let emailer = MockEmailer;
+        let app_data = get_app_data(repo, emailer, auth_service).await;
 
         let result = get_job(app_data, Path::from(1)).await.unwrap();
 
@@ -463,7 +485,8 @@ mod tests {
         init_fixtures().await;
         let repo = MockDbRepo::init().await;
         let auth_service = MockAuthService;
-        let app_data = get_app_data(repo, auth_service).await;
+        let emailer = MockEmailer;
+        let app_data = get_app_data(repo, emailer, auth_service).await;
 
         let result = get_all_jobs(app_data, Json(PagingModel { page_size: 10, last_offset: 1 })).await.unwrap();
 
@@ -475,7 +498,8 @@ mod tests {
         init_fixtures().await;
         let repo = MockDbRepo::init().await;
         let auth_service = MockAuthService;
-        let app_data = get_app_data(repo, auth_service).await;
+        let emailer = MockEmailer;
+        let app_data = get_app_data(repo, emailer, auth_service).await;
 
         let result = get_jobs_by_employer(app_data, Json(IdAndPagingModel { id: 1, page_size: 10, last_offset: 1 })).await.unwrap();
 
@@ -487,7 +511,8 @@ mod tests {
         init_fixtures().await;
         let repo = MockDbRepo::init().await;
         let auth_service = MockAuthService;
-        let app_data = get_app_data(repo, auth_service).await;
+        let emailer = MockEmailer;
+        let app_data = get_app_data(repo, emailer, auth_service).await;
 
         let result = get_jobs_by_search_terms(app_data, Json(SearchAndPagingModel { search_terms: vec![], page_size: 10, last_offset: 1 })).await.unwrap();
 
@@ -499,7 +524,8 @@ mod tests {
         init_fixtures().await;
         let repo = MockDbRepo::init().await;
         let auth_service = MockAuthService;
-        let app_data = get_app_data(repo, auth_service).await;
+        let emailer = MockEmailer;
+        let app_data = get_app_data(repo, emailer, auth_service).await;
 
         let result = get_jobs_by_developer(app_data, Json(IdAndPagingModel { id: 1, page_size: 10, last_offset: 1 })).await.unwrap();
 

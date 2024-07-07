@@ -69,6 +69,7 @@ create table dev_email_confirmation (
     "is_confirmed" boolean not null,
     "is_valid" boolean not null,
     "new_email" varchar(120) not null,
+    "unique_key" uuid not null,
 
     constraint fk_developer foreign key(developer_id) references developer(id)
 );
@@ -94,6 +95,7 @@ create table emp_email_confirmation (
     "is_confirmed" boolean not null,
     "is_valid" boolean not null,
     "new_email" varchar(120) not null,
+    "unique_key" uuid not null,
 
     constraint fk_employer foreign key(employer_id) references employer(id)
 );

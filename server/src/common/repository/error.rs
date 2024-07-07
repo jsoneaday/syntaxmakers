@@ -10,6 +10,8 @@ pub enum SqlxError {
     EmailConfirmFailed,
     #[display(fmt = "Email confirm invalid")]
     EmailConfirmInvalid,
+    #[display(fmt = "Email confirm failed, invalid unique key")]
+    EmailConfirmInvalidUniqueKey,
     #[display(fmt = "Newer email confirmations exist than the one presented")]
     NewerEmailConfirmExist,
     UpdateProfileEmailFailed

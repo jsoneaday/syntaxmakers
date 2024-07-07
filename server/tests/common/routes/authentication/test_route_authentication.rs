@@ -1,14 +1,24 @@
 use actix_web::web::Json;
 use chrono::Utc;
 use syntaxmakers_server::{
-    common_test::fixtures::{get_app_data, get_fake_httprequest_with_bearer_token, get_httpresponse_body_as_string, init_fixtures}, 
     common::{
-        repository::base::{Repository, DbRepo}, 
-        repository::user::models::DeveloperOrEmployer as UserDeveloperOrEmployer,
-        authentication::auth_keys_service::{AuthService, STANDARD_ACCESS_TOKEN_EXPIRATION, decode_token, REFRESH_TOKEN_LABEL}
+        authentication::auth_keys_service::{decode_token, AuthService, REFRESH_TOKEN_LABEL, STANDARD_ACCESS_TOKEN_EXPIRATION}, 
+        repository::{
+            base::{DbRepo, Repository}, 
+            developers::{models::NewDeveloper, repo::{ConfirmEmailFn, InsertDeveloperFn, QueryLatestValidEmailConfirmFn}},
+            user::models::DeveloperOrEmployer as UserDeveloperOrEmployer
+        }
+    }, 
+    common_test::fixtures::{
+        get_app_data, 
+        get_fake_dev_desc, 
+        get_fake_email, 
+        get_fake_fullname, 
+        get_fake_httprequest_with_bearer_token, 
+        get_fake_user_name, get_httpresponse_body_as_string, init_fixtures, MockEmailer
     }, 
     routes::authentication::{
-        models::{LoginCredential, DeveloperOrEmployer as AuthDeveloperOrEmployer, RefreshToken}, routes::{login, refresh_access_token}
+        models::{DeveloperOrEmployer as AuthDeveloperOrEmployer, LoginCredential, RefreshToken}, routes::{login, refresh_access_token}
     }    
 };
 use actix_http::StatusCode;
@@ -21,10 +31,25 @@ async fn test_refresh_access_token_route() {
     let repo = DbRepo::init().await;
     init_fixtures().await;
     let auth_service = AuthService;
-    let app_data = get_app_data(repo, auth_service).await;
-    let user_name = "jon".to_string();
-    let email = "jon@jon.com".to_string();
+    let emailer = MockEmailer;
+    let app_data = get_app_data(repo.clone(), emailer.clone(), auth_service).await;
+    let user_name = get_fake_user_name();
+    let full_name = get_fake_fullname();
+    let description = get_fake_dev_desc();
+    let email = get_fake_email();
     let password = "test1234".to_string();
+
+    let create_result = repo.insert_developer(NewDeveloper {
+        user_name: user_name.clone(),
+        full_name,
+        email: email.clone(),
+        description,
+        password: password.clone(),
+        primary_lang_id: 1,
+        secondary_lang_id: None
+    }, &emailer).await.unwrap();
+    let email_confirm = repo.query_latest_valid_email_confirm(create_result.id).await.unwrap().unwrap();    
+    _ = repo.confirm_email(email.clone(), create_result.id, email_confirm.unique_key.to_string()).await;
      
     let login_token_result = login(
         app_data.clone(), Json(LoginCredential { dev_or_emp: AuthDeveloperOrEmployer::Developer, email, password })

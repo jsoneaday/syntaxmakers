@@ -2,16 +2,15 @@ use actix_web::{web::{Data, Json}, HttpRequest};
 use crate::{
     app_state::AppState, 
     common::{
-        authentication::auth_keys_service::Authenticator, 
-        repository::{base::Repository, developers::repo::QueryDeveloperFn, employers::repo::QueryEmployerFn, user::{models::{ChangePassword, DeveloperOrEmployer}, repo::ChangePasswordFn}}
+        authentication::auth_keys_service::Authenticator, emailer::emailer::EmailerService, repository::{base::Repository, developers::repo::QueryDeveloperFn, employers::repo::QueryEmployerFn, user::{models::{ChangePassword, DeveloperOrEmployer}, repo::ChangePasswordFn}}
     }, 
     routes::{auth_helper::check_is_authenticated, authentication::models::DeveloperOrEmployer as AuthDeveloperOrEmployer, base_model::OutputBool, user_error::UserError}
 };
 use super::models::ChangePasswordRoute;
 use log::error;
 
-pub async fn change_password<T: QueryDeveloperFn + QueryEmployerFn + ChangePasswordFn + Repository, U: Authenticator>(
-    app_data: Data<AppState<T, U>>, 
+pub async fn change_password<T: QueryDeveloperFn + QueryEmployerFn + ChangePasswordFn + Repository, E: EmailerService, U: Authenticator>(
+    app_data: Data<AppState<T, E, U>>, 
     json: Json<ChangePasswordRoute>,
     req: HttpRequest
 ) -> Result<OutputBool, UserError> {

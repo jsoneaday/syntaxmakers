@@ -4,14 +4,16 @@ use fake::faker::internet::en::{Username, SafeEmail};
 use syntaxmakers_server::common::repository::base::{Repository, DbRepo};
 use syntaxmakers_server::common::repository::companies::models::NewCompany;
 use syntaxmakers_server::common::repository::employers::models::{NewEmployer, UpdateEmployer};
-use syntaxmakers_server::common::repository::employers::repo::{ConfirmEmailFn, InsertEmployerFn, QueryAllEmployersFn, QueryEmployerByEmailFn, QueryEmployerFn, UpdateEmployerFn};
+use syntaxmakers_server::common::repository::employers::repo::{ConfirmEmailFn, InsertEmployerFn, QueryAllEmployersFn, QueryEmployerByEmailFn, QueryEmployerFn, QueryLatestValidEmailConfirmFn, UpdateEmployerFn};
 use syntaxmakers_server::common::repository::companies::repo::InsertCompanyFn;
-use syntaxmakers_server::common_test::fixtures::{ get_company_logo_randomly, get_fake_email, get_fake_fullname, get_fake_user_name, init_fixtures};
+use syntaxmakers_server::common_test::fixtures::{ get_company_logo_randomly, get_fake_email, get_fake_fullname, get_fake_user_name, init_fixtures, MockEmailer};
+
 
 #[tokio::test]
 async fn test_create_employer_and_get_back() {
     let repo = DbRepo::init().await;
     init_fixtures().await;
+    let emailer = MockEmailer;
     let user_name = Username().fake::<String>();
     let full_name = get_fake_fullname();
     let email = get_fake_email();
@@ -26,7 +28,7 @@ async fn test_create_employer_and_get_back() {
         email: email.clone(),
         password: "test1234".to_string(),
         company_id
-    }).await.unwrap();
+    }, &emailer).await.unwrap();
     let get_result = repo.query_employer(create_result.id).await.unwrap().unwrap();
     
     assert!(get_result.clone().id == create_result.id);
@@ -40,6 +42,7 @@ async fn test_create_employer_and_get_back() {
 async fn test_create_employer_and_check_does_not_allow_existing_email() {
     let repo = DbRepo::init().await;
     init_fixtures().await;
+    let emailer = MockEmailer;
     let user_name = Username().fake::<String>();
     let full_name = get_fake_fullname();
     let email = get_fake_email();
@@ -54,14 +57,14 @@ async fn test_create_employer_and_check_does_not_allow_existing_email() {
         email: email.clone(),
         password: "test1234".to_string(),
         company_id
-    }).await.unwrap();
+    }, &emailer).await.unwrap();
     let create_result2 = repo.insert_employer(NewEmployer {
         user_name: get_fake_user_name(),
         full_name: full_name.clone(),
         email: email.clone(),
         password: "test1234".to_string(),
         company_id
-    }).await;
+    }, &emailer).await;
     
     assert!(create_result2.is_err());
     assert!(create_result2.err().unwrap().as_database_error().unwrap().is_unique_violation());    
@@ -71,6 +74,7 @@ async fn test_create_employer_and_check_does_not_allow_existing_email() {
 async fn test_create_employer_and_check_does_not_allow_existing_username() {
     let repo = DbRepo::init().await;
     init_fixtures().await;
+    let emailer = MockEmailer;
     let user_name = Username().fake::<String>();
     let full_name = get_fake_fullname();
     let email = get_fake_email();
@@ -85,14 +89,14 @@ async fn test_create_employer_and_check_does_not_allow_existing_username() {
         email: email.clone(),
         password: "test1234".to_string(),
         company_id
-    }).await.unwrap();
+    }, &emailer).await.unwrap();
     let create_result2 = repo.insert_employer(NewEmployer {
         user_name: user_name.clone(),
         full_name: full_name.clone(),
         email: get_fake_email(),
         password: "test1234".to_string(),
         company_id
-    }).await;
+    }, &emailer).await;
     
     assert!(create_result2.is_err());
     assert!(create_result2.err().unwrap().as_database_error().unwrap().is_unique_violation());    
@@ -102,6 +106,7 @@ async fn test_create_employer_and_check_does_not_allow_existing_username() {
 async fn test_create_employer_and_get_back_by_email() {
     let repo = DbRepo::init().await;
     init_fixtures().await;
+    let emailer = MockEmailer;
     let user_name = Username().fake::<String>();
     let full_name = get_fake_fullname();
     let email = SafeEmail().fake::<String>();
@@ -116,7 +121,7 @@ async fn test_create_employer_and_get_back_by_email() {
         email: email.clone(),
         password: "test1234".to_string(),
         company_id
-    }).await.unwrap();
+    }, &emailer).await.unwrap();
     
     let get_result = repo.query_employer_by_email(email.clone()).await.unwrap().unwrap();
     
@@ -131,6 +136,7 @@ async fn test_create_employer_and_get_back_by_email() {
 async fn test_create_two_employers_and_get_back_both() {
     let repo = DbRepo::init().await;
     init_fixtures().await;
+    let emailer = MockEmailer;
     let logo = get_company_logo_randomly();
 
     let company_create_result = repo.insert_company(NewCompany{ name: CompanyName().fake::<String>(), logo: Some(logo), headquarters_country_id: 1 }).await.unwrap();
@@ -142,14 +148,14 @@ async fn test_create_two_employers_and_get_back_both() {
         email: SafeEmail().fake::<String>(),
         password: "test1234".to_string(),
         company_id
-    }).await.unwrap();
+    }, &emailer).await.unwrap();
     let create_result2 = repo.insert_employer(NewEmployer {
         user_name: Username().fake::<String>(),
         full_name: get_fake_fullname(),
         email: SafeEmail().fake::<String>(),
         password: "test1234".to_string(),
         company_id
-    }).await.unwrap();
+    }, &emailer).await.unwrap();
 
     let get_all_result = repo.query_all_employers(10, 0).await.unwrap();
     
@@ -165,6 +171,7 @@ async fn test_create_two_employers_and_get_back_both() {
 async fn test_create_employer_then_update_and_confirm_new_field_values() {
     let repo = DbRepo::init().await;
     init_fixtures().await;
+    let emailer = MockEmailer;
     let logo = get_company_logo_randomly();
 
     let company_create_result = repo.insert_company(NewCompany{ name: CompanyName().fake::<String>(), logo: Some(logo.clone()), headquarters_country_id: 1 }).await.unwrap();
@@ -176,7 +183,7 @@ async fn test_create_employer_then_update_and_confirm_new_field_values() {
         email: get_fake_email(),
         password: "test1234".to_string(),
         company_id
-    }).await.unwrap();
+    }, &emailer).await.unwrap();
 
     let company_update_result = repo.insert_company(NewCompany{ name: CompanyName().fake::<String>(), logo: Some(logo), headquarters_country_id: 1 }).await.unwrap();
     let update_company_id = company_update_result.id;
@@ -187,7 +194,7 @@ async fn test_create_employer_then_update_and_confirm_new_field_values() {
         full_name: full_name.clone(),
         email: email.clone(),
         company_id: update_company_id
-    }).await.unwrap();
+    }, &emailer).await.unwrap();
 
     let updated = repo.query_employer(create_result.id).await.unwrap().unwrap();
 
@@ -200,6 +207,7 @@ async fn test_create_employer_then_update_and_confirm_new_field_values() {
 async fn test_insert_emp_and_confirm_email() {
     let repo = DbRepo::init().await;
     init_fixtures().await;
+    let emailer = MockEmailer;
     let email = get_fake_email();
     
     // insert_developer should create a new email confirm
@@ -209,9 +217,11 @@ async fn test_insert_emp_and_confirm_email() {
         email: email.clone(),
         password: "test1234".to_string(),
         company_id: 1
-    }).await.unwrap();
+    }, &emailer).await.unwrap();
 
-    match repo.confirm_email(email, create_result1.id).await {
+    let email_confirm = repo.query_latest_valid_email_confirm(create_result1.id).await.unwrap().unwrap();
+
+    match repo.confirm_email(email, create_result1.id, email_confirm.unique_key.to_string()).await {
         Ok(_) => (),
         Err(e) => panic!("{}", e)
     }
@@ -221,30 +231,33 @@ async fn test_insert_emp_and_confirm_email() {
 async fn test_update_emp_email_and_confirm_it() {
     let repo = DbRepo::init().await;
     init_fixtures().await;
+    let emailer = MockEmailer;
     let old_email = get_fake_email();
     
-    let created_result1 = repo.insert_employer(NewEmployer {
+    let create_result1 = repo.insert_employer(NewEmployer {
         user_name: Username().fake::<String>(),
         full_name: get_fake_fullname(),
         email: old_email.clone(),
         password: "test1234".to_string(),
         company_id: 1
-    }).await.unwrap();
+    }, &emailer).await.unwrap();
 
     let new_email = get_fake_email();
     _ = repo.update_employer(UpdateEmployer {
-        id: created_result1.id,
+        id: create_result1.id,
         full_name: get_fake_fullname(),
         email: new_email.clone(),
         company_id: 2
-    }).await.unwrap();
+    }, &emailer).await.unwrap();
+
+    let email_confirm = repo.query_latest_valid_email_confirm(create_result1.id).await.unwrap().unwrap();
     
-    match repo.confirm_email(new_email.clone(), created_result1.id).await {
+    match repo.confirm_email(new_email.clone(), create_result1.id, email_confirm.unique_key.to_string()).await {
         Ok(_) => (),
         Err(e) => panic!("{}", e)
     }
 
-    match repo.query_employer(created_result1.id).await {
+    match repo.query_employer(create_result1.id).await {
         Ok(dev) => match dev {
             Some(dev) => dev.email == new_email,
             None => panic!("Employer's email does not match after email confirm")

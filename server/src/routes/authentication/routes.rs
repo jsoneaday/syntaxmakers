@@ -9,8 +9,14 @@ use log::error;
 use crate::{
     app_state::AppState, 
     common::{
-        authentication::auth_keys_service::{decode_token, get_token, Authenticator, REFRESH_TOKEN_LABEL, STANDARD_ACCESS_TOKEN_EXPIRATION, STANDARD_REFRESH_TOKEN_EXPIRATION}, repository::{
-            base::Repository, developers::repo::{HasUnconfirmedDevEmailFn, QueryDeveloperFn}, employers::repo::{HasUnconfirmedEmpEmailFn, QueryEmployerFn}, user::{models::{AuthenticateResult, DeveloperOrEmployer as UserDeveloperOrEmployer}, repo::AuthenticateDbFn}
+        authentication::auth_keys_service::{
+            decode_token, get_token, Authenticator, REFRESH_TOKEN_LABEL, STANDARD_ACCESS_TOKEN_EXPIRATION, STANDARD_REFRESH_TOKEN_EXPIRATION
+        }, 
+        emailer::emailer::EmailerService, repository::{
+            base::Repository, 
+            developers::repo::{HasUnconfirmedDevEmailFn, QueryDeveloperFn}, 
+            employers::repo::{HasUnconfirmedEmpEmailFn, QueryEmployerFn}, 
+            user::{models::{AuthenticateResult, DeveloperOrEmployer as UserDeveloperOrEmployer}, repo::AuthenticateDbFn}
         }
     }, 
     routes::authentication::models::DeveloperOrEmployer as AuthDeveloperOrEmployer
@@ -18,7 +24,7 @@ use crate::{
 use super::models::{LoginCredential, RefreshToken};
 
 
-pub async fn refresh_access_token<T: Repository, U: Authenticator>(app_data: Data<AppState<T, U>>, json: Json<RefreshToken>, req: HttpRequest) -> HttpResponse {
+pub async fn refresh_access_token<T: Repository, E: EmailerService, U: Authenticator>(app_data: Data<AppState<T, E, U>>, json: Json<RefreshToken>, req: HttpRequest) -> HttpResponse {
     let dev_or_emp = if json.dev_or_emp == AuthDeveloperOrEmployer::Developer {
         UserDeveloperOrEmployer::Developer
     } else {
@@ -54,7 +60,11 @@ pub async fn refresh_access_token<T: Repository, U: Authenticator>(app_data: Dat
     };
 }
 
-pub async fn login<T: HasUnconfirmedDevEmailFn + HasUnconfirmedEmpEmailFn + AuthenticateDbFn + QueryDeveloperFn + QueryEmployerFn + Repository, U: Authenticator>(app_data: Data<AppState<T, U>>, json: Json<LoginCredential>) 
+pub async fn login<
+    T: HasUnconfirmedDevEmailFn + HasUnconfirmedEmpEmailFn + AuthenticateDbFn + QueryDeveloperFn + QueryEmployerFn + Repository, 
+    E: EmailerService, 
+    U: Authenticator
+    >(app_data: Data<AppState<T, E, U>>, json: Json<LoginCredential>) 
     -> HttpResponse {
     let dev_or_emp = if json.dev_or_emp == AuthDeveloperOrEmployer::Developer {
         match app_data.repo.has_unconfirmed_dev_email(json.email.clone()).await {
@@ -166,8 +176,8 @@ pub async fn login<T: HasUnconfirmedDevEmailFn + HasUnconfirmedEmpEmailFn + Auth
     }  
 }
 
-fn get_refresh_and_access_token_response<'a, T: AuthenticateDbFn + QueryDeveloperFn + Repository, U: Authenticator>(
-    app_data: Data<AppState<T, U>>, user_name: &'a str, dev_or_emp: &'a UserDeveloperOrEmployer
+fn get_refresh_and_access_token_response<'a, T: AuthenticateDbFn + QueryDeveloperFn + Repository, E: EmailerService, U: Authenticator>(
+    app_data: Data<AppState<T, E, U>>, user_name: &'a str, dev_or_emp: &'a UserDeveloperOrEmployer
 ) -> (Cookie<'a>, String) {
     let access_token = get_token(user_name.to_string(), dev_or_emp.clone(), &app_data.auth_keys.encoding_key, Some(STANDARD_ACCESS_TOKEN_EXPIRATION));
     let refresh_token = get_token(user_name.to_string(), dev_or_emp.clone(), &app_data.auth_keys.encoding_key, None);
@@ -190,9 +200,10 @@ mod tests {
     use chrono::Utc;
     use fake::{faker::internet::en::FreeEmail, Fake};
     use jsonwebtoken::DecodingKey;
+    use uuid::Uuid;
     use crate::{
         common::{
-            authentication::auth_keys_service::{AuthenticationError, STANDARD_REFRESH_TOKEN_EXPIRATION}, repository::{developers::models::Developer, employers::models::Employer, user::repo::AuthenticateDbFn}
+            authentication::auth_keys_service::{AuthenticationError, STANDARD_REFRESH_TOKEN_EXPIRATION}, emailer::model::EmailError, repository::{developers::models::Developer, employers::models::Employer, user::repo::AuthenticateDbFn}
         }, 
         common_test::fixtures::{get_app_data, get_fake_dev_desc, get_fake_email}
     };
@@ -205,6 +216,18 @@ mod tests {
     impl Authenticator for MockAuthService {
         async fn is_authenticated(&self, _: String, _: Vec<(&str, &str)>, _: &DecodingKey) -> Result<bool, AuthenticationError> {
             Ok(true)
+        }
+    }
+
+    struct MockEmailer;
+    #[async_trait]
+    impl EmailerService for MockEmailer {
+        async fn send_email_confirm_requirement(&self, _: i64, _: String, _: Uuid) -> Result<(), EmailError> {
+            Ok(())
+        }
+
+        async fn receive_email_confirm(&self, _: i64, _: String, _: Uuid) -> Result<(), EmailError> {
+            Ok(())
         }
     }
 
@@ -274,7 +297,8 @@ mod tests {
     async fn test_login_route() {
         let repo = MockDbRepo::init().await;
         let auth_service = MockAuthService;
-        let app_data = get_app_data(repo, auth_service).await;
+        let emailer = MockEmailer;
+        let app_data = get_app_data(repo, emailer, auth_service).await; 
 
         let result = login(app_data.clone(), Json(LoginCredential { 
             dev_or_emp: AuthDeveloperOrEmployer::Developer, email: FreeEmail().fake::<String>(), password: "test1234".to_string() 

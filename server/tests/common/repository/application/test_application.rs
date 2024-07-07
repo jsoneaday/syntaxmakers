@@ -5,6 +5,7 @@ use syntaxmakers_server::common_test::fixtures::get_fake_dev_desc;
 use syntaxmakers_server::common_test::fixtures::get_fake_email;
 use syntaxmakers_server::common_test::fixtures::get_fake_title;
 use syntaxmakers_server::common_test::fixtures::get_fake_user_name;
+use syntaxmakers_server::common_test::fixtures::MockEmailer;
 use syntaxmakers_server::common_test::fixtures::COUNTRIES;
 use syntaxmakers_server::common_test::fixtures::INDUSTRIES;
 use syntaxmakers_server::common_test::fixtures::LANGUAGES;
@@ -20,6 +21,7 @@ use syntaxmakers_server::{
 async fn test_insert_application_fails_if_user_already_applied() {
     let repo = DbRepo::init().await;
     init_fixtures().await;
+    let emailer = MockEmailer;
 
     let job = repo.insert_job(NewJob {
         employer_id: 1,
@@ -41,7 +43,7 @@ async fn test_insert_application_fails_if_user_already_applied() {
         password: "123".to_string(), 
         primary_lang_id: 1, 
         secondary_lang_id: None
-    }).await.unwrap();
+    }, &emailer).await.unwrap();
 
     let result = repo.insert_application(NewApplication { job_id: job.as_ref().unwrap().id, developer_id: developer.clone().id}).await;
     assert!(result.unwrap().id > 0);

@@ -50,6 +50,10 @@ pub mod common {
         pub mod password_hash;
         pub mod auth_keys_service;
     }
+    pub mod emailer {
+        pub mod model;
+        pub mod emailer;
+    }
 }
 pub mod common_test {
     pub mod fixtures;
@@ -109,6 +113,7 @@ pub mod routes {
 use actix_cors::Cors;
 use actix_web::{HttpServer, http::header, App, middleware::Logger, web};
 use common::authentication::auth_keys_service::{init_auth_keys, AuthService};
+use common::emailer::emailer::Emailer;
 use common::repository::base::{DbRepo, Repository};
 use routes::application::routes::{create_application, developer_applied};
 use routes::authentication::routes::{login, refresh_access_token};
@@ -151,6 +156,7 @@ pub async fn run() -> std::io::Result<()> {
     
     let app_data = actix_web::web::Data::new(AppState{
         repo: DbRepo::init().await,
+        emailer: Emailer,
         auth_service: AuthService,
         auth_keys: init_auth_keys().await
     });    
@@ -174,61 +180,61 @@ pub async fn run() -> std::io::Result<()> {
             .service(
                 web::scope("/v1")
                     .service(web::resource("/login")
-                        .route(web::post().to(login::<DbRepo, AuthService>)))
+                        .route(web::post().to(login::<DbRepo, Emailer, AuthService>)))
                     .service(web::resource("/apply_job")
-                        .route(web::post().to(create_application::<DbRepo, AuthService>)))
+                        .route(web::post().to(create_application::<DbRepo, Emailer, AuthService>)))
                     .service(web::resource("/developer_applied")
-                        .route(web::post().to(developer_applied::<DbRepo, AuthService>)))
+                        .route(web::post().to(developer_applied::<DbRepo, Emailer, AuthService>)))
                     .service(web::resource("/refreshtoken")
-                        .route(web::post().to(refresh_access_token::<DbRepo, AuthService>)))
+                        .route(web::post().to(refresh_access_token::<DbRepo, Emailer, AuthService>)))
                     .service(web::resource("/salaries")
-                        .route(web::get().to(get_all_salaries::<DbRepo, AuthService>)))
+                        .route(web::get().to(get_all_salaries::<DbRepo, Emailer, AuthService>)))
                     .service(web::resource("/languages")
-                        .route(web::get().to(get_all_languages::<DbRepo, AuthService>)))
+                        .route(web::get().to(get_all_languages::<DbRepo, Emailer, AuthService>)))
                     .service(web::resource("/job/{id}")
-                        .route(web::get().to(get_job::<DbRepo, AuthService>)))
+                        .route(web::get().to(get_job::<DbRepo, Emailer, AuthService>)))
                     .service(web::resource("/job_update")
-                        .route(web::post().to(update_job::<DbRepo, AuthService>)))
+                        .route(web::post().to(update_job::<DbRepo, Emailer, AuthService>)))
                     .service(web::resource("/job")
-                        .route(web::post().to(create_job::<DbRepo, AuthService>)))
+                        .route(web::post().to(create_job::<DbRepo, Emailer, AuthService>)))
                     .service(web::resource("/jobs_dev")
-                        .route(web::post().to(get_jobs_by_developer::<DbRepo, AuthService>)))
+                        .route(web::post().to(get_jobs_by_developer::<DbRepo, Emailer, AuthService>)))
                     .service(web::resource("/jobs_emp")
-                        .route(web::post().to(get_jobs_by_employer::<DbRepo, AuthService>)))
+                        .route(web::post().to(get_jobs_by_employer::<DbRepo, Emailer, AuthService>)))
                     .service(web::resource("/jobs_search")
-                        .route(web::post().to(get_jobs_by_search_terms::<DbRepo, AuthService>)))
+                        .route(web::post().to(get_jobs_by_search_terms::<DbRepo, Emailer, AuthService>)))
                     .service(web::resource("/jobs_applied")
-                        .route(web::post().to(get_jobs_by_applier::<DbRepo, AuthService>)))
+                        .route(web::post().to(get_jobs_by_applier::<DbRepo, Emailer, AuthService>)))
                     .service(web::resource("/industries")
-                        .route(web::get().to(get_all_industries::<DbRepo, AuthService>)))
+                        .route(web::get().to(get_all_industries::<DbRepo, Emailer, AuthService>)))
                     .service(web::resource("/employer/{id}")
-                        .route(web::get().to(get_employer::<DbRepo, AuthService>)))
+                        .route(web::get().to(get_employer::<DbRepo, Emailer, AuthService>)))
                     .service(web::resource("/employer")
-                        .route(web::post().to(create_employer::<DbRepo, AuthService>)))
+                        .route(web::post().to(create_employer::<DbRepo, Emailer, AuthService>)))
                     .service(web::resource("/employer_update")
-                        .route(web::post().to(update_employer::<DbRepo, AuthService>)))
+                        .route(web::post().to(update_employer::<DbRepo, Emailer, AuthService>)))
                     .service(web::resource("/employer_email/{email}")
-                        .route(web::get().to(get_employer_by_email::<DbRepo, AuthService>)))
+                        .route(web::get().to(get_employer_by_email::<DbRepo, Emailer, AuthService>)))
                     .service(web::resource("/employers")
-                        .route(web::get().to(get_all_employers::<DbRepo, AuthService>)))
+                        .route(web::get().to(get_all_employers::<DbRepo, Emailer, AuthService>)))
                     .service(web::resource("/developer_email/{email}")
-                        .route(web::get().to(get_developer_by_email::<DbRepo, AuthService>)))
+                        .route(web::get().to(get_developer_by_email::<DbRepo, Emailer, AuthService>)))
                     .service(web::resource("/developer/{id}")
-                        .route(web::get().to(get_developer::<DbRepo, AuthService>)))
+                        .route(web::get().to(get_developer::<DbRepo, Emailer, AuthService>)))
                     .service(web::resource("/developer")
-                        .route(web::post().to(create_developer::<DbRepo, AuthService>)))
+                        .route(web::post().to(create_developer::<DbRepo, Emailer, AuthService>)))
                     .service(web::resource("/developer_update")
-                        .route(web::post().to(update_developer::<DbRepo, AuthService>)))                    
+                        .route(web::post().to(update_developer::<DbRepo, Emailer, AuthService>)))                    
                     .service(web::resource("/developers")
-                        .route(web::get().to(get_all_developers::<DbRepo, AuthService>)))
+                        .route(web::get().to(get_all_developers::<DbRepo, Emailer, AuthService>)))
                     .service(web::resource("/user_change_password")
-                        .route(web::post().to(change_password::<DbRepo, AuthService>)))
+                        .route(web::post().to(change_password::<DbRepo, Emailer, AuthService>)))
                     .service(web::resource("/countries")
-                        .route(web::get().to(get_all_countries::<DbRepo, AuthService>)))
+                        .route(web::get().to(get_all_countries::<DbRepo, Emailer, AuthService>)))
                     .service(web::resource("/company")
-                        .route(web::post().to(create_company::<DbRepo, AuthService>)))
+                        .route(web::post().to(create_company::<DbRepo, Emailer, AuthService>)))
                     .service(web::resource("/companies")
-                        .route(web::get().to(get_all_companies::<DbRepo, AuthService>)))
+                        .route(web::get().to(get_all_companies::<DbRepo, Emailer, AuthService>)))
             )            
     })
     .bind((host, port)).expect("")

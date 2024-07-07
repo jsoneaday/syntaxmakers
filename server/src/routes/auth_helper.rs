@@ -1,13 +1,18 @@
 use actix_web::{web::Data, HttpRequest};
 use log::{error, info};
 use crate::{
-    common::{repository::{developers::repo::QueryDeveloperFn, employers::repo::QueryEmployerFn, base::Repository}, authentication::auth_keys_service::Authenticator}, app_state::AppState
+    app_state::AppState, 
+    common::{
+        authentication::auth_keys_service::Authenticator, 
+        emailer::emailer::EmailerService, 
+        repository::{base::Repository, developers::repo::QueryDeveloperFn, employers::repo::QueryEmployerFn}
+    }
 };
 use super::{authentication::models::DeveloperOrEmployer as AuthDeveloperOrEmployer, route_utils::get_header_strings};
 
 
-pub async fn check_is_authenticated<T: QueryDeveloperFn + QueryEmployerFn + Repository, U: Authenticator>(
-    app_data: Data<AppState<T, U>>, 
+pub async fn check_is_authenticated<T: QueryDeveloperFn + QueryEmployerFn + Repository, E: EmailerService, U: Authenticator>(
+    app_data: Data<AppState<T, E, U>>, 
     id: i64,
     dev_or_emp: AuthDeveloperOrEmployer,
     req: HttpRequest
@@ -72,10 +77,10 @@ mod tests {
     use chrono::Utc;
     use fake::{faker::internet::en::FreeEmail, Fake};
     use jsonwebtoken::DecodingKey;
+    use uuid::Uuid;
     use crate::{
         common::{
-            authentication::auth_keys_service::{AuthenticationError, Authenticator}, 
-            repository::{developers::{models::Developer, repo::HasUnconfirmedDevEmailFn}, employers::{models::Employer, repo::HasUnconfirmedEmpEmailFn}, user::{models::{AuthenticateResult, DeveloperOrEmployer as UserDeveloperOrEmployer}, repo::AuthenticateDbFn}}
+            authentication::auth_keys_service::{AuthenticationError, Authenticator}, emailer::model::EmailError, repository::{developers::{models::Developer, repo::HasUnconfirmedDevEmailFn}, employers::{models::Employer, repo::HasUnconfirmedEmpEmailFn}, user::{models::{AuthenticateResult, DeveloperOrEmployer as UserDeveloperOrEmployer}, repo::AuthenticateDbFn}}
         }, 
         common_test::fixtures::{get_app_data, get_fake_dev_desc, get_fake_email, get_fake_httprequest_with_bearer_token}, routes::authentication::{models::LoginCredential, routes::login}
     };
@@ -102,6 +107,18 @@ mod tests {
     impl AuthenticateDbFn for MockDbRepo {
         async fn authenticate_db(&self, _: UserDeveloperOrEmployer, _: String, _: String) -> Result<AuthenticateResult, sqlx::Error> {
             Ok(AuthenticateResult::Success{ id: 1 })
+        }
+    }
+
+    struct MockEmailer;
+    #[async_trait]
+    impl EmailerService for MockEmailer {
+        async fn send_email_confirm_requirement(&self, _: i64, _: String, _: Uuid) -> Result<(), EmailError> {
+            Ok(())
+        }
+
+        async fn receive_email_confirm(&self, _: i64, _: String, _: Uuid) -> Result<(), EmailError> {
+            Ok(())
         }
     }
 
@@ -157,7 +174,8 @@ mod tests {
    async fn test_check_is_authenticated() {
     let repo = MockDbRepo::init().await;
     let auth_service = MockAuthService;
-    let app_data = get_app_data(repo, auth_service).await;
+    let emailer = MockEmailer;
+    let app_data = get_app_data(repo, emailer, auth_service).await; 
     let dev_or_emp = AuthDeveloperOrEmployer::Developer;
     let id: i64 = 1;
 

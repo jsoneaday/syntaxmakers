@@ -1,5 +1,6 @@
 use chrono::{DateTime, Utc};
 use sqlx::FromRow;
+use uuid::Uuid;
 use crate::common::authentication::password_hash::verify_password;
 
 #[derive(FromRow, Debug, Clone)]
@@ -61,6 +62,7 @@ pub struct DevEmailConfirm {
     pub is_confirmed: bool,
     pub is_valid: bool,
     pub new_email: String,
+    pub unique_key: Uuid
 }
 
 pub struct NewDeveloper {

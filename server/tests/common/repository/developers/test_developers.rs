@@ -1,18 +1,21 @@
 use fake::Fake;
 use fake::faker::internet::en::{Username, SafeEmail};
+use syntaxmakers_server::common::emailer::emailer::Emailer;
 use syntaxmakers_server::common::repository::base::{Repository, DbRepo};
 use syntaxmakers_server::common::repository::developers::models::{NewDeveloper, UpdateDeveloper};
 use syntaxmakers_server::common::repository::developers::repo::{
-    InsertDeveloperFn, ConfirmEmailFn, QueryAllDevelopersFn, QueryDeveloperByEmailFn, QueryDeveloperFn, UpdateDeveloperFn
+    InsertDeveloperFn, ConfirmEmailFn, QueryAllDevelopersFn, QueryDeveloperByEmailFn, QueryDeveloperFn, UpdateDeveloperFn, QueryLatestValidEmailConfirmFn
 };
 use syntaxmakers_server::common::repository::user::models::{ChangePassword, DeveloperOrEmployer};
 use syntaxmakers_server::common::repository::user::repo::ChangePasswordFn;
-use syntaxmakers_server::common_test::fixtures::{ get_fake_dev_desc, get_fake_email, get_fake_fullname, get_fake_user_name, init_fixtures, LANGUAGES};
+use syntaxmakers_server::common_test::fixtures::{ get_fake_dev_desc, get_fake_email, get_fake_fullname, get_fake_user_name, init_fixtures, MockEmailer, LANGUAGES};
+
 
 #[tokio::test]
 async fn test_create_developer_and_get_back() {
     let repo = DbRepo::init().await;
     init_fixtures().await;
+    let emailer = MockEmailer;
     
     let user_name = Username().fake::<String>();
     let full_name = get_fake_fullname();
@@ -27,7 +30,7 @@ async fn test_create_developer_and_get_back() {
         password: "test1234".to_string(),
         primary_lang_id,
         secondary_lang_id: None
-    }).await.unwrap();
+    }, &emailer).await.unwrap();
     let get_result = repo.query_developer(create_result.id).await.unwrap().unwrap();
     
     assert!(get_result.clone().id == create_result.id);
@@ -41,6 +44,7 @@ async fn test_create_developer_and_get_back() {
 async fn test_create_developers_and_check_does_not_allow_duplicate_email() {
     let repo = DbRepo::init().await;
     init_fixtures().await;
+    let emailer = MockEmailer;
     
     let user_name = Username().fake::<String>();
     let full_name = get_fake_fullname();
@@ -55,7 +59,7 @@ async fn test_create_developers_and_check_does_not_allow_duplicate_email() {
         password: "test1234".to_string(),
         primary_lang_id,
         secondary_lang_id: None
-    }).await.unwrap();
+    }, &emailer).await.unwrap();
     let create_result = repo.insert_developer(NewDeveloper {
         user_name: get_fake_user_name(),
         full_name: full_name.clone(),
@@ -64,7 +68,7 @@ async fn test_create_developers_and_check_does_not_allow_duplicate_email() {
         password: "test1234".to_string(),
         primary_lang_id,
         secondary_lang_id: None
-    }).await;
+    }, &emailer).await;
     
     assert!(create_result.is_err());
     assert!(create_result.err().unwrap().as_database_error().unwrap().is_unique_violation());
@@ -74,6 +78,7 @@ async fn test_create_developers_and_check_does_not_allow_duplicate_email() {
 async fn test_create_developers_and_check_does_not_allow_duplicate_user_name() {
     let repo = DbRepo::init().await;
     init_fixtures().await;
+    let emailer = MockEmailer;
     
     let user_name = Username().fake::<String>();
     let full_name = get_fake_fullname();
@@ -88,7 +93,7 @@ async fn test_create_developers_and_check_does_not_allow_duplicate_user_name() {
         password: "test1234".to_string(),
         primary_lang_id,
         secondary_lang_id: None
-    }).await.unwrap();
+    }, &emailer).await.unwrap();
     let create_result = repo.insert_developer(NewDeveloper {
         user_name: user_name,
         full_name: full_name,
@@ -97,7 +102,7 @@ async fn test_create_developers_and_check_does_not_allow_duplicate_user_name() {
         password: "test1234".to_string(),
         primary_lang_id,
         secondary_lang_id: None
-    }).await;
+    }, &emailer).await;
     
     assert!(create_result.is_err());
     assert!(create_result.err().unwrap().as_database_error().unwrap().is_unique_violation());
@@ -107,6 +112,7 @@ async fn test_create_developers_and_check_does_not_allow_duplicate_user_name() {
 async fn test_create_developer_and_get_back_by_email() {
     let repo = DbRepo::init().await;
     init_fixtures().await;
+    let emailer = MockEmailer;
     let user_name = Username().fake::<String>();
     let full_name = get_fake_fullname();
     let email = SafeEmail().fake::<String>();
@@ -120,7 +126,7 @@ async fn test_create_developer_and_get_back_by_email() {
         password: "test1234".to_string(),
         primary_lang_id,
         secondary_lang_id: None
-    }).await.unwrap();
+    }, &emailer).await.unwrap();
     let get_result = repo.query_developer_by_email(email.clone()).await.unwrap().unwrap();
     
     assert!(get_result.clone().id == create_result.id);
@@ -134,6 +140,7 @@ async fn test_create_developer_and_get_back_by_email() {
 async fn test_create_two_developers_and_get_all() {
     let repo = DbRepo::init().await;
     init_fixtures().await;
+    let emailer = MockEmailer;
     
     let create_result1 = repo.insert_developer(NewDeveloper {
         user_name: Username().fake::<String>(),
@@ -143,7 +150,7 @@ async fn test_create_two_developers_and_get_all() {
         password: "test1234".to_string(),
         primary_lang_id: 1,
         secondary_lang_id: None
-    }).await.unwrap();
+    }, &emailer).await.unwrap();
     let create_result2 = repo.insert_developer(NewDeveloper {
         user_name: Username().fake::<String>(),
         full_name: get_fake_fullname(),
@@ -152,7 +159,7 @@ async fn test_create_two_developers_and_get_all() {
         password: "test1234".to_string(),
         primary_lang_id: 1,
         secondary_lang_id: None
-    }).await.unwrap();
+    }, &emailer).await.unwrap();
 
     let get_all_result = repo.query_all_developers(10, 0).await.unwrap();
     
@@ -168,6 +175,7 @@ async fn test_create_two_developers_and_get_all() {
 async fn test_change_dev_password_fails_on_invalid_old_password() {
     let repo = DbRepo::init().await;
     init_fixtures().await;
+    let emailer = MockEmailer;
     
     let user_name = Username().fake::<String>();
     let full_name = get_fake_fullname();
@@ -183,7 +191,7 @@ async fn test_change_dev_password_fails_on_invalid_old_password() {
         password: old_password.clone(),
         primary_lang_id,
         secondary_lang_id: None
-    }).await.unwrap();
+    }, &emailer).await.unwrap();
 
     let update_result = repo.change_password(ChangePassword { 
         id: create_result.id, 
@@ -198,6 +206,7 @@ async fn test_change_dev_password_fails_on_invalid_old_password() {
 async fn test_change_dev_password_fails_on_invalid_new_password() {
     let repo = DbRepo::init().await;
     init_fixtures().await;
+    let emailer = Emailer;
     
     let user_name = Username().fake::<String>();
     let full_name = get_fake_fullname();
@@ -213,7 +222,7 @@ async fn test_change_dev_password_fails_on_invalid_new_password() {
         password: old_password.clone(),
         primary_lang_id,
         secondary_lang_id: None
-    }).await.unwrap();
+    }, &emailer).await.unwrap();
 
     let update_result = repo.change_password(ChangePassword { 
         id: create_result.id, 
@@ -228,6 +237,7 @@ async fn test_change_dev_password_fails_on_invalid_new_password() {
 async fn test_change_dev_password_succeeds_on_new_password() {
     let repo = DbRepo::init().await;
     init_fixtures().await;
+    let emailer = MockEmailer;
     
     let user_name = Username().fake::<String>();
     let full_name = get_fake_fullname();
@@ -243,7 +253,7 @@ async fn test_change_dev_password_succeeds_on_new_password() {
         password: old_password.clone(),
         primary_lang_id,
         secondary_lang_id: None
-    }).await.unwrap();
+    }, &emailer).await.unwrap();
 
     let update_result = repo.change_password(ChangePassword { 
         id: create_result.id, 
@@ -258,6 +268,7 @@ async fn test_change_dev_password_succeeds_on_new_password() {
 async fn test_update_developer_updates_fields() {
     let repo = DbRepo::init().await;
     init_fixtures().await;
+    let emailer = MockEmailer;
     
     let user_name = Username().fake::<String>();
     let full_name = get_fake_fullname();
@@ -273,7 +284,7 @@ async fn test_update_developer_updates_fields() {
         password: old_password.clone(),
         primary_lang_id,
         secondary_lang_id: None
-    }).await.unwrap();
+    }, &emailer).await.unwrap();
 
     let new_full_name = get_fake_fullname();
     let new_email = get_fake_email();
@@ -286,7 +297,7 @@ async fn test_update_developer_updates_fields() {
         description: get_fake_dev_desc(),
         primary_lang_id: new_primary_lang_id,
         secondary_lang_id: new_secondary_lang_id
-    }).await;    
+    }, &emailer).await;    
     let get_result = repo.query_developer(create_result.id).await.unwrap().unwrap();
     
     assert!(update_result.is_ok());
@@ -301,6 +312,7 @@ async fn test_update_developer_updates_fields() {
 async fn test_update_developer_updates_secondary_lang() {
     let repo = DbRepo::init().await;
     init_fixtures().await;
+    let emailer = MockEmailer;
     
     let user_name = Username().fake::<String>();
     let full_name = get_fake_fullname();
@@ -317,7 +329,7 @@ async fn test_update_developer_updates_secondary_lang() {
         password: old_password.clone(),
         primary_lang_id,
         secondary_lang_id
-    }).await.unwrap();
+    }, &emailer).await.unwrap();
 
     let new_full_name = get_fake_fullname();
     let new_email = get_fake_email();
@@ -330,7 +342,7 @@ async fn test_update_developer_updates_secondary_lang() {
         description: get_fake_dev_desc(),
         primary_lang_id: new_primary_lang_id,
         secondary_lang_id: new_secondary_lang_id
-    }).await;    
+    }, &emailer).await;    
     let get_result = repo.query_developer(create_result.id).await.unwrap().unwrap();
     
     assert!(get_result.clone().secondary_lang_id.unwrap() == new_secondary_lang_id.unwrap());
@@ -339,6 +351,7 @@ async fn test_update_developer_updates_secondary_lang() {
 #[tokio::test]
 async fn test_update_developer_succeeds_on_remove_new_secondary_lang() {
     let repo = DbRepo::init().await;
+    let emailer = MockEmailer;
     init_fixtures().await;
     
     let user_name = Username().fake::<String>();
@@ -356,7 +369,7 @@ async fn test_update_developer_succeeds_on_remove_new_secondary_lang() {
         password: old_password.clone(),
         primary_lang_id,
         secondary_lang_id
-    }).await.unwrap();
+    }, &emailer).await.unwrap();
 
     let new_full_name = get_fake_fullname();
     let new_email = get_fake_email();
@@ -368,7 +381,7 @@ async fn test_update_developer_succeeds_on_remove_new_secondary_lang() {
         description: get_fake_dev_desc(),
         primary_lang_id: new_primary_lang_id,
         secondary_lang_id: None
-    }).await;    
+    }, &emailer).await;    
     let get_result = repo.query_developer(create_result.id).await.unwrap().unwrap();
     
     assert!(get_result.clone().secondary_lang_id == None);
@@ -378,6 +391,7 @@ async fn test_update_developer_succeeds_on_remove_new_secondary_lang() {
 async fn test_insert_dev_and_confirm_email() {
     let repo = DbRepo::init().await;
     init_fixtures().await;
+    let emailer = MockEmailer;
     let email = get_fake_email();
     
     // insert_developer should create a new email confirm
@@ -389,9 +403,11 @@ async fn test_insert_dev_and_confirm_email() {
         password: "test1234".to_string(),
         primary_lang_id: 1,
         secondary_lang_id: None
-    }).await.unwrap();
+    }, &emailer).await.unwrap();
 
-    match repo.confirm_email(email, create_result1.id).await {
+    let email_confirm = repo.query_latest_valid_email_confirm(create_result1.id).await.unwrap().unwrap();
+
+    match repo.confirm_email(email, create_result1.id, email_confirm.unique_key.to_string()).await {
         Ok(_) => (),
         Err(e) => panic!("{}", e)
     }
@@ -401,9 +417,10 @@ async fn test_insert_dev_and_confirm_email() {
 async fn test_update_dev_email_and_confirm_it() {
     let repo = DbRepo::init().await;
     init_fixtures().await;
+    let emailer = MockEmailer;
     let old_email = get_fake_email();
     
-    let created_result1 = repo.insert_developer(NewDeveloper {
+    let create_result1 = repo.insert_developer(NewDeveloper {
         user_name: Username().fake::<String>(),
         full_name: get_fake_fullname(),
         email: old_email.clone(),
@@ -411,24 +428,26 @@ async fn test_update_dev_email_and_confirm_it() {
         password: "test1234".to_string(),
         primary_lang_id: 1,
         secondary_lang_id: None
-    }).await.unwrap();
+    }, &emailer).await.unwrap();
 
     let new_email = get_fake_email();
     _ = repo.update_developer(UpdateDeveloper {
-        id: created_result1.id,
+        id: create_result1.id,
         full_name: get_fake_fullname(),
         email: new_email.clone(),
         description: get_fake_dev_desc(),
         primary_lang_id: 2,
         secondary_lang_id: None
-    }).await.unwrap();
+    }, &emailer).await.unwrap();
+
+    let email_confirm = repo.query_latest_valid_email_confirm(create_result1.id).await.unwrap().unwrap();
     
-    match repo.confirm_email(new_email.clone(), created_result1.id).await {
+    match repo.confirm_email(new_email.clone(), create_result1.id, email_confirm.unique_key.to_string()).await {
         Ok(_) => (),
         Err(e) => panic!("{}", e)
     }
 
-    match repo.query_developer(created_result1.id).await {
+    match repo.query_developer(create_result1.id).await {
         Ok(dev) => match dev {
             Some(dev) => dev.email == new_email,
             None => panic!("Developer's email does not match after email confirm")

@@ -1,13 +1,13 @@
 use actix_web::web::Data;
 use crate::{
-    common::{repository::{base::Repository, salaries::repo::QueryAllSalariesFn}, authentication::auth_keys_service::Authenticator}, 
     app_state::AppState, 
+    common::{authentication::auth_keys_service::Authenticator, emailer::emailer::EmailerService, repository::{base::Repository, salaries::repo::QueryAllSalariesFn}}, 
     routes::user_error::UserError
 };
 use super::models::{SalaryResponder, SalaryResponders};
 
-pub async fn get_all_salaries<T: QueryAllSalariesFn + Repository, U: Authenticator>(
-    app_data: Data<AppState<T, U>>
+pub async fn get_all_salaries<T: QueryAllSalariesFn + Repository, E: EmailerService, U: Authenticator>(
+    app_data: Data<AppState<T, E, U>>
 ) -> Result<SalaryResponders, UserError> {
     let result = app_data.repo.query_all_salaries().await;
 
@@ -30,11 +30,12 @@ pub async fn get_all_salaries<T: QueryAllSalariesFn + Repository, U: Authenticat
 
 #[cfg(test)]
 mod tests {
-    use crate::{common_test::fixtures::{MockDbRepo, get_app_data}, common::{repository::salaries::models::Salary, authentication::auth_keys_service::AuthenticationError}};
+    use crate::{common::{authentication::auth_keys_service::AuthenticationError, emailer::model::EmailError, repository::salaries::models::Salary}, common_test::fixtures::{get_app_data, MockDbRepo}};
     use super::*;
     use async_trait::async_trait;
     use chrono::Utc;
     use jsonwebtoken::DecodingKey;
+    use uuid::Uuid;
 
     struct MockAuthService;
     
@@ -42,6 +43,18 @@ mod tests {
     impl Authenticator for MockAuthService {
         async fn is_authenticated(&self, _: String, _: Vec<(&str, &str)>, _: &DecodingKey) -> Result<bool, AuthenticationError> {
             Ok(true)
+        }
+    }
+
+    struct MockEmailer;
+    #[async_trait]
+    impl EmailerService for MockEmailer {
+        async fn send_email_confirm_requirement(&self, _: i64, _: String, _: Uuid) -> Result<(), EmailError> {
+            Ok(())
+        }
+
+        async fn receive_email_confirm(&self, _: i64, _: String, _: Uuid) -> Result<(), EmailError> {
+            Ok(())
         }
     }
 
@@ -63,7 +76,8 @@ mod tests {
     async fn test_get_all_salaries_route() {
         let repo = MockDbRepo::init().await;
         let auth_service = MockAuthService;
-        let app_data = get_app_data(repo, auth_service).await;
+        let emailer = MockEmailer;
+        let app_data = get_app_data(repo, emailer, auth_service).await; 
 
         let result = get_all_salaries(app_data).await.unwrap();
 

@@ -3,15 +3,25 @@ use log::error;
 use crate::{
     app_state::AppState, common::{
         authentication::auth_keys_service::Authenticator, 
-        repository::{application::{models::NewApplication, repo::{DevHasAppliedFn, InsertApplicationFn}}, base::Repository, developers::repo::QueryDeveloperFn, employers::repo::QueryEmployerFn}
+        emailer::emailer::EmailerService, 
+        repository::{
+            application::{models::NewApplication, repo::{DevHasAppliedFn, InsertApplicationFn}}, 
+            base::Repository, 
+            developers::repo::QueryDeveloperFn, 
+            employers::repo::QueryEmployerFn
+        }
     }, 
     routes::{auth_helper::check_is_authenticated, base_model::{OutputBool, OutputId}, user_error::UserError}
 };
 use super::models::NewApplicationForRoute;
 use crate::routes::authentication::models::DeveloperOrEmployer as AuthDeveloperOrEmployer;
 
-pub async fn create_application<T: InsertApplicationFn + Repository + QueryEmployerFn + QueryDeveloperFn, U: Authenticator>
-    (app_data: Data<AppState<T, U>>, new_application: Json<NewApplicationForRoute>, req: HttpRequest) -> Result<OutputId, UserError> {
+pub async fn create_application<
+    T: InsertApplicationFn + Repository + QueryEmployerFn + QueryDeveloperFn, 
+    E: EmailerService,
+    U: Authenticator
+    >
+    (app_data: Data<AppState<T, E, U>>, new_application: Json<NewApplicationForRoute>, req: HttpRequest) -> Result<OutputId, UserError> {
     
     let is_auth = check_is_authenticated(app_data.clone(), new_application.developer_id, AuthDeveloperOrEmployer::Developer, req).await;
     if !is_auth {
@@ -25,7 +35,8 @@ pub async fn create_application<T: InsertApplicationFn + Repository + QueryEmplo
     }
 }
 
-pub async fn developer_applied<T: DevHasAppliedFn + Repository, U: Authenticator>(app_data: Data<AppState<T, U>>, json: Json<NewApplicationForRoute>) -> Result<OutputBool, UserError> {    
+pub async fn developer_applied<T: DevHasAppliedFn + Repository, E: EmailerService, U: Authenticator>(app_data: Data<AppState<T, E, U>>, json: Json<NewApplicationForRoute>) 
+    -> Result<OutputBool, UserError> {    
     match app_data.repo.dev_has_applied(json.job_id, json.developer_id).await {
         Ok(applied) => Ok(OutputBool { result: applied }),
         Err(e) => Err(e.into())
@@ -36,7 +47,7 @@ pub async fn developer_applied<T: DevHasAppliedFn + Repository, U: Authenticator
 mod tests {
     use crate::{
         common::{
-            authentication::auth_keys_service::AuthenticationError, repository::{
+            authentication::auth_keys_service::AuthenticationError, emailer::model::EmailError, repository::{
                 base::EntityId, 
                 developers::{models::Developer, repo::HasUnconfirmedDevEmailFn}, 
                 employers::{models::Employer, repo::HasUnconfirmedEmpEmailFn}, 
@@ -51,6 +62,7 @@ mod tests {
     use chrono::Utc;
     use fake::{faker::{company::en::CompanyName, internet::en::FreeEmail}, Fake};
     use jsonwebtoken::DecodingKey;
+    use uuid::Uuid;
     use crate::common_test::fixtures::{get_app_data, get_fake_desc, get_fake_title};
     use super::*;
 
@@ -104,6 +116,18 @@ mod tests {
     impl AuthenticateDbFn for MockDbRepo {
         async fn authenticate_db(&self, _: UserDeveloperOrEmployer, _: String, _: String) -> Result<AuthenticateResult, sqlx::Error> {
             Ok(AuthenticateResult::Success{ id: 1 })
+        }
+    }
+
+    struct MockEmailer;
+    #[async_trait]
+    impl EmailerService for MockEmailer {
+        async fn send_email_confirm_requirement(&self, _: i64, _: String, _: Uuid) -> Result<(), EmailError> {
+            Ok(())
+        }
+
+        async fn receive_email_confirm(&self, _: i64, _: String, _: Uuid) -> Result<(), EmailError> {
+            Ok(())
         }
     }
 
@@ -174,7 +198,8 @@ mod tests {
         init_fixtures().await;
         let repo = MockDbRepo::init().await;
         let auth_service = MockAuthService;
-        let app_data = get_app_data(repo, auth_service).await;
+        let emailer = MockEmailer;
+        let app_data = get_app_data(repo, emailer, auth_service).await; 
 
         let login_result = login(
             app_data.clone(), 
@@ -198,7 +223,8 @@ mod tests {
         init_fixtures().await;
         let repo = MockDbRepo::init().await;
         let auth_service = MockAuthService;
-        let app_data = get_app_data(repo, auth_service).await;
+        let emailer = MockEmailer;
+        let app_data = get_app_data(repo, emailer, auth_service).await; 
 
         let response = developer_applied(app_data, Json(NewApplicationForRoute { job_id: 1, developer_id: 1 })).await.unwrap();
 
