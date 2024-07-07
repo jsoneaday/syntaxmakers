@@ -47,13 +47,14 @@ export default function Login({ toggleOpen }: LoginProps) {
       email,
       password
     )
-      .then(({ message: accessToken, status }: LoginResult) => {
+      .then(({ message, status }: LoginResult) => {
         if (status === 200) {
+          // when successful message is access_token!
           if (devOrEmp === UiDevOrEmployer.Developer) {
-            getDeveloperByEmail(email, accessToken)
+            getDeveloperByEmail(email, message)
               .then((dev) => {
                 if (dev) {
-                  const profile = convertDev(dev, accessToken);
+                  const profile = convertDev(dev, message);
 
                   startTransition(() => {
                     setProfile(profile);
@@ -68,10 +69,10 @@ export default function Login({ toggleOpen }: LoginProps) {
                 console.log("Developer: failed to get developer", error);
               });
           } else {
-            getEmployerByEmail(email, accessToken)
+            getEmployerByEmail(email, message)
               .then((emp) => {
                 if (emp) {
-                  const profile = convertEmp(emp, accessToken);
+                  const profile = convertEmp(emp, message);
 
                   setProfile(profile);
                   toggleOpen();
@@ -86,9 +87,7 @@ export default function Login({ toggleOpen }: LoginProps) {
           }
         } else {
           setErrorMessage(
-            status === 401
-              ? "Login failed. Invalid email or password"
-              : "Login has failed. Please try again"
+            status === 401 ? "Login failed. Invalid email or password" : message
           );
         }
       })

@@ -1,7 +1,7 @@
 .modal-container {
   outline: 0;
   top: 5em;
-  width: 450px;
+  max-width: 450px;
   padding: 2em;
   border: solid 1px var(--border-cl);
   border-radius: 5px;

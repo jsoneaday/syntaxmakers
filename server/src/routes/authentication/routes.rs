@@ -10,7 +10,7 @@ use crate::{
     app_state::AppState, 
     common::{
         authentication::auth_keys_service::{decode_token, get_token, Authenticator, REFRESH_TOKEN_LABEL, STANDARD_ACCESS_TOKEN_EXPIRATION, STANDARD_REFRESH_TOKEN_EXPIRATION}, repository::{
-            base::Repository, developers::repo::{HasUnconfirmedEmailFn, QueryDeveloperFn}, employers::repo::QueryEmployerFn, user::{models::{AuthenticateResult, DeveloperOrEmployer as UserDeveloperOrEmployer}, repo::AuthenticateDbFn}
+            base::Repository, developers::repo::{HasUnconfirmedDevEmailFn, QueryDeveloperFn}, employers::repo::{HasUnconfirmedEmpEmailFn, QueryEmployerFn}, user::{models::{AuthenticateResult, DeveloperOrEmployer as UserDeveloperOrEmployer}, repo::AuthenticateDbFn}
         }
     }, 
     routes::authentication::models::DeveloperOrEmployer as AuthDeveloperOrEmployer
@@ -54,26 +54,41 @@ pub async fn refresh_access_token<T: Repository, U: Authenticator>(app_data: Dat
     };
 }
 
-pub async fn login<T: HasUnconfirmedEmailFn + AuthenticateDbFn + QueryDeveloperFn + QueryEmployerFn + Repository, U: Authenticator>(app_data: Data<AppState<T, U>>, json: Json<LoginCredential>) 
-    -> HttpResponse {    
-    match app_data.repo.has_unconfirmed_email(json.email.clone()).await {
-        Ok(has_unconfirmed) => if has_unconfirmed {
-            error!("Has unconfirmed email");
-            return HttpResponse::Unauthorized()
-            .content_type(ContentType::json())
-            .body("Email change confirmation has not been approved yet. You must approve the confirmation before logging in.");
-        },
-        Err(e) => {
-            error!("Has unconfirmed email {}", e);
-            return HttpResponse::Unauthorized()
-            .content_type(ContentType::json())
-            .body("Something has gone wrong while checking for unconfirmed emails confirmations");
-        }
-    };
-
+pub async fn login<T: HasUnconfirmedDevEmailFn + HasUnconfirmedEmpEmailFn + AuthenticateDbFn + QueryDeveloperFn + QueryEmployerFn + Repository, U: Authenticator>(app_data: Data<AppState<T, U>>, json: Json<LoginCredential>) 
+    -> HttpResponse {
     let dev_or_emp = if json.dev_or_emp == AuthDeveloperOrEmployer::Developer {
+        match app_data.repo.has_unconfirmed_dev_email(json.email.clone()).await {
+            Ok(has_unconfirmed) => if has_unconfirmed {
+                println!("Has unconfirmed email");
+                return HttpResponse::NotAcceptable()
+                .content_type(ContentType::json())
+                .body("An email change confirmation is still pending. Please check your email.");
+            },
+            Err(e) => {
+                println!("Failed to check if has unconfirmed email {}", e);
+                return HttpResponse::NotAcceptable()
+                .content_type(ContentType::json())
+                .body("Something has gone wrong while checking for unconfirmed email confirmations");
+            }
+        };
+
         UserDeveloperOrEmployer::Developer
     } else {
+        match app_data.repo.has_unconfirmed_emp_email(json.email.clone()).await {
+            Ok(has_unconfirmed) => if has_unconfirmed {
+                println!("Has unconfirmed email");
+                return HttpResponse::NotAcceptable()
+                .content_type(ContentType::json())
+                .body("An email change confirmation is still pending. Please check your email.");
+            },
+            Err(e) => {
+                println!("Failed to check if has unconfirmed email {}", e);
+                return HttpResponse::NotAcceptable()
+                .content_type(ContentType::json())
+                .body("Something has gone wrong while checking for unconfirmed email confirmations");
+            }
+        };
+
         UserDeveloperOrEmployer::Employer
     };
     let auth_result = app_data.repo.authenticate_db(dev_or_emp.clone(), json.email.clone(), json.password.clone()).await;
@@ -242,8 +257,8 @@ mod tests {
     }   
 
     #[async_trait]
-    impl HasUnconfirmedEmailFn for MockDbRepo {
-        async fn has_unconfirmed_email(&self, _: String) -> Result<bool, sqlx::Error> {
+    impl HasUnconfirmedDevEmailFn for MockDbRepo {
+        async fn has_unconfirmed_dev_email(&self, _: String) -> Result<bool, sqlx::Error> {
             Ok(false)
         }
     }    

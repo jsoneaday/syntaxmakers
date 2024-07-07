@@ -10,7 +10,6 @@ use crate::{
             employers::repo::QueryEmployerFn
         }
     }, 
-    common_test::fixtures::get_fake_dev_desc, 
     routes::{auth_helper::check_is_authenticated, base_model::{IdAndPagingModel, OutputBool, OutputId}, route_utils::get_header_strings, user_error::UserError}
 };
 use super::models::{DeveloperResponder, DeveloperResponders, NewDeveloperForRoute, UpdateDeveloperForRoute};
@@ -45,7 +44,7 @@ pub async fn create_developer<T: QueryDeveloperByUserNameFn + QueryDeveloperByEm
         user_name: json.user_name.to_owned(),
         full_name: json.full_name.to_owned(),
         email: json.email.to_owned(),
-        description: get_fake_dev_desc(),
+        description: json.description.to_owned(),
         password: json.password.to_owned(),
         primary_lang_id: json.primary_lang_id,
         secondary_lang_id: json.secondary_lang_id

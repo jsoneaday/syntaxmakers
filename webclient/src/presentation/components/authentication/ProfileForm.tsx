@@ -617,11 +617,7 @@ export function ProfileForm({
             <section className="form-section">
               <span>Description</span>
               <div
-                style={
-                  isModalMode
-                    ? { marginTop: "1em", marginBottom: "3em", width: "50%" }
-                    : { marginTop: "1em", marginBottom: "3em", width: "75%" }
-                }
+                style={{ marginTop: "1em", marginBottom: "3em", width: "75%" }}
               >
                 <MarkdownEditor
                   mdRef={mdRef}

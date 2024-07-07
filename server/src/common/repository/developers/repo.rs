@@ -417,13 +417,13 @@ impl QueryAllDevelopersFn for DbRepo {
 }
 
 #[async_trait]
-pub trait HasUnconfirmedEmailFn {
-    async fn has_unconfirmed_email(&self, email: String) -> Result<bool, Error>;
+pub trait HasUnconfirmedDevEmailFn {
+    async fn has_unconfirmed_dev_email(&self, email: String) -> Result<bool, Error>;
 }
 
 #[async_trait]
-impl HasUnconfirmedEmailFn for DbRepo {
-    async fn has_unconfirmed_email(&self, email: String) -> Result<bool, Error> {
+impl HasUnconfirmedDevEmailFn for DbRepo {
+    async fn has_unconfirmed_dev_email(&self, email: String) -> Result<bool, Error> {
         internal::has_unconfirmed_email(self.get_conn(), email).await
     }
 }

@@ -31,14 +31,17 @@ export async function login(
     });
 
     if (response.ok) {
+      console.log("ok");
       const access_token: string = await response.text();
       return {
         message: access_token,
         status: response.status,
       };
     }
+    const message = await response.text();
+    console.log("not ok", message);
     return {
-      message: response.statusText,
+      message,
       status: response.status,
     };
   } catch (err) {

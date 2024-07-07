@@ -48,16 +48,16 @@ mod internal {
         let existing_employer = query_employer(conn, update_employer.id).await.unwrap();
 
         let mut tx = conn.begin().await.unwrap();
+        // notice: email is not reset here it is reset later once user confirms new email
         let update_result = query::<_>(
             r"
                 update employer
-                set updated_at = $2, full_name = $3, email = $4, company_id = $5
+                set updated_at = $2, full_name = $3, company_id = $4
                 where id = $1
             ")
             .bind(update_employer.id)
             .bind(Utc::now())
             .bind(update_employer.full_name)
-            .bind(update_employer.email.clone())
             .bind(update_employer.company_id)
             .execute(&mut *tx)
             .await;
@@ -333,13 +333,13 @@ impl QueryAllEmployersFn for DbRepo {
 }
 
 #[async_trait]
-pub trait HasUnconfirmedEmailFn {
-    async fn has_unconfirmed_email(&self, email: String) -> Result<bool, Error>;
+pub trait HasUnconfirmedEmpEmailFn {
+    async fn has_unconfirmed_emp_email(&self, email: String) -> Result<bool, Error>;
 }
 
 #[async_trait]
-impl HasUnconfirmedEmailFn for DbRepo {
-    async fn has_unconfirmed_email(&self, email: String) -> Result<bool, Error> {
+impl HasUnconfirmedEmpEmailFn for DbRepo {
+    async fn has_unconfirmed_emp_email(&self, email: String) -> Result<bool, Error> {
         internal::has_unconfirmed_email(self.get_conn(), email).await
     }
 }
