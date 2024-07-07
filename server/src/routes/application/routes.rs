@@ -39,7 +39,7 @@ mod tests {
             authentication::auth_keys_service::AuthenticationError, repository::{
                 base::EntityId, 
                 developers::{models::Developer, repo::HasUnconfirmedDevEmailFn}, 
-                employers::models::Employer, 
+                employers::{models::Employer, repo::HasUnconfirmedEmpEmailFn}, 
                 jobs::models::Job, 
                 user::{models::{AuthenticateResult, DeveloperOrEmployer as UserDeveloperOrEmployer}, repo::AuthenticateDbFn}
             }            
@@ -161,6 +161,13 @@ mod tests {
             Ok(false)
         }
     }  
+
+    #[async_trait]
+    impl HasUnconfirmedEmpEmailFn for MockDbRepo {
+        async fn has_unconfirmed_emp_email(&self, _: String) -> Result<bool, sqlx::Error> {
+            Ok(false)
+        }
+    } 
 
     #[tokio::test]
     async fn test_create_job_application_route() {

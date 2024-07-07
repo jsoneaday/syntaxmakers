@@ -192,7 +192,7 @@ async fn test_create_employer_then_update_and_confirm_new_field_values() {
     let updated = repo.query_employer(create_result.id).await.unwrap().unwrap();
 
     assert!(updated.full_name == full_name);
-    assert!(updated.email == email);
+    // deliberately not testing email match as it won't be same until email confirm which is tested below
     assert!(updated.company_id == update_company_id);
 }
 

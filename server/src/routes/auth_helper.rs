@@ -75,7 +75,7 @@ mod tests {
     use crate::{
         common::{
             authentication::auth_keys_service::{AuthenticationError, Authenticator}, 
-            repository::{developers::{models::Developer, repo::HasUnconfirmedDevEmailFn}, employers::models::Employer, user::{models::{AuthenticateResult, DeveloperOrEmployer as UserDeveloperOrEmployer}, repo::AuthenticateDbFn}}
+            repository::{developers::{models::Developer, repo::HasUnconfirmedDevEmailFn}, employers::{models::Employer, repo::HasUnconfirmedEmpEmailFn}, user::{models::{AuthenticateResult, DeveloperOrEmployer as UserDeveloperOrEmployer}, repo::AuthenticateDbFn}}
         }, 
         common_test::fixtures::{get_app_data, get_fake_dev_desc, get_fake_email, get_fake_httprequest_with_bearer_token}, routes::authentication::{models::LoginCredential, routes::login}
     };
@@ -145,6 +145,13 @@ mod tests {
             Ok(false)
         }
     }  
+
+    #[async_trait]
+    impl HasUnconfirmedEmpEmailFn for MockDbRepo {
+        async fn has_unconfirmed_emp_email(&self, _: String) -> Result<bool, sqlx::Error> {
+            Ok(false)
+        }
+    } 
 
     #[tokio::test]
    async fn test_check_is_authenticated() {

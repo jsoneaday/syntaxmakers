@@ -261,6 +261,13 @@ mod tests {
         async fn has_unconfirmed_dev_email(&self, _: String) -> Result<bool, sqlx::Error> {
             Ok(false)
         }
+    }  
+
+    #[async_trait]
+    impl HasUnconfirmedEmpEmailFn for MockDbRepo {
+        async fn has_unconfirmed_emp_email(&self, _: String) -> Result<bool, sqlx::Error> {
+            Ok(false)
+        }
     }    
 
     #[tokio::test]
