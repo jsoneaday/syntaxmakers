@@ -28,11 +28,10 @@ mod tests {
     use fake::{faker::address::en::CountryName, Fake};
     use async_trait::async_trait;
     use jsonwebtoken::DecodingKey;
-    use uuid::Uuid;
     use super::*;
     use crate::{
-        common::{authentication::auth_keys_service::AuthenticationError, emailer::model::EmailError, repository::industries::{models::Industry, repo::QueryAllIndustriesFn}}, 
-        common_test::fixtures::{get_app_data, MockDbRepo}
+        common::{authentication::auth_keys_service::AuthenticationError, repository::industries::{models::Industry, repo::QueryAllIndustriesFn}}, 
+        common_test::fixtures::{get_app_data, MockDbRepo, MockEmailer}
     };
 
     struct MockAuthService;
@@ -40,18 +39,6 @@ mod tests {
     impl Authenticator for MockAuthService {
         async fn is_authenticated(&self, _: String, _: Vec<(&str, &str)>, _: &DecodingKey) -> Result<bool, AuthenticationError> {
             Ok(true)
-        }
-    }
-
-    struct MockEmailer;
-    #[async_trait]
-    impl EmailerService for MockEmailer {
-        async fn send_email_confirm_requirement(&self, _: i64, _: String, _: Uuid) -> Result<(), EmailError> {
-            Ok(())
-        }
-
-        async fn receive_email_confirm(&self, _: i64, _: String, _: Uuid) -> Result<(), EmailError> {
-            Ok(())
         }
     }
 

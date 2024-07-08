@@ -200,12 +200,12 @@ mod tests {
     use chrono::Utc;
     use fake::{faker::internet::en::FreeEmail, Fake};
     use jsonwebtoken::DecodingKey;
-    use uuid::Uuid;
     use crate::{
         common::{
-            authentication::auth_keys_service::{AuthenticationError, STANDARD_REFRESH_TOKEN_EXPIRATION}, emailer::model::EmailError, repository::{developers::models::Developer, employers::models::Employer, user::repo::AuthenticateDbFn}
+            authentication::auth_keys_service::{AuthenticationError, STANDARD_REFRESH_TOKEN_EXPIRATION}, 
+            repository::{developers::models::Developer, employers::models::Employer, user::repo::AuthenticateDbFn}
         }, 
-        common_test::fixtures::{get_app_data, get_fake_dev_desc, get_fake_email}
+        common_test::fixtures::{get_app_data, get_fake_dev_desc, get_fake_email, MockEmailer}
     };
 
     const DEV_USERNAME: &str = "tester";
@@ -216,18 +216,6 @@ mod tests {
     impl Authenticator for MockAuthService {
         async fn is_authenticated(&self, _: String, _: Vec<(&str, &str)>, _: &DecodingKey) -> Result<bool, AuthenticationError> {
             Ok(true)
-        }
-    }
-
-    struct MockEmailer;
-    #[async_trait]
-    impl EmailerService for MockEmailer {
-        async fn send_email_confirm_requirement(&self, _: i64, _: String, _: Uuid) -> Result<(), EmailError> {
-            Ok(())
-        }
-
-        async fn receive_email_confirm(&self, _: i64, _: String, _: Uuid) -> Result<(), EmailError> {
-            Ok(())
         }
     }
 

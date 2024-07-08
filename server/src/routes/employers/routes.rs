@@ -244,36 +244,23 @@ mod tests {
     use std::vec;
     use crate::{
         common::{
-            authentication::auth_keys_service::AuthenticationError, emailer::model::EmailError, repository::{
+            authentication::auth_keys_service::AuthenticationError, repository::{
                 base::EntityId, employers::{models::Employer, repo::QueryAllEmployersFn}, user::models::DeveloperOrEmployer
             }
         }, 
-        common_test::fixtures::{get_app_data, get_fake_email, get_fake_fullname, get_fake_httprequest_with_bearer_token, MockDbRepo}
+        common_test::fixtures::{get_app_data, get_fake_email, get_fake_fullname, get_fake_httprequest_with_bearer_token, MockEmailer, MockDbRepo}
     };
     use super::*;
     use async_trait::async_trait;
     use chrono::Utc;
     use fake::{faker::internet::en::{Username, FreeEmail}, Fake};
     use jsonwebtoken::DecodingKey;
-    use uuid::Uuid;
 
     struct MockAuthService;
     #[async_trait]
     impl Authenticator for MockAuthService {
         async fn is_authenticated(&self, _: String, _: Vec<(&str, &str)>, _: &DecodingKey) -> Result<bool, AuthenticationError> {
             Ok(true)
-        }
-    }
-
-    struct MockEmailer;
-    #[async_trait]
-    impl EmailerService for MockEmailer {
-        async fn send_email_confirm_requirement(&self, _: i64, _: String, _: Uuid) -> Result<(), EmailError> {
-            Ok(())
-        }
-
-        async fn receive_email_confirm(&self, _: i64, _: String, _: Uuid) -> Result<(), EmailError> {
-            Ok(())
         }
     }
 
@@ -325,7 +312,7 @@ mod tests {
         }
     }
 
-    mod mod_create_employer_route {
+    mod mod_create_employer_route {     
         use super::*;
 
         #[async_trait]

@@ -77,12 +77,16 @@ mod tests {
     use chrono::Utc;
     use fake::{faker::internet::en::FreeEmail, Fake};
     use jsonwebtoken::DecodingKey;
-    use uuid::Uuid;
     use crate::{
         common::{
-            authentication::auth_keys_service::{AuthenticationError, Authenticator}, emailer::model::EmailError, repository::{developers::{models::Developer, repo::HasUnconfirmedDevEmailFn}, employers::{models::Employer, repo::HasUnconfirmedEmpEmailFn}, user::{models::{AuthenticateResult, DeveloperOrEmployer as UserDeveloperOrEmployer}, repo::AuthenticateDbFn}}
+            authentication::auth_keys_service::{AuthenticationError, Authenticator}, 
+            repository::{
+                developers::{models::Developer, repo::HasUnconfirmedDevEmailFn}, 
+                employers::{models::Employer, repo::HasUnconfirmedEmpEmailFn}, 
+                user::{models::{AuthenticateResult, DeveloperOrEmployer as UserDeveloperOrEmployer}, repo::AuthenticateDbFn}
+            }
         }, 
-        common_test::fixtures::{get_app_data, get_fake_dev_desc, get_fake_email, get_fake_httprequest_with_bearer_token}, routes::authentication::{models::LoginCredential, routes::login}
+        common_test::fixtures::{get_app_data, get_fake_dev_desc, get_fake_email, get_fake_httprequest_with_bearer_token, MockEmailer}, routes::authentication::{models::LoginCredential, routes::login}
     };
 
     const DEV_USERNAME: &str = "tester";
@@ -107,18 +111,6 @@ mod tests {
     impl AuthenticateDbFn for MockDbRepo {
         async fn authenticate_db(&self, _: UserDeveloperOrEmployer, _: String, _: String) -> Result<AuthenticateResult, sqlx::Error> {
             Ok(AuthenticateResult::Success{ id: 1 })
-        }
-    }
-
-    struct MockEmailer;
-    #[async_trait]
-    impl EmailerService for MockEmailer {
-        async fn send_email_confirm_requirement(&self, _: i64, _: String, _: Uuid) -> Result<(), EmailError> {
-            Ok(())
-        }
-
-        async fn receive_email_confirm(&self, _: i64, _: String, _: Uuid) -> Result<(), EmailError> {
-            Ok(())
         }
     }
 

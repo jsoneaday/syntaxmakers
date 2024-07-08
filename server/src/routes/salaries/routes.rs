@@ -30,12 +30,14 @@ pub async fn get_all_salaries<T: QueryAllSalariesFn + Repository, E: EmailerServ
 
 #[cfg(test)]
 mod tests {
-    use crate::{common::{authentication::auth_keys_service::AuthenticationError, emailer::model::EmailError, repository::salaries::models::Salary}, common_test::fixtures::{get_app_data, MockDbRepo}};
+    use crate::{
+        common::{authentication::auth_keys_service::AuthenticationError, repository::salaries::models::Salary}, 
+        common_test::fixtures::{get_app_data, MockDbRepo, MockEmailer}
+    };
     use super::*;
     use async_trait::async_trait;
     use chrono::Utc;
     use jsonwebtoken::DecodingKey;
-    use uuid::Uuid;
 
     struct MockAuthService;
     
@@ -43,18 +45,6 @@ mod tests {
     impl Authenticator for MockAuthService {
         async fn is_authenticated(&self, _: String, _: Vec<(&str, &str)>, _: &DecodingKey) -> Result<bool, AuthenticationError> {
             Ok(true)
-        }
-    }
-
-    struct MockEmailer;
-    #[async_trait]
-    impl EmailerService for MockEmailer {
-        async fn send_email_confirm_requirement(&self, _: i64, _: String, _: Uuid) -> Result<(), EmailError> {
-            Ok(())
-        }
-
-        async fn receive_email_confirm(&self, _: i64, _: String, _: Uuid) -> Result<(), EmailError> {
-            Ok(())
         }
     }
 

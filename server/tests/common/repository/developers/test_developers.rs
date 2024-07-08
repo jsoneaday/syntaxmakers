@@ -1,6 +1,5 @@
 use fake::Fake;
 use fake::faker::internet::en::{Username, SafeEmail};
-use syntaxmakers_server::common::emailer::emailer::Emailer;
 use syntaxmakers_server::common::repository::base::{Repository, DbRepo};
 use syntaxmakers_server::common::repository::developers::models::{NewDeveloper, UpdateDeveloper};
 use syntaxmakers_server::common::repository::developers::repo::{
@@ -206,7 +205,7 @@ async fn test_change_dev_password_fails_on_invalid_old_password() {
 async fn test_change_dev_password_fails_on_invalid_new_password() {
     let repo = DbRepo::init().await;
     init_fixtures().await;
-    let emailer = Emailer;
+    let emailer = MockEmailer;
     
     let user_name = Username().fake::<String>();
     let full_name = get_fake_fullname();

@@ -48,11 +48,10 @@ mod tests {
     use jsonwebtoken::DecodingKey;
     use sqlx::Error as SqlxError;
     use chrono::Utc;
-    use uuid::Uuid;
     use super::*;
     use crate::{
-        common::{authentication::auth_keys_service::AuthenticationError, emailer::model::EmailError, repository::{base::EntityId, companies::{models::Company, repo::{InsertCompanyFn, QueryAllCompaniesFn}}}}, 
-        common_test::fixtures::{get_app_data, get_company_logo_randomly, MockDbRepo}
+        common::{authentication::auth_keys_service::AuthenticationError, repository::{base::EntityId, companies::{models::Company, repo::{InsertCompanyFn, QueryAllCompaniesFn}}}}, 
+        common_test::fixtures::{get_app_data, get_company_logo_randomly, MockDbRepo, MockEmailer}
     };
     use async_trait::async_trait;
     use fake::{faker::company::en::CompanyName, Fake};
@@ -63,18 +62,6 @@ mod tests {
     impl Authenticator for MockAuthService {
         async fn is_authenticated(&self, _: String, _: Vec<(&str, &str)>, _: &DecodingKey) -> Result<bool, AuthenticationError> {
             Ok(true)
-        }
-    }
-
-    struct MockEmailer;
-    #[async_trait]
-    impl EmailerService for MockEmailer {
-        async fn send_email_confirm_requirement(&self, _: i64, _: String, _: Uuid) -> Result<(), EmailError> {
-            Ok(())
-        }
-
-        async fn receive_email_confirm(&self, _: i64, _: String, _: Uuid) -> Result<(), EmailError> {
-            Ok(())
         }
     }
 

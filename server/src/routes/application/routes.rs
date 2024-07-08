@@ -47,7 +47,7 @@ pub async fn developer_applied<T: DevHasAppliedFn + Repository, E: EmailerServic
 mod tests {
     use crate::{
         common::{
-            authentication::auth_keys_service::AuthenticationError, emailer::model::EmailError, repository::{
+            authentication::auth_keys_service::AuthenticationError, repository::{
                 base::EntityId, 
                 developers::{models::Developer, repo::HasUnconfirmedDevEmailFn}, 
                 employers::{models::Employer, repo::HasUnconfirmedEmpEmailFn}, 
@@ -55,14 +55,13 @@ mod tests {
                 user::{models::{AuthenticateResult, DeveloperOrEmployer as UserDeveloperOrEmployer}, repo::AuthenticateDbFn}
             }            
         }, 
-        common_test::fixtures::{get_fake_dev_desc, get_fake_email, get_fake_fullname, get_fake_httprequest_with_bearer_token, init_fixtures, COUNTRIES, INDUSTRIES, LANGUAGES, SALARY_BASE}, 
+        common_test::fixtures::{get_fake_dev_desc, get_fake_email, get_fake_fullname, get_fake_httprequest_with_bearer_token, init_fixtures, MockEmailer, COUNTRIES, INDUSTRIES, LANGUAGES, SALARY_BASE}, 
         routes::authentication::{models::LoginCredential, routes::login}
     };
     use async_trait::async_trait;
     use chrono::Utc;
     use fake::{faker::{company::en::CompanyName, internet::en::FreeEmail}, Fake};
     use jsonwebtoken::DecodingKey;
-    use uuid::Uuid;
     use crate::common_test::fixtures::{get_app_data, get_fake_desc, get_fake_title};
     use super::*;
 
@@ -116,18 +115,6 @@ mod tests {
     impl AuthenticateDbFn for MockDbRepo {
         async fn authenticate_db(&self, _: UserDeveloperOrEmployer, _: String, _: String) -> Result<AuthenticateResult, sqlx::Error> {
             Ok(AuthenticateResult::Success{ id: 1 })
-        }
-    }
-
-    struct MockEmailer;
-    #[async_trait]
-    impl EmailerService for MockEmailer {
-        async fn send_email_confirm_requirement(&self, _: i64, _: String, _: Uuid) -> Result<(), EmailError> {
-            Ok(())
-        }
-
-        async fn receive_email_confirm(&self, _: i64, _: String, _: Uuid) -> Result<(), EmailError> {
-            Ok(())
         }
     }
 

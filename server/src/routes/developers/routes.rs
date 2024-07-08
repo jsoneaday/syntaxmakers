@@ -235,17 +235,18 @@ mod tests {
     use crate::{
         common::{
             authentication::auth_keys_service::AuthenticationError, 
-            emailer::model::EmailError, 
             repository::{base::EntityId, developers::models::Developer, user::{models::{ChangePassword, DeveloperOrEmployer}, repo::ChangePasswordFn}}
         }, 
-        common_test::fixtures::{get_app_data, get_fake_dev_desc, get_fake_email, get_fake_fullname, get_fake_httprequest_with_bearer_token, init_fixtures, MockDbRepo}, 
+        common_test::fixtures::{
+            get_app_data, get_fake_dev_desc, get_fake_email, get_fake_fullname, get_fake_httprequest_with_bearer_token, init_fixtures, get_fake_user_name,
+            MockEmailer, MockDbRepo, LANGUAGES
+        }, 
         routes::user::{models::ChangePasswordRoute, routes::change_password}
     };
     use async_trait::async_trait;
     use chrono::Utc;
     use fake::{faker::internet::en::Username, Fake};
     use jsonwebtoken::DecodingKey;
-    use uuid::Uuid;
     use super::*;
 
     const DEV_USERNAME: &str = "tester";
@@ -254,18 +255,6 @@ mod tests {
     impl Authenticator for MockAuthService {
         async fn is_authenticated(&self, _: String, _: Vec<(&str, &str)>, _: &DecodingKey) -> Result<bool, AuthenticationError> {
             Ok(true)
-        }
-    }
-
-    struct MockEmailer;
-    #[async_trait]
-    impl EmailerService for MockEmailer {
-        async fn send_email_confirm_requirement(&self, _: i64, _: String, _: Uuid) -> Result<(), EmailError> {
-            Ok(())
-        }
-
-        async fn receive_email_confirm(&self, _: i64, _: String, _: Uuid) -> Result<(), EmailError> {
-            Ok(())
         }
     }
 
@@ -325,8 +314,7 @@ mod tests {
         }
     }
 
-    mod mod_create_developer_route {
-        use crate::common_test::fixtures::{get_fake_email, get_fake_user_name, init_fixtures, LANGUAGES};
+    mod mod_create_developer_route {        
         use super::*;
 
         pub struct CreateDevMockDbRepo;

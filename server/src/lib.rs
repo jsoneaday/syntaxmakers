@@ -156,7 +156,7 @@ pub async fn run() -> std::io::Result<()> {
     
     let app_data = actix_web::web::Data::new(AppState{
         repo: DbRepo::init().await,
-        emailer: Emailer,
+        emailer: Emailer::new(),
         auth_service: AuthService,
         auth_keys: init_auth_keys().await
     });    

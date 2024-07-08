@@ -161,7 +161,7 @@ pub async fn init_fixtures() {
 
 async fn setup_data() {
     let repo = DbRepo::init().await;
-    let emailer = Emailer;
+    let emailer = Emailer::new();
 
     let devs_count = repo.query_all_developers(1000, 0).await.unwrap().len();
     if devs_count == 0 {
@@ -291,7 +291,7 @@ impl Repository for MockDbRepo {
 pub struct MockEmailer;
 #[async_trait]
 impl EmailerService for MockEmailer {
-    async fn send_email_confirm_requirement(&self, _: i64, _: String, _: Uuid) -> Result<(), EmailError> {
+    async fn send_email_confirm_requirement(&self, _: i64, _: String, _: String, _: String, _: Uuid) -> Result<(), EmailError> {
         Ok(())
     }
 

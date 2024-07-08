@@ -5,7 +5,9 @@ pub enum EmailError {
     #[display(fmt = "Confirmation email failed to send")]
     EmailConfirmationSendFailed,
     #[display(fmt = "Confirmation email receive processing failed")]
-    EmailConfirmationReceiveFailed
+    EmailConfirmationReceiveFailed,
+    #[display(fmt = "Sending email failed")]
+    EmailSendFailed
 }
 
 impl sqlx::error::DatabaseError for EmailError {

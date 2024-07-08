@@ -12,6 +12,8 @@ mod internal {
     use chrono::Utc;
     use sqlx::PgConnection;
     use uuid::Uuid;    
+    use crate::common::emailer::emailer::{CHANGE_EMAIL_CONFIRMATION_BODY, SIGNUP_EMAIL_CONFIRMATION_BODY};
+
     use super::*;    
 
     pub async fn insert_employer<E: EmailerService + Send + Sync>(conn: &Pool<Postgres>, new_employer: NewEmployer, emailer: &E) -> Result<EntityId, Error> {
@@ -19,7 +21,7 @@ mod internal {
 
         let employer = query_as::<_, EntityId>("insert into employer (user_name, full_name, email, password, company_id) values ($1, $2, $3, $4, $5) returning id")
             .bind(new_employer.user_name)
-            .bind(new_employer.full_name)
+            .bind(new_employer.full_name.clone())
             .bind(new_employer.email.clone())
             .bind(hash_password(&new_employer.password).unwrap())
             .bind(new_employer.company_id)
@@ -28,7 +30,7 @@ mod internal {
 
         match employer {
             Ok(entity) => {
-                match insert_email_confirm(&mut *tx, entity.id, new_employer.email, emailer).await {
+                match insert_email_confirm(&mut *tx, entity.id, SIGNUP_EMAIL_CONFIRMATION_BODY.to_string(), new_employer.full_name, new_employer.email, emailer).await {
                     Ok(_email_confirm) => (),
                     Err(e) => return Err(e)
                 };
@@ -58,7 +60,7 @@ mod internal {
             ")
             .bind(update_employer.id)
             .bind(Utc::now())
-            .bind(update_employer.full_name)
+            .bind(update_employer.full_name.clone())
             .bind(update_employer.company_id)
             .execute(&mut *tx)
             .await;
@@ -82,7 +84,7 @@ mod internal {
         };
 
         if existing_employer.unwrap().email != update_employer.email {
-            match insert_email_confirm(&mut *tx, update_employer.id, update_employer.email, emailer).await {
+            match insert_email_confirm(&mut *tx, update_employer.id, CHANGE_EMAIL_CONFIRMATION_BODY.to_string(), update_employer.full_name, update_employer.email, emailer).await {
                 Ok(_email_confirm) => (),
                 Err(e) => return Err(e)
             }
@@ -174,7 +176,7 @@ mod internal {
     }
 
     // whether the user is attempting to use their old email or their new email
-    async fn insert_email_confirm<E: EmailerService + Send + Sync>(tx: &mut PgConnection, emp_id: i64, new_email: String, emailer: &E) -> Result<EmailConfirm, Error> {
+    async fn insert_email_confirm<E: EmailerService + Send + Sync>(tx: &mut PgConnection, emp_id: i64, email_body: String, full_name: String, new_email: String, emailer: &E) -> Result<EmailConfirm, Error> {
         let uuid = Uuid::now_v7();
         match query_as::<_, EntityId>(r"
             insert into emp_email_confirmation
@@ -189,7 +191,7 @@ mod internal {
         .fetch_one(tx)
         .await {
             Ok(entity) => {
-                match emailer.send_email_confirm_requirement(emp_id, new_email, uuid).await {
+                match emailer.send_email_confirm_requirement(emp_id, email_body, full_name, new_email, uuid).await {
                     Ok(_) => Ok(EmailConfirm {
                         entity,
                         unique_key: uuid

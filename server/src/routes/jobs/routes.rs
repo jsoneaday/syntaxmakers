@@ -225,21 +225,24 @@ fn convert_job_applied(job: &JobApplied) -> JobAppliedResponder {
 mod tests {
     use crate::{
         common::{
-            authentication::auth_keys_service::AuthenticationError, emailer::model::EmailError, repository::{
-                developers::{models::Developer, repo::HasUnconfirmedDevEmailFn}, employers::{models::Employer, repo::HasUnconfirmedEmpEmailFn}, jobs::models::Job, user::{models::{AuthenticateResult, DeveloperOrEmployer as UserDeveloperOrEmployer}, repo::AuthenticateDbFn}
+            authentication::auth_keys_service::AuthenticationError, repository::{
+                developers::{models::Developer, repo::HasUnconfirmedDevEmailFn}, 
+                employers::{models::Employer, repo::HasUnconfirmedEmpEmailFn}, 
+                jobs::models::Job, 
+                user::{models::{AuthenticateResult, DeveloperOrEmployer as UserDeveloperOrEmployer}, repo::AuthenticateDbFn}
             }            
         }, 
-        common_test::fixtures::{get_fake_dev_desc, get_fake_email, get_fake_fullname, get_fake_httprequest_with_bearer_token, init_fixtures, COUNTRIES, INDUSTRIES, LANGUAGES, SALARY_BASE}, routes::authentication::{models::LoginCredential, routes::login}
+        common_test::fixtures::{
+            get_app_data, get_fake_desc, get_fake_dev_desc, get_fake_email, get_fake_fullname, get_fake_httprequest_with_bearer_token, get_fake_title, init_fixtures, MockEmailer, COUNTRIES, INDUSTRIES, LANGUAGES, SALARY_BASE
+        }, 
+        routes::authentication::{models::LoginCredential, routes::login}
     };
     use super::*;
     use async_trait::async_trait;
     use chrono::Utc;
     use fake::{faker::{company::en::CompanyName, internet::en::FreeEmail}, Fake};
     use jsonwebtoken::DecodingKey;
-    use uuid::Uuid;
-    use crate::{
-        common::repository::{jobs::repo::InsertJobFn, base::EntityId}, common_test::fixtures::{get_app_data, get_fake_title, get_fake_desc}
-    };
+    use crate::common::repository::{jobs::repo::InsertJobFn, base::EntityId};
 
     const DEV_USERNAME: &str = "tester";
     const EMP_USERNAME: &str = "employer";
@@ -250,18 +253,6 @@ mod tests {
     impl Authenticator for MockAuthService {
         async fn is_authenticated(&self, _: String, _: Vec<(&str, &str)>, _: &DecodingKey) -> Result<bool, AuthenticationError> {
             Ok(true)
-        }
-    }
-
-    struct MockEmailer;
-    #[async_trait]
-    impl EmailerService for MockEmailer {
-        async fn send_email_confirm_requirement(&self, _: i64, _: String, _: Uuid) -> Result<(), EmailError> {
-            Ok(())
-        }
-    
-        async fn receive_email_confirm(&self,  _: i64, _: String, _: Uuid) -> Result<(), EmailError> {
-            Ok(())
         }
     }
 
