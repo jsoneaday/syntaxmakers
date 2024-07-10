@@ -3,7 +3,7 @@ use fake::faker::internet::en::{Username, SafeEmail};
 use syntaxmakers_server::common::repository::base::{Repository, DbRepo};
 use syntaxmakers_server::common::repository::developers::models::{NewDeveloper, UpdateDeveloper};
 use syntaxmakers_server::common::repository::developers::repo::{
-    InsertDeveloperFn, ConfirmEmailFn, QueryAllDevelopersFn, QueryDeveloperByEmailFn, QueryDeveloperFn, UpdateDeveloperFn, QueryLatestValidEmailConfirmFn
+    InsertDeveloperFn, ConfirmDevEmailFn, QueryAllDevelopersFn, QueryDeveloperByEmailFn, QueryDeveloperFn, UpdateDeveloperFn, QueryLatestValidEmailConfirmFn
 };
 use syntaxmakers_server::common::repository::user::models::{ChangePassword, DeveloperOrEmployer};
 use syntaxmakers_server::common::repository::user::repo::ChangePasswordFn;
@@ -406,7 +406,7 @@ async fn test_insert_dev_and_confirm_email() {
 
     let email_confirm = repo.query_latest_valid_email_confirm(create_result1.id).await.unwrap().unwrap();
 
-    match repo.confirm_email(email, create_result1.id, email_confirm.unique_key.to_string()).await {
+    match repo.confirm_dev_email(email, create_result1.id, email_confirm.unique_key.to_string()).await {
         Ok(_) => (),
         Err(e) => panic!("{}", e)
     }
@@ -441,7 +441,7 @@ async fn test_update_dev_email_and_confirm_it() {
 
     let email_confirm = repo.query_latest_valid_email_confirm(create_result1.id).await.unwrap().unwrap();
     
-    match repo.confirm_email(new_email.clone(), create_result1.id, email_confirm.unique_key.to_string()).await {
+    match repo.confirm_dev_email(new_email.clone(), create_result1.id, email_confirm.unique_key.to_string()).await {
         Ok(_) => (),
         Err(e) => panic!("{}", e)
     }

@@ -5,7 +5,7 @@ use syntaxmakers_server::{
         authentication::auth_keys_service::{decode_token, AuthService, REFRESH_TOKEN_LABEL, STANDARD_ACCESS_TOKEN_EXPIRATION}, 
         repository::{
             base::{DbRepo, Repository}, 
-            developers::{models::NewDeveloper, repo::{ConfirmEmailFn, InsertDeveloperFn, QueryLatestValidEmailConfirmFn}},
+            developers::{models::NewDeveloper, repo::{ConfirmDevEmailFn, InsertDeveloperFn, QueryLatestValidEmailConfirmFn}},
             user::models::DeveloperOrEmployer as UserDeveloperOrEmployer
         }
     }, 
@@ -49,7 +49,7 @@ async fn test_refresh_access_token_route() {
         secondary_lang_id: None
     }, &emailer).await.unwrap();
     let email_confirm = repo.query_latest_valid_email_confirm(create_result.id).await.unwrap().unwrap();    
-    _ = repo.confirm_email(email.clone(), create_result.id, email_confirm.unique_key.to_string()).await;
+    _ = repo.confirm_dev_email(email.clone(), create_result.id, email_confirm.unique_key.to_string()).await;
      
     let login_token_result = login(
         app_data.clone(), Json(LoginCredential { dev_or_emp: AuthDeveloperOrEmployer::Developer, email, password })

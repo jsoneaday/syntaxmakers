@@ -1,7 +1,7 @@
 use actix_web::{web::{Data, Json, Path}, HttpRequest};
 use crate::{
     app_state::AppState, common::{
-        authentication::auth_keys_service::Authenticator, emailer::emailer::EmailerService, repository::{
+        authentication::auth_keys_service::Authenticator, emailer::emailer::EmailerSendService, repository::{
             base::Repository, 
             developers::{
                 models::{NewDeveloper, UpdateDeveloper}, 
@@ -19,7 +19,7 @@ use log::error;
 /// register a new developer profile
 pub async fn create_developer<
     T: QueryDeveloperByUserNameFn + QueryDeveloperByEmailFn + InsertDeveloperFn<E> + Repository, 
-    E: EmailerService + Send + Sync, 
+    E: EmailerSendService + Send + Sync, 
     U: Authenticator
     >(
     app_data: Data<AppState<T, E, U>>, 
@@ -62,7 +62,7 @@ pub async fn create_developer<
 
 pub async fn update_developer<
     T: QueryDeveloperByEmailFn + QueryDeveloperFn + QueryEmployerFn + UpdateDeveloperFn<E> + Repository, 
-    E: EmailerService + Send + Sync, 
+    E: EmailerSendService + Send + Sync, 
     U: Authenticator
     >(
     app_data: Data<AppState<T, E, U>>, 
@@ -93,7 +93,7 @@ pub async fn update_developer<
     }
 }
 
-pub async fn get_developer<T: QueryDeveloperFn + Repository, E: EmailerService, U: Authenticator>(
+pub async fn get_developer<T: QueryDeveloperFn + Repository, E: EmailerSendService, U: Authenticator>(
     app_data: Data<AppState<T, E, U>>, 
     path: Path<i64>,
     req: HttpRequest
@@ -141,7 +141,7 @@ pub async fn get_developer<T: QueryDeveloperFn + Repository, E: EmailerService, 
     }
 }
 
-pub async fn get_developer_by_email<T: QueryDeveloperByEmailFn + Repository, E: EmailerService, U: Authenticator>(
+pub async fn get_developer_by_email<T: QueryDeveloperByEmailFn + Repository, E: EmailerSendService, U: Authenticator>(
     app_data: Data<AppState<T, E, U>>, 
     path: Path<String>,
     req: HttpRequest
@@ -180,7 +180,7 @@ pub async fn get_developer_by_email<T: QueryDeveloperByEmailFn + Repository, E: 
     }
 }
 
-pub async fn get_all_developers<T: QueryAllDevelopersFn + QueryDeveloperFn + Repository, E: EmailerService, U: Authenticator>(
+pub async fn get_all_developers<T: QueryAllDevelopersFn + QueryDeveloperFn + Repository, E: EmailerSendService, U: Authenticator>(
     app_data: Data<AppState<T, E, U>>, 
     json: Json<IdAndPagingModel>,
     req: HttpRequest
@@ -327,7 +327,7 @@ mod tests {
         }
 
         #[async_trait]
-        impl<E: EmailerService + Send + Sync> InsertDeveloperFn<E> for CreateDevMockDbRepo {
+        impl<E: EmailerSendService + Send + Sync> InsertDeveloperFn<E> for CreateDevMockDbRepo {
             async fn insert_developer(&self, _: NewDeveloper, _emailer: &E) -> Result<EntityId, sqlx::Error> {
                 Ok(EntityId { id: 1 })
             }

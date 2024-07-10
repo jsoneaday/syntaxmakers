@@ -1,12 +1,12 @@
 use actix_web::web::Data;
 use crate::{
     app_state::AppState, common::{
-        authentication::auth_keys_service::Authenticator, emailer::emailer::EmailerService, repository::{base::Repository, languages::repo::QueryAllLanguagesFn}
+        authentication::auth_keys_service::Authenticator, emailer::emailer::EmailerSendService, repository::{base::Repository, languages::repo::QueryAllLanguagesFn}
     }, routes::user_error::UserError
 };
 use super::models::{LanguageResponders, LanguageResponder};
 
-pub async fn get_all_languages<T: QueryAllLanguagesFn + Repository, E: EmailerService, U: Authenticator>(app_data: Data<AppState<T, E, U>>) -> Result<LanguageResponders, UserError> {
+pub async fn get_all_languages<T: QueryAllLanguagesFn + Repository, E: EmailerSendService, U: Authenticator>(app_data: Data<AppState<T, E, U>>) -> Result<LanguageResponders, UserError> {
     let result = app_data.repo.query_all_languages().await;
 
     match result {

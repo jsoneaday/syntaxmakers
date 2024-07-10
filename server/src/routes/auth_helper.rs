@@ -4,14 +4,14 @@ use crate::{
     app_state::AppState, 
     common::{
         authentication::auth_keys_service::Authenticator, 
-        emailer::emailer::EmailerService, 
+        emailer::emailer::EmailerSendService, 
         repository::{base::Repository, developers::repo::QueryDeveloperFn, employers::repo::QueryEmployerFn}
     }
 };
 use super::{authentication::models::DeveloperOrEmployer as AuthDeveloperOrEmployer, route_utils::get_header_strings};
 
 
-pub async fn check_is_authenticated<T: QueryDeveloperFn + QueryEmployerFn + Repository, E: EmailerService, U: Authenticator>(
+pub async fn check_is_authenticated<T: QueryDeveloperFn + QueryEmployerFn + Repository, E: EmailerSendService, U: Authenticator>(
     app_data: Data<AppState<T, E, U>>, 
     id: i64,
     dev_or_emp: AuthDeveloperOrEmployer,

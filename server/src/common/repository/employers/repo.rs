@@ -6,7 +6,7 @@ use crate::common::repository::employers::models::{NewEmployer, Employer};
 use crate::common::repository::base::EntityId;
 use crate::common::{authentication::password_hash::hash_password, repository::{employers::models::UpdateEmployer, error::SqlxError}};
 use log::error;
-use crate::common::{emailer::emailer::EmailerService, repository::{base::EmailConfirm, employers::models::EmpEmailConfirm}};
+use crate::common::{emailer::emailer::EmailerSendService, repository::{base::EmailConfirm, employers::models::EmpEmailConfirm}};
 
 mod internal {
     use chrono::Utc;
@@ -16,7 +16,7 @@ mod internal {
 
     use super::*;    
 
-    pub async fn insert_employer<E: EmailerService + Send + Sync>(conn: &Pool<Postgres>, new_employer: NewEmployer, emailer: &E) -> Result<EntityId, Error> {
+    pub async fn insert_employer<E: EmailerSendService + Send + Sync>(conn: &Pool<Postgres>, new_employer: NewEmployer, emailer: &E) -> Result<EntityId, Error> {
         let mut tx = conn.begin().await.unwrap();
 
         let employer = query_as::<_, EntityId>("insert into employer (user_name, full_name, email, password, company_id) values ($1, $2, $3, $4, $5) returning id")
@@ -46,7 +46,7 @@ mod internal {
     }
 
     /// note: Does NOT change password!
-    pub async fn update_employer<E: EmailerService + Send + Sync>(conn: &Pool<Postgres>, update_employer: UpdateEmployer, emailer: &E) -> Result<(), Error> {
+    pub async fn update_employer<E: EmailerSendService + Send + Sync>(conn: &Pool<Postgres>, update_employer: UpdateEmployer, emailer: &E) -> Result<(), Error> {
         // need later to confirm does request change email?
         let existing_employer = query_employer(conn, update_employer.id).await.unwrap();
 
@@ -71,12 +71,12 @@ mod internal {
                     Ok(row)
                 } else {
                     error!("update employer has failed");
-                    Err(SqlxError::QueryFailed)
+                    Err(SqlxError::DatabaseQueryFailed)
                 }
             },
             Err(e) => {
                 error!("update employer error: {:?}", e);
-                Err(SqlxError::QueryFailed)
+                Err(SqlxError::DatabaseQueryFailed)
             }
         };
         if let Err(e) = update_result {
@@ -176,7 +176,7 @@ mod internal {
     }
 
     // whether the user is attempting to use their old email or their new email
-    async fn insert_email_confirm<E: EmailerService + Send + Sync>(tx: &mut PgConnection, emp_id: i64, email_body: String, full_name: String, new_email: String, emailer: &E) -> Result<EmailConfirm, Error> {
+    async fn insert_email_confirm<E: EmailerSendService + Send + Sync>(tx: &mut PgConnection, emp_id: i64, email_body: String, full_name: String, new_email: String, emailer: &E) -> Result<EmailConfirm, Error> {
         let uuid = Uuid::now_v7();
         match query_as::<_, EntityId>(r"
             insert into emp_email_confirmation
@@ -191,7 +191,7 @@ mod internal {
         .fetch_one(tx)
         .await {
             Ok(entity) => {
-                match emailer.send_email_confirm_requirement(emp_id, email_body, full_name, new_email, uuid).await {
+                match emailer.send_email_confirm_requirement(false, emp_id, email_body, full_name, new_email, uuid).await {
                     Ok(_) => Ok(EmailConfirm {
                         entity,
                         unique_key: uuid
@@ -204,6 +204,7 @@ mod internal {
     }
 
     pub async fn confirm_email(conn: &Pool<Postgres>, email: String, emp_id: i64, unique_key: String) -> Result<(), Error> {
+        println!("start emp email confirm");
         let mut tx = conn.begin().await.unwrap();
 
         #[allow(unused)]
@@ -213,6 +214,34 @@ mod internal {
             Err(_) => return Err(SqlxError::EmailConfirmInvalidUniqueKey.into())
         };
         let uuid = uuid.unwrap();
+
+        match query_as::<_, EmpEmailConfirm>(
+            r"
+                select * from emp_email_confirmation 
+                where 
+                    is_confirmed = true 
+                    and is_valid = false 
+                    and employer_id = $1 
+                    and new_email = $2 
+                    and unique_key = $3 
+                order by updated_at desc limit 1
+            "
+        )
+        .bind(emp_id)
+        .bind(email.clone())
+        .bind(uuid)
+        .fetch_optional(&mut *tx)
+        .await {
+            Ok(row) => if row.is_some() {
+                println!("Found already confirmed");
+                return Err(SqlxError::EmailAlreadyConfirmed.into())
+            },
+            Err(e) => {
+                println!("Error trying to find already confirmed {}", e);
+                ()
+            }
+        };
+        println!("found no already confirmed");
 
         #[allow(unused)]
         let mut current_email_confirm: Option<EmpEmailConfirm> = None;
@@ -245,20 +274,20 @@ mod internal {
                 .await {
                     Ok(found_newer_confirms) => if found_newer_confirms.len() > 0 {
                         println!("found newer confirms");
-                        return Err(SqlxError::NewerEmailConfirmExist.into());
+                        return Err(SqlxError::EmailConfirmFailedNewerExists.into());
                     },
                     Err(e) => {
-                        println!("{}", e);
+                        println!("failed querying prior confirmations: {}", e);
                         return Err(e);
                     }
                 }                
             } else {
                 println!("email confirm invalid");
-                return Err(SqlxError::EmailConfirmInvalid.into());
+                return Err(SqlxError::EmailConfirmInvalidParams.into());
             },
             Err(e) => {
-                println!("{}", e);
-                return Err(e);
+                println!("failed querying existing unconfirmed confirm, {}", e);
+                return Err(SqlxError::EmailConfirmNotFound.into());
             }
         };
 
@@ -290,7 +319,8 @@ mod internal {
         .execute(&mut *tx)
         .await {
             Ok(row) => {
-                if row.rows_affected() == 0 {                                        
+                if row.rows_affected() == 0 {
+                    println!("cannot find confirm to update");
                     return Err(SqlxError::EmailConfirmFailed.into())
                 }
             },
@@ -307,7 +337,7 @@ mod internal {
                     _ = tx.commit().await;
                     Ok(())
                 } else {
-                    Err(SqlxError::UpdateProfileEmailFailed.into())
+                    Err(SqlxError::EmailConfirmForProfileUpdateFailed.into())
                 },
                 Err(e) => Err(e)
             }
@@ -315,24 +345,24 @@ mod internal {
 }
 
 #[async_trait]
-pub trait InsertEmployerFn<E: EmailerService + Send + Sync> {
+pub trait InsertEmployerFn<E: EmailerSendService + Send + Sync> {
     async fn insert_employer(&self, new_employer: NewEmployer, emailer: &E) -> Result<EntityId, Error>;
 }
 
 #[async_trait]
-impl<E: EmailerService + Send + Sync> InsertEmployerFn<E> for DbRepo {
+impl<E: EmailerSendService + Send + Sync> InsertEmployerFn<E> for DbRepo {
     async fn insert_employer(&self, new_employer: NewEmployer, emailer: &E) -> Result<EntityId, Error> {
         internal::insert_employer(self.get_conn(), new_employer, emailer).await
     }
 }
 
 #[async_trait]
-pub trait UpdateEmployerFn<E: EmailerService + Send + Sync> {
+pub trait UpdateEmployerFn<E: EmailerSendService + Send + Sync> {
     async fn update_employer(&self, update_employer: UpdateEmployer, emailer: &E) -> Result<(), Error>;
 }
 
 #[async_trait]
-impl<E: EmailerService + Send + Sync> UpdateEmployerFn<E> for DbRepo {
+impl<E: EmailerSendService + Send + Sync> UpdateEmployerFn<E> for DbRepo {
     async fn update_employer(&self, update_employer: UpdateEmployer, emailer: &E) -> Result<(), Error> {
         internal::update_employer(self.get_conn(), update_employer, emailer).await
     }
@@ -411,13 +441,13 @@ impl QueryLatestValidEmailConfirmFn for DbRepo {
 }
 
 #[async_trait]
-pub trait ConfirmEmailFn {
-    async fn confirm_email(&self, email: String, emp_id: i64, unique_key: String) -> Result<(), Error>;
+pub trait ConfirmEmpEmailFn {
+    async fn confirm_emp_email(&self, email: String, emp_id: i64, unique_key: String) -> Result<(), Error>;
 }
 
 #[async_trait]
-impl ConfirmEmailFn for DbRepo {
-    async fn confirm_email(&self, email: String, emp_id: i64, unique_key: String) -> Result<(), Error> {
+impl ConfirmEmpEmailFn for DbRepo {
+    async fn confirm_emp_email(&self, email: String, emp_id: i64, unique_key: String) -> Result<(), Error> {
         internal::confirm_email(self.get_conn(), email, emp_id, unique_key).await
     }
 }

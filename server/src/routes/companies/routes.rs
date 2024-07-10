@@ -3,14 +3,14 @@ use crate::{
     app_state::AppState, 
     common::{
         authentication::auth_keys_service::Authenticator, 
-        emailer::emailer::EmailerService, 
+        emailer::emailer::EmailerSendService, 
         repository::{base::Repository, companies::{models::NewCompany, repo::{InsertCompanyFn, QueryAllCompaniesFn}}}
     }, 
     routes::{base_model::OutputId, user_error::UserError}
 };
 use super::models::{NewCompanyForRoute, CompanyResponder, CompanyResponders};
 
-pub async fn create_company<T: InsertCompanyFn + Repository, E: EmailerService, U: Authenticator>(
+pub async fn create_company<T: InsertCompanyFn + Repository, E: EmailerSendService, U: Authenticator>(
     app_state: Data<AppState<T, E, U>>, 
     json: Json<NewCompanyForRoute>
 ) -> Result<OutputId, UserError> {
@@ -22,7 +22,7 @@ pub async fn create_company<T: InsertCompanyFn + Repository, E: EmailerService, 
     }
 }
 
-pub async fn get_all_companies<T: QueryAllCompaniesFn + Repository, E: EmailerService, U: Authenticator>(app_state: Data<AppState<T, E, U>>) -> Result<CompanyResponders, UserError> {
+pub async fn get_all_companies<T: QueryAllCompaniesFn + Repository, E: EmailerSendService, U: Authenticator>(app_state: Data<AppState<T, E, U>>) -> Result<CompanyResponders, UserError> {
     let result = app_state.repo.query_all_companies().await;
 
     match result {

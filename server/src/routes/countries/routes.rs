@@ -1,10 +1,10 @@
 use crate::{
-    app_state::AppState, common::{authentication::auth_keys_service::Authenticator, emailer::emailer::EmailerService, repository::{base::Repository, countries::repo::QueryAllCountriesFn}}, routes::user_error::UserError
+    app_state::AppState, common::{authentication::auth_keys_service::Authenticator, emailer::emailer::EmailerSendService, repository::{base::Repository, countries::repo::QueryAllCountriesFn}}, routes::user_error::UserError
 };
 use actix_web::web::Data;
 use super::models::{CountryResponder, CountryResponders};
 
-pub async fn get_all_countries<T: QueryAllCountriesFn + Repository, E: EmailerService, U: Authenticator>(app_state: Data<AppState<T, E, U>>) -> Result<CountryResponders, UserError> {
+pub async fn get_all_countries<T: QueryAllCountriesFn + Repository, E: EmailerSendService, U: Authenticator>(app_state: Data<AppState<T, E, U>>) -> Result<CountryResponders, UserError> {
     let result = app_state.repo.query_all_countries().await;
 
     match result {

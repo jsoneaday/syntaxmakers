@@ -1,15 +1,39 @@
-use actix_web::{web::{Data, Json}, HttpRequest};
+use actix_web::{web::{Data, Json, Query}, HttpRequest};
 use crate::{
     app_state::AppState, 
     common::{
-        authentication::auth_keys_service::Authenticator, emailer::emailer::EmailerService, repository::{base::Repository, developers::repo::QueryDeveloperFn, employers::repo::QueryEmployerFn, user::{models::{ChangePassword, DeveloperOrEmployer}, repo::ChangePasswordFn}}
+        authentication::auth_keys_service::Authenticator, 
+        emailer::emailer::{EmailerReceiveService, EmailerSendService}, 
+        repository::{
+            base::Repository, developers::repo::QueryDeveloperFn, employers::repo::QueryEmployerFn, user::{models::{ChangePassword, DeveloperOrEmployer}, repo::ChangePasswordFn}
+        }
     }, 
     routes::{auth_helper::check_is_authenticated, authentication::models::DeveloperOrEmployer as AuthDeveloperOrEmployer, base_model::OutputBool, user_error::UserError}
 };
-use super::models::ChangePasswordRoute;
+use crate::common::repository::developers::repo::ConfirmDevEmailFn as ConfirmDevEmailFn;
+use crate::common::repository::employers::repo::ConfirmEmpEmailFn as ConfirmEmpEmailFn;
+use super::models::{ChangePasswordRoute, ConfirmEmailQuery};
 use log::error;
 
-pub async fn change_password<T: QueryDeveloperFn + QueryEmployerFn + ChangePasswordFn + Repository, E: EmailerService, U: Authenticator>(
+pub async fn confirm_email<T: ConfirmDevEmailFn + ConfirmEmpEmailFn + Repository + Send + Sync, E: EmailerSendService + EmailerReceiveService<T>, U: Authenticator>(
+    app_data: Data<AppState<T, E, U>>,
+    query: Query<ConfirmEmailQuery>
+) -> Result<OutputBool, UserError> {
+    match app_data.emailer.receive_email_confirm(&app_data.repo, query.is_dev, query.profile_id, query.new_email.to_owned(), query.unique_key.unwrap()).await {
+        Ok(()) => {
+            println!("success");
+            Ok(OutputBool { result: true })
+        },
+        Err(e) => {
+            println!("route: {}", e);
+            match e {
+                _ => Err(e.into())
+            }            
+        }
+    }
+}
+
+pub async fn change_password<T: QueryDeveloperFn + QueryEmployerFn + ChangePasswordFn + Repository, E: EmailerSendService, U: Authenticator>(
     app_data: Data<AppState<T, E, U>>, 
     json: Json<ChangePasswordRoute>,
     req: HttpRequest

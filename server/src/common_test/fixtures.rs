@@ -16,7 +16,7 @@ use log::{info, error};
 use uuid::Uuid;
 use crate::app_state::AppState;
 use crate::common::authentication::auth_keys_service::{init_auth_keys, get_token, Authenticator, AuthenticationError};
-use crate::common::emailer::emailer::{Emailer, EmailerService};
+use crate::common::emailer::emailer::{EmailerReceiveService, EmailerSendService};
 use crate::common::emailer::model::EmailError;
 use crate::common::fs_utils::get_file_buffer;
 use crate::common::rand_utils::get_random_no_from_range;
@@ -24,9 +24,9 @@ use crate::common::repository::base::{Repository, DbRepo};
 use crate::common::repository::countries::models::Country;
 use crate::common::repository::countries::repo::QueryAllCountriesFn;
 use crate::common::repository::developers::models::NewDeveloper;
-use crate::common::repository::developers::repo::{InsertDeveloperFn, QueryAllDevelopersFn};
+use crate::common::repository::developers::repo::{ConfirmDevEmailFn, InsertDeveloperFn, QueryAllDevelopersFn};
 use crate::common::repository::employers::models::NewEmployer;
-use crate::common::repository::employers::repo::{InsertEmployerFn, QueryAllEmployersFn};
+use crate::common::repository::employers::repo::{ConfirmEmpEmailFn, InsertEmployerFn, QueryAllEmployersFn};
 use crate::common::repository::industries::models::Industry;
 use crate::common::repository::industries::repo::QueryAllIndustriesFn;
 use crate::common::repository::jobs::models::NewJob;
@@ -161,7 +161,7 @@ pub async fn init_fixtures() {
 
 async fn setup_data() {
     let repo = DbRepo::init().await;
-    let emailer = Emailer::new();
+    let emailer = MockEmailer;
 
     let devs_count = repo.query_all_developers(1000, 0).await.unwrap().len();
     if devs_count == 0 {
@@ -235,7 +235,7 @@ async fn setup_data() {
     }
 }
 
-pub async fn get_app_data<T: Repository, E: EmailerService, U: Authenticator>(repo: T, emailer: E, auth_service: U) -> actix_web::web::Data<AppState<T, E, U>> {
+pub async fn get_app_data<T: Repository, E: EmailerSendService, U: Authenticator>(repo: T, emailer: E, auth_service: U) -> actix_web::web::Data<AppState<T, E, U>> {
     actix_web::web::Data::new(AppState { repo, emailer, auth_service, auth_keys: init_auth_keys().await })
 }
 
@@ -290,12 +290,15 @@ impl Repository for MockDbRepo {
 #[derive(Clone, Debug)]
 pub struct MockEmailer;
 #[async_trait]
-impl EmailerService for MockEmailer {
-    async fn send_email_confirm_requirement(&self, _: i64, _: String, _: String, _: String, _: Uuid) -> Result<(), EmailError> {
+impl EmailerSendService for MockEmailer {
+    async fn send_email_confirm_requirement(&self, _: bool, _: i64, _: String, _: String, _: String, _: Uuid) -> Result<(), EmailError> {
         Ok(())
     }
+}
 
-    async fn receive_email_confirm(&self, _: i64, _: String, _: Uuid) -> Result<(), EmailError> {
+#[async_trait]
+impl<T: ConfirmDevEmailFn + ConfirmEmpEmailFn + Repository + Send + Sync> EmailerReceiveService<T> for MockEmailer {
+    async fn receive_email_confirm(&self, _: &T, _: bool, _: i64, _: String, _: Uuid) -> Result<(), EmailError> {
         Ok(())
     }
 }

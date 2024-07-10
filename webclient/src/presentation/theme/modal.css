@@ -10,3 +10,21 @@
   opacity: 1;
   background-color: var(--bg-cl);
 }
+
+.popup-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5em;
+  border-bottom: solid 1px var(--border-cl);
+}
+
+.popup-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1em;
+  height: 120px;
+}

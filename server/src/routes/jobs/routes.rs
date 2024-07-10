@@ -2,7 +2,7 @@ use actix_web::{web::{Data, Json, Path}, HttpResponse, HttpRequest};
 use log::error;
 use crate::{
     app_state::AppState, common::{
-        authentication::auth_keys_service::Authenticator, emailer::emailer::EmailerService, repository::{
+        authentication::auth_keys_service::Authenticator, emailer::emailer::EmailerSendService, repository::{
             base::Repository, 
             developers::repo::QueryDeveloperFn, 
             employers::repo::QueryEmployerFn, 
@@ -19,7 +19,7 @@ use super::models::{JobAppliedResponders, JobAppliedResponder, JobResponder, Job
 use crate::routes::authentication::models::DeveloperOrEmployer as AuthDeveloperOrEmployer;
 
 #[allow(unused)]
-pub async fn create_job<T: InsertJobFn + QueryEmployerFn + QueryDeveloperFn + Repository, E: EmailerService, U: Authenticator>(app_data: Data<AppState<T, E, U>>, json: Json<NewJobForRoute>, req: HttpRequest)
+pub async fn create_job<T: InsertJobFn + QueryEmployerFn + QueryDeveloperFn + Repository, E: EmailerSendService, U: Authenticator>(app_data: Data<AppState<T, E, U>>, json: Json<NewJobForRoute>, req: HttpRequest)
  -> Result<OutputId, UserError> {    
     let is_auth = check_is_authenticated(app_data.clone(), json.employer_id, AuthDeveloperOrEmployer::Employer, req).await;
     if !is_auth {
@@ -46,7 +46,7 @@ pub async fn create_job<T: InsertJobFn + QueryEmployerFn + QueryDeveloperFn + Re
 }
 
 #[allow(unused)]
-pub async fn update_job<T: UpdateJobFn + QueryEmployerFn + QueryDeveloperFn + Repository, E: EmailerService, U: Authenticator>(app_data: Data<AppState<T, E, U>>, json: Json<UpdateJobForRoute>, req: HttpRequest)
+pub async fn update_job<T: UpdateJobFn + QueryEmployerFn + QueryDeveloperFn + Repository, E: EmailerSendService, U: Authenticator>(app_data: Data<AppState<T, E, U>>, json: Json<UpdateJobForRoute>, req: HttpRequest)
  -> HttpResponse {
     let is_auth = check_is_authenticated(app_data.clone(), json.employer_id, AuthDeveloperOrEmployer::Employer, req).await;
     if !is_auth {
@@ -76,7 +76,7 @@ pub async fn update_job<T: UpdateJobFn + QueryEmployerFn + QueryDeveloperFn + Re
 }
 
 #[allow(unused)]
-pub async fn get_job<T: QueryJobFn + Repository, E: EmailerService, U: Authenticator>(app_data: Data<AppState<T, E, U>>, path: Path<i64>) -> Result<Option<JobResponder>, UserError> {
+pub async fn get_job<T: QueryJobFn + Repository, E: EmailerSendService, U: Authenticator>(app_data: Data<AppState<T, E, U>>, path: Path<i64>) -> Result<Option<JobResponder>, UserError> {
     let result = app_data.repo.query_job(path.into_inner()).await;
     
     match result {
@@ -89,14 +89,14 @@ pub async fn get_job<T: QueryJobFn + Repository, E: EmailerService, U: Authentic
 }
 
 #[allow(unused)]
-pub async fn get_all_jobs<T: QueryAllJobsFn + Repository, E: EmailerService, U: Authenticator>(app_data: Data<AppState<T, E, U>>, json: Json<PagingModel>) -> Result<JobResponders, UserError> {
+pub async fn get_all_jobs<T: QueryAllJobsFn + Repository, E: EmailerSendService, U: Authenticator>(app_data: Data<AppState<T, E, U>>, json: Json<PagingModel>) -> Result<JobResponders, UserError> {
     let result = app_data.repo.query_all_jobs(json.page_size, json.last_offset).await;
     
     return_jobs_result(result)
 }
 
 #[allow(unused)]
-pub async fn get_jobs_by_developer<T: QueryJobsByDeveloperFn + Repository, E: EmailerService, U: Authenticator>(app_data: Data<AppState<T, E, U>>, json: Json<IdAndPagingModel>) -> Result<JobResponders, UserError> {
+pub async fn get_jobs_by_developer<T: QueryJobsByDeveloperFn + Repository, E: EmailerSendService, U: Authenticator>(app_data: Data<AppState<T, E, U>>, json: Json<IdAndPagingModel>) -> Result<JobResponders, UserError> {
     let result = app_data.repo.query_jobs_by_developer(json.id, json.page_size, json.last_offset).await;
     // remove unneeded match
     match result {
@@ -108,7 +108,7 @@ pub async fn get_jobs_by_developer<T: QueryJobsByDeveloperFn + Repository, E: Em
 }
 
 #[allow(unused)]
-pub async fn get_jobs_by_employer<T: QueryJobsByEmployerFn + Repository, E: EmailerService, U: Authenticator>(app_data: Data<AppState<T, E, U>>, json: Json<IdAndPagingModel>) 
+pub async fn get_jobs_by_employer<T: QueryJobsByEmployerFn + Repository, E: EmailerSendService, U: Authenticator>(app_data: Data<AppState<T, E, U>>, json: Json<IdAndPagingModel>) 
     -> Result<JobResponders, UserError> {
     let result = app_data.repo.query_jobs_by_employer(json.id, json.page_size, json.last_offset).await;
     
@@ -116,7 +116,7 @@ pub async fn get_jobs_by_employer<T: QueryJobsByEmployerFn + Repository, E: Emai
 }
 
 #[allow(unused)]
-pub async fn get_jobs_by_search_terms<T: QueryJobsBySearchTermsFn + Repository, E: EmailerService, U: Authenticator>(app_data: Data<AppState<T, E, U>>, json: Json<SearchAndPagingModel>) 
+pub async fn get_jobs_by_search_terms<T: QueryJobsBySearchTermsFn + Repository, E: EmailerSendService, U: Authenticator>(app_data: Data<AppState<T, E, U>>, json: Json<SearchAndPagingModel>) 
     -> Result<JobResponders, UserError> {
     let result = app_data.repo.query_jobs_by_search_terms(json.search_terms.clone(), json.page_size, json.last_offset).await;
     
@@ -124,7 +124,7 @@ pub async fn get_jobs_by_search_terms<T: QueryJobsBySearchTermsFn + Repository, 
 }
 
 #[allow(unused)]
-pub async fn get_jobs_by_applier<T: QueryJobsByApplierFn + Repository, E: EmailerService, U: Authenticator>(app_data: Data<AppState<T, E, U>>, json: Json<IdAndPagingModel>) -> Result<JobAppliedResponders, UserError> {
+pub async fn get_jobs_by_applier<T: QueryJobsByApplierFn + Repository, E: EmailerSendService, U: Authenticator>(app_data: Data<AppState<T, E, U>>, json: Json<IdAndPagingModel>) -> Result<JobAppliedResponders, UserError> {
     let result = app_data.repo.query_jobs_by_applier(json.id, json.page_size, json.last_offset).await;
     // remove unneeded match
     match result {

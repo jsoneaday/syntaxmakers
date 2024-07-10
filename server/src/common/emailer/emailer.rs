@@ -1,5 +1,9 @@
 use async_trait::async_trait;
+use log::error;
 use uuid::Uuid;
+use crate::common::repository::base::Repository;
+use crate::common::repository::developers::repo::ConfirmDevEmailFn;
+use crate::common::repository::employers::repo::ConfirmEmpEmailFn;
 use super::model::EmailError;
 use lettre::message::header::ContentType;
 use lettre::transport::smtp::authentication::Credentials;
@@ -7,8 +11,8 @@ use lettre::{Message, SmtpTransport, Transport};
 use std::env;
 use dotenv::dotenv;
 
-pub const SIGNUP_EMAIL_CONFIRMATION_BODY: &str = "Thank you for signing up. Please click the button below to confirm your email address:";
-pub const CHANGE_EMAIL_CONFIRMATION_BODY: &str = "Your email has been changed. Please click the button below to confirm your email address:";
+pub const SIGNUP_EMAIL_CONFIRMATION_BODY: &str = "Thank you for signing up to SyntaxMakers. The Jobs Posting site for specialized programming languages. <br/><br/>Please click the button below to confirm your email address:";
+pub const CHANGE_EMAIL_CONFIRMATION_BODY: &str = "Your SyntaxMakers account email has been changed. Please click the button below to confirm your email address:";
 
 #[derive(Clone, Debug)]
 pub struct Emailer {
@@ -17,24 +21,26 @@ pub struct Emailer {
 }
 
 #[async_trait]
-pub trait EmailerService {
-    async fn send_email_confirm_requirement(&self, profile_id: i64, email_body: String, full_name: String, new_email: String, unique_key: Uuid) 
-        -> Result<(), EmailError>;
-
-    async fn receive_email_confirm(&self, profile_id: i64, new_email: String, unique_key: Uuid) -> Result<(), EmailError>;
+pub trait EmailerSendService {
+    async fn send_email_confirm_requirement(&self, is_dev: bool, profile_id: i64, email_body: String, full_name: String, new_email: String, unique_key: Uuid) 
+        -> Result<(), EmailError>;    
 }
 
 #[allow(unused)]
 #[async_trait]
-impl EmailerService for Emailer {
+impl EmailerSendService for Emailer {
     /// e.g. email_body - "Thank you for signing up. Please click the button below to confirm your email address:"
-    async fn send_email_confirm_requirement(&self, profile_id: i64, email_body: String, full_name: String, new_email: String, unique_key: Uuid) 
+    async fn send_email_confirm_requirement(&self, is_dev: bool, profile_id: i64, email_body: String, full_name: String, new_email: String, unique_key: Uuid) 
         -> Result<(), EmailError> {
         let subject = "SyntaxMakers: email confirmation";
         let body = Emailer::get_send_email_body(
+            is_dev,
+            profile_id,
             full_name.as_str(), 
             email_body.as_str(), 
-            env::var("CONFIRMATION_LINK").unwrap().as_str()
+            env::var("CONFIRMATION_LINK").unwrap().as_str(),            
+            &new_email,
+            unique_key.to_string().as_str()
         );
 
         let email = Message::builder()
@@ -42,7 +48,7 @@ impl EmailerService for Emailer {
             .reply_to("SyntaxMakers Support <support@syntaxmakers.com>".parse().unwrap())
             .to(format!("{} <{}>", full_name, new_email).parse().unwrap())
             .subject(subject)
-            .header(ContentType::TEXT_PLAIN)
+            .header(ContentType::TEXT_HTML)
             .body(body) 
             .unwrap();
         let creds = Credentials::new(self.user_name.clone(), self.password.clone());
@@ -52,13 +58,37 @@ impl EmailerService for Emailer {
             Ok(_) => Ok(()),
             Err(e) => {
                 println!("{}", e);
-                Err(EmailError::EmailSendFailed)
+                Err(EmailError::EmailConfirmationSendFailed)
             }
         }        
     }
+}
 
-    async fn receive_email_confirm(&self, profile_id: i64, new_email: String, unique_key: Uuid) -> Result<(), EmailError> {
-        Ok(())
+#[async_trait]
+pub trait EmailerReceiveService<T: ConfirmDevEmailFn + ConfirmEmpEmailFn + Repository + Send + Sync> {
+    async fn receive_email_confirm(&self, repo: &T, is_dev: bool, profile_id: i64, new_email: String, unique_key: Uuid) -> Result<(), EmailError>;
+}
+
+#[async_trait]
+impl<T: ConfirmDevEmailFn + ConfirmEmpEmailFn + Repository + Send + Sync> EmailerReceiveService<T> for Emailer {
+    async fn receive_email_confirm(&self, repo: &T, is_dev: bool, profile_id: i64, new_email: String, unique_key: Uuid) -> Result<(), EmailError> {
+        if is_dev {
+            match repo.confirm_dev_email(new_email, profile_id, unique_key.to_string()).await {
+                Ok(()) => Ok(()),
+                Err(e) => {
+                    println!("emailer: {}", e);
+                    Err(EmailError::from(e))
+                }
+            }
+        } else {
+            match repo.confirm_emp_email(new_email, profile_id, unique_key.to_string()).await {
+                Ok(()) => Ok(()),
+                Err(e) => {
+                    error!("confirm_emp_email {}", e);
+                    Err(EmailError::from(e))
+                }
+            }
+        }
     }
 }
 
@@ -71,7 +101,7 @@ impl Emailer {
         }
     }
 
-    fn get_send_email_body(full_name: &str, msg_body: &str, email_confirm_link: &str) -> String {
+    fn get_send_email_body(is_dev: bool, profile_id: i64, full_name: &str, msg_body: &str, email_confirm_link: &str, new_email: &str, unique_key: &str) -> String {
         String::from(format!("
             <!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">
             <html xmlns=\"http://www.w3.org/1999/xhtml\">
@@ -100,7 +130,7 @@ impl Emailer {
                                             </tr>
                                             <tr>
                                                 <td align=\"center\" style=\"padding: 20px 0 30px 0;\">
-                                                    <a href=\"{}\" style=\"background-color: #007bff; border: none; color: white; padding: 15px 32px; text-align: center; text-decoration: none; display: inline-block; font-size: 16px; margin: 4px 2px; cursor: pointer;\">Confirm Email</a>
+                                                    <a href=\"{}?is_dev={}&profile_id={}&new_email={}&unique_key={}&\" style=\"background-color: #007bff; border: none; color: white; padding: 15px 32px; text-align: center; text-decoration: none; display: inline-block; font-size: 16px; margin: 4px 2px; cursor: pointer;\">Confirm Email</a>
                                                 </td>
                                             </tr>
                                             <tr>
@@ -120,6 +150,11 @@ impl Emailer {
         ", 
         full_name, 
         msg_body,
-        email_confirm_link))
+        email_confirm_link,
+        is_dev,
+        profile_id,
+        new_email,
+        unique_key    
+    ))
     }
 }

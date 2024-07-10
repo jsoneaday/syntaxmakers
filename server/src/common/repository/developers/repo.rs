@@ -6,7 +6,7 @@ use crate::common::repository::developers::models::{Developer, NewDeveloper, Upd
 use crate::common::repository::base::EntityId;
 use log::error;
 use crate::common::{authentication::password_hash::hash_password, repository::{base::EmailConfirm, developers::models::DevEmailConfirm, error::SqlxError}};
-use crate::common::emailer::emailer::EmailerService;
+use crate::common::emailer::emailer::EmailerSendService;
 
 mod internal {
     use chrono::Utc;
@@ -16,7 +16,7 @@ mod internal {
 
     use super::*;    
 
-    pub async fn insert_developer<E: EmailerService + Send + Sync>(conn: &Pool<Postgres>, new_developer: NewDeveloper, emailer: &E) -> Result<EntityId, Error> {
+    pub async fn insert_developer<E: EmailerSendService + Send + Sync>(conn: &Pool<Postgres>, new_developer: NewDeveloper, emailer: &E) -> Result<EntityId, Error> {
         let mut tx = conn.begin().await.unwrap();
         
         // todo: need to test min password length 8 and max 200
@@ -77,7 +77,7 @@ mod internal {
     }
     
     /// note: Does NOT change password!
-    pub async fn update_developer<E: EmailerService + Send + Sync>(conn: &Pool<Postgres>, update_developer: UpdateDeveloper, emailer: &E) -> Result<(), Error> {
+    pub async fn update_developer<E: EmailerSendService + Send + Sync>(conn: &Pool<Postgres>, update_developer: UpdateDeveloper, emailer: &E) -> Result<(), Error> {
         // need later to confirm does request change email?
         let existing_developer = query_developer(conn, update_developer.id).await.unwrap();
 
@@ -105,12 +105,12 @@ mod internal {
                     Ok(row)
                 } else {
                     error!("update developer has failed");
-                    Err(SqlxError::QueryFailed)
+                    Err(SqlxError::DatabaseQueryFailed)
                 }
             },
             Err(e) => {
                 error!("update developer error: {:?}", e);
-                Err(SqlxError::QueryFailed)
+                Err(SqlxError::DatabaseQueryFailed)
             }
         };
         if let Err(e) = update_result {
@@ -268,7 +268,7 @@ mod internal {
     }
 
     // whether the user is attempting to use their old email or their new email
-    async fn insert_email_confirm<E: EmailerService + Send + Sync>(tx: &mut PgConnection, dev_id: i64, email_body: String, dev_full_name: String, new_email: String, emailer: &E) -> Result<EmailConfirm, Error> {
+    async fn insert_email_confirm<E: EmailerSendService + Send + Sync>(tx: &mut PgConnection, dev_id: i64, email_body: String, dev_full_name: String, new_email: String, emailer: &E) -> Result<EmailConfirm, Error> {
         let uuid = Uuid::now_v7();
         match query_as::<_, EntityId>(r"
             insert into dev_email_confirmation
@@ -283,7 +283,7 @@ mod internal {
         .fetch_one(tx)
         .await {
             Ok(entity) => {
-                match emailer.send_email_confirm_requirement(dev_id, email_body, dev_full_name, new_email, uuid).await {
+                match emailer.send_email_confirm_requirement(true, dev_id, email_body, dev_full_name, new_email, uuid).await {
                     Ok(_) => Ok(EmailConfirm {
                         entity,
                         unique_key: uuid
@@ -305,6 +305,32 @@ mod internal {
             Err(_) => return Err(SqlxError::EmailConfirmInvalidUniqueKey.into())
         }
         let uuid = uuid.unwrap();
+
+        // first see if email already confirmed
+        match query_as::<_, DevEmailConfirm>(
+            r"
+                select * 
+                from dev_email_confirmation 
+                where 
+                is_confirmed = true 
+                and is_valid = false 
+                and developer_id = $1 
+                and new_email = $2 
+                and unique_key = $3
+                order by updated_at desc 
+                limit 1
+            "
+        )
+        .bind(dev_id)
+        .bind(email.clone())
+        .bind(uuid)
+        .fetch_optional(&mut *tx)
+        .await {
+            Ok(row) => if row.is_some() {
+                return Err(SqlxError::EmailAlreadyConfirmed.into())
+            },
+            Err(_) => ()
+        };
 
         #[allow(unused)]
         let mut current_email_confirm: Option<DevEmailConfirm> = None;
@@ -338,7 +364,7 @@ mod internal {
                 .fetch_all(&mut *tx)
                 .await {
                     Ok(found_newer_confirms) => if found_newer_confirms.len() > 0 {
-                        return Err(SqlxError::NewerEmailConfirmExist.into());
+                        return Err(SqlxError::EmailConfirmFailedNewerExists.into());
                     },
                     Err(e) => return Err(e)
                 }                
@@ -393,7 +419,7 @@ mod internal {
                     _ = tx.commit().await;
                     Ok(())
                 } else {
-                    Err(SqlxError::UpdateProfileEmailFailed.into())
+                    Err(SqlxError::EmailConfirmForProfileUpdateFailed.into())
                 },
                 Err(e) => Err(e)
             }
@@ -401,24 +427,24 @@ mod internal {
 }
 
 #[async_trait]
-pub trait InsertDeveloperFn<E: EmailerService + Send + Sync> {
+pub trait InsertDeveloperFn<E: EmailerSendService + Send + Sync> {
     async fn insert_developer(&self, new_developer: NewDeveloper, emailer: &E) -> Result<EntityId, Error>;
 }
 
 #[async_trait]
-impl<E: EmailerService + Send + Sync> InsertDeveloperFn<E> for DbRepo {
+impl<E: EmailerSendService + Send + Sync> InsertDeveloperFn<E> for DbRepo {
     async fn insert_developer(&self, new_developer: NewDeveloper, emailer: &E) -> Result<EntityId, Error> {
         internal::insert_developer(self.get_conn(), new_developer, emailer).await
     }
 }
 
 #[async_trait]
-pub trait UpdateDeveloperFn<E: EmailerService + Send + Sync> {
+pub trait UpdateDeveloperFn<E: EmailerSendService + Send + Sync> {
     async fn update_developer(&self, update_developer: UpdateDeveloper, emailer: &E) -> Result<(), Error>;
 }
 
 #[async_trait]
-impl<E: EmailerService + Send + Sync> UpdateDeveloperFn<E> for DbRepo {
+impl<E: EmailerSendService + Send + Sync> UpdateDeveloperFn<E> for DbRepo {
     async fn update_developer(&self, update_developer: UpdateDeveloper, emailer: &E) -> Result<(), Error> {
         internal::update_developer(self.get_conn(), update_developer, emailer).await
     }
@@ -497,13 +523,13 @@ impl QueryLatestValidEmailConfirmFn for DbRepo {
 }
 
 #[async_trait]
-pub trait ConfirmEmailFn {
-    async fn confirm_email(&self, email: String, dev_id: i64, unique_key: String) -> Result<(), Error>;
+pub trait ConfirmDevEmailFn {
+    async fn confirm_dev_email(&self, email: String, dev_id: i64, unique_key: String) -> Result<(), Error>;
 }
 
 #[async_trait]
-impl ConfirmEmailFn for DbRepo {
-    async fn confirm_email(&self, email: String, dev_id: i64, unique_key: String) -> Result<(), Error> {
+impl ConfirmDevEmailFn for DbRepo {
+    async fn confirm_dev_email(&self, email: String, dev_id: i64, unique_key: String) -> Result<(), Error> {
         internal::confirm_email(self.get_conn(), email, dev_id, unique_key).await
     }
 }

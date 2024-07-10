@@ -4,7 +4,7 @@ use fake::faker::internet::en::{Username, SafeEmail};
 use syntaxmakers_server::common::repository::base::{Repository, DbRepo};
 use syntaxmakers_server::common::repository::companies::models::NewCompany;
 use syntaxmakers_server::common::repository::employers::models::{NewEmployer, UpdateEmployer};
-use syntaxmakers_server::common::repository::employers::repo::{ConfirmEmailFn, InsertEmployerFn, QueryAllEmployersFn, QueryEmployerByEmailFn, QueryEmployerFn, QueryLatestValidEmailConfirmFn, UpdateEmployerFn};
+use syntaxmakers_server::common::repository::employers::repo::{ConfirmEmpEmailFn, InsertEmployerFn, QueryAllEmployersFn, QueryEmployerByEmailFn, QueryEmployerFn, QueryLatestValidEmailConfirmFn, UpdateEmployerFn};
 use syntaxmakers_server::common::repository::companies::repo::InsertCompanyFn;
 use syntaxmakers_server::common_test::fixtures::{ get_company_logo_randomly, get_fake_email, get_fake_fullname, get_fake_user_name, init_fixtures, MockEmailer};
 
@@ -221,7 +221,7 @@ async fn test_insert_emp_and_confirm_email() {
 
     let email_confirm = repo.query_latest_valid_email_confirm(create_result1.id).await.unwrap().unwrap();
 
-    match repo.confirm_email(email, create_result1.id, email_confirm.unique_key.to_string()).await {
+    match repo.confirm_emp_email(email, create_result1.id, email_confirm.unique_key.to_string()).await {
         Ok(_) => (),
         Err(e) => panic!("{}", e)
     }
@@ -252,7 +252,7 @@ async fn test_update_emp_email_and_confirm_it() {
 
     let email_confirm = repo.query_latest_valid_email_confirm(create_result1.id).await.unwrap().unwrap();
     
-    match repo.confirm_email(new_email.clone(), create_result1.id, email_confirm.unique_key.to_string()).await {
+    match repo.confirm_emp_email(new_email.clone(), create_result1.id, email_confirm.unique_key.to_string()).await {
         Ok(_) => (),
         Err(e) => panic!("{}", e)
     }

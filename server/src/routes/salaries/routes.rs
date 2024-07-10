@@ -1,12 +1,12 @@
 use actix_web::web::Data;
 use crate::{
     app_state::AppState, 
-    common::{authentication::auth_keys_service::Authenticator, emailer::emailer::EmailerService, repository::{base::Repository, salaries::repo::QueryAllSalariesFn}}, 
+    common::{authentication::auth_keys_service::Authenticator, emailer::emailer::EmailerSendService, repository::{base::Repository, salaries::repo::QueryAllSalariesFn}}, 
     routes::user_error::UserError
 };
 use super::models::{SalaryResponder, SalaryResponders};
 
-pub async fn get_all_salaries<T: QueryAllSalariesFn + Repository, E: EmailerService, U: Authenticator>(
+pub async fn get_all_salaries<T: QueryAllSalariesFn + Repository, E: EmailerSendService, U: Authenticator>(
     app_data: Data<AppState<T, E, U>>
 ) -> Result<SalaryResponders, UserError> {
     let result = app_data.repo.query_all_salaries().await;

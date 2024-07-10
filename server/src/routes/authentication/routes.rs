@@ -12,7 +12,7 @@ use crate::{
         authentication::auth_keys_service::{
             decode_token, get_token, Authenticator, REFRESH_TOKEN_LABEL, STANDARD_ACCESS_TOKEN_EXPIRATION, STANDARD_REFRESH_TOKEN_EXPIRATION
         }, 
-        emailer::emailer::EmailerService, repository::{
+        emailer::emailer::EmailerSendService, repository::{
             base::Repository, 
             developers::repo::{HasUnconfirmedDevEmailFn, QueryDeveloperFn}, 
             employers::repo::{HasUnconfirmedEmpEmailFn, QueryEmployerFn}, 
@@ -24,7 +24,7 @@ use crate::{
 use super::models::{LoginCredential, RefreshToken};
 
 
-pub async fn refresh_access_token<T: Repository, E: EmailerService, U: Authenticator>(app_data: Data<AppState<T, E, U>>, json: Json<RefreshToken>, req: HttpRequest) -> HttpResponse {
+pub async fn refresh_access_token<T: Repository, E: EmailerSendService, U: Authenticator>(app_data: Data<AppState<T, E, U>>, json: Json<RefreshToken>, req: HttpRequest) -> HttpResponse {
     let dev_or_emp = if json.dev_or_emp == AuthDeveloperOrEmployer::Developer {
         UserDeveloperOrEmployer::Developer
     } else {
@@ -62,7 +62,7 @@ pub async fn refresh_access_token<T: Repository, E: EmailerService, U: Authentic
 
 pub async fn login<
     T: HasUnconfirmedDevEmailFn + HasUnconfirmedEmpEmailFn + AuthenticateDbFn + QueryDeveloperFn + QueryEmployerFn + Repository, 
-    E: EmailerService, 
+    E: EmailerSendService, 
     U: Authenticator
     >(app_data: Data<AppState<T, E, U>>, json: Json<LoginCredential>) 
     -> HttpResponse {
@@ -176,7 +176,7 @@ pub async fn login<
     }  
 }
 
-fn get_refresh_and_access_token_response<'a, T: AuthenticateDbFn + QueryDeveloperFn + Repository, E: EmailerService, U: Authenticator>(
+fn get_refresh_and_access_token_response<'a, T: AuthenticateDbFn + QueryDeveloperFn + Repository, E: EmailerSendService, U: Authenticator>(
     app_data: Data<AppState<T, E, U>>, user_name: &'a str, dev_or_emp: &'a UserDeveloperOrEmployer
 ) -> (Cookie<'a>, String) {
     let access_token = get_token(user_name.to_string(), dev_or_emp.clone(), &app_data.auth_keys.encoding_key, Some(STANDARD_ACCESS_TOKEN_EXPIRATION));

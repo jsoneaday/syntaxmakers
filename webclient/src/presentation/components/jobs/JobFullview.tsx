@@ -794,16 +794,7 @@ export default function JobFullview({ userType }: JobFullviewProps) {
   return (
     <>
       <Popup isOpen={isPopupOpen} toggleOpen={toggleIsPopupOpen}>
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: "0.5em",
-            borderBottom: "solid 1px var(--border-cl)",
-          }}
-        >
+        <div className="popup-container">
           <ValidationMsgView
             validationMessage={validationMessage}
             successMessage={successMessage}

@@ -1,9 +1,9 @@
 use actix_web::web::Data;
-use crate::{app_state::AppState, common::{authentication::auth_keys_service::Authenticator, emailer::emailer::EmailerService, repository::{base::Repository, industries::repo::QueryAllIndustriesFn}}, routes::user_error::UserError};
+use crate::{app_state::AppState, common::{authentication::auth_keys_service::Authenticator, emailer::emailer::EmailerSendService, repository::{base::Repository, industries::repo::QueryAllIndustriesFn}}, routes::user_error::UserError};
 use super::models::{IndustryResponders, IndustryResponder};
 
 #[allow(unused)]
-pub async fn get_all_industries<T: QueryAllIndustriesFn + Repository, E: EmailerService, U: Authenticator>(app_data: Data<AppState<T, E, U>>) -> Result<IndustryResponders, UserError>{
+pub async fn get_all_industries<T: QueryAllIndustriesFn + Repository, E: EmailerSendService, U: Authenticator>(app_data: Data<AppState<T, E, U>>) -> Result<IndustryResponders, UserError>{
     let result = app_data.repo.query_all_industries().await;
 
     match result {

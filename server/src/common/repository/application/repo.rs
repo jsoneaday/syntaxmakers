@@ -44,7 +44,7 @@ mod internal {
             }
         }
     
-        Err(SqlxError::QueryFailed.into())
+        Err(SqlxError::DatabaseQueryFailed.into())
     }
 
     pub async fn dev_has_applied(conn: &Pool<Postgres>, job_id: i64, dev_id: i64) -> Result<bool, Error> {

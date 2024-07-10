@@ -1,7 +1,7 @@
 use actix_web::{web::{Data, Json, Path}, HttpRequest};
 use crate::{
     app_state::AppState, common::{
-        authentication::auth_keys_service::Authenticator, emailer::emailer::EmailerService, repository::{
+        authentication::auth_keys_service::Authenticator, emailer::emailer::EmailerSendService, repository::{
             base::Repository, 
             companies::{models::NewCompany, repo::InsertCompanyFn}, 
             countries::repo::QueryAllCountriesFn, 
@@ -20,7 +20,7 @@ use log::error;
 /// register a new employer profile
 pub async fn create_employer<
     T: QueryAllCountriesFn + InsertCompanyFn + QueryEmployerByUsernameFn + QueryEmployerByEmailFn + InsertEmployerFn<E> + Repository, 
-    E: EmailerService + Send + Sync, 
+    E: EmailerSendService + Send + Sync, 
     U: Authenticator
 >(
     app_data: Data<AppState<T, E, U>>, 
@@ -97,7 +97,7 @@ pub async fn create_employer<
 
 pub async fn update_employer<
     T: QueryAllCountriesFn + QueryEmployerByEmailFn + InsertCompanyFn + QueryDeveloperFn + QueryEmployerFn + UpdateEmployerFn<E> + Repository, 
-    E: EmailerService + Send + Sync,
+    E: EmailerSendService + Send + Sync,
     U: Authenticator
     >(
     app_data: Data<AppState<T, E, U>>, 
@@ -157,7 +157,7 @@ pub async fn update_employer<
     }
 }
 
-pub async fn get_employer<T: QueryEmployerFn + Repository, E: EmailerService, U: Authenticator>(app_data: Data<AppState<T, E, U>>, path: Path<i64>) 
+pub async fn get_employer<T: QueryEmployerFn + Repository, E: EmailerSendService, U: Authenticator>(app_data: Data<AppState<T, E, U>>, path: Path<i64>) 
     -> Result<Option<EmployerResponder>, UserError> {
     let result = app_data.repo.query_employer(path.into_inner()).await;
 
@@ -177,7 +177,7 @@ pub async fn get_employer<T: QueryEmployerFn + Repository, E: EmailerService, U:
     }
 }
 
-pub async fn get_employer_by_email<T: QueryEmployerByEmailFn + Repository, E: EmailerService, U: Authenticator>(
+pub async fn get_employer_by_email<T: QueryEmployerByEmailFn + Repository, E: EmailerSendService, U: Authenticator>(
     app_data: Data<AppState<T, E, U>>, 
     path: Path<String>,
     req: HttpRequest
@@ -214,7 +214,7 @@ pub async fn get_employer_by_email<T: QueryEmployerByEmailFn + Repository, E: Em
     }
 }
 
-pub async fn get_all_employers<T: QueryAllEmployersFn + Repository, E: EmailerService, U: Authenticator>(
+pub async fn get_all_employers<T: QueryAllEmployersFn + Repository, E: EmailerSendService, U: Authenticator>(
     app_data: Data<AppState<T, E, U>>, 
     json: Json<PagingModel>
 ) -> Result<EmployerResponders, UserError> {
@@ -265,14 +265,14 @@ mod tests {
     }
 
     #[async_trait]
-    impl<E: EmailerService + Send + Sync> InsertEmployerFn<E> for MockDbRepo {
+    impl<E: EmailerSendService + Send + Sync> InsertEmployerFn<E> for MockDbRepo {
         async fn insert_employer(&self, _: NewEmployer, _: &E) -> Result<EntityId, sqlx::Error> {
             Ok(EntityId { id: 1 })
         }
     }
 
     #[async_trait]
-    impl<E: EmailerService + Send + Sync> UpdateEmployerFn<E> for MockDbRepo {
+    impl<E: EmailerSendService + Send + Sync> UpdateEmployerFn<E> for MockDbRepo {
         async fn update_employer(&self, _: UpdateEmployer, _: &E) -> Result<(), sqlx::Error> {
             Ok(())
         }

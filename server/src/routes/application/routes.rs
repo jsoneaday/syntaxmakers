@@ -3,7 +3,7 @@ use log::error;
 use crate::{
     app_state::AppState, common::{
         authentication::auth_keys_service::Authenticator, 
-        emailer::emailer::EmailerService, 
+        emailer::emailer::EmailerSendService, 
         repository::{
             application::{models::NewApplication, repo::{DevHasAppliedFn, InsertApplicationFn}}, 
             base::Repository, 
@@ -18,7 +18,7 @@ use crate::routes::authentication::models::DeveloperOrEmployer as AuthDeveloperO
 
 pub async fn create_application<
     T: InsertApplicationFn + Repository + QueryEmployerFn + QueryDeveloperFn, 
-    E: EmailerService,
+    E: EmailerSendService,
     U: Authenticator
     >
     (app_data: Data<AppState<T, E, U>>, new_application: Json<NewApplicationForRoute>, req: HttpRequest) -> Result<OutputId, UserError> {
@@ -35,7 +35,7 @@ pub async fn create_application<
     }
 }
 
-pub async fn developer_applied<T: DevHasAppliedFn + Repository, E: EmailerService, U: Authenticator>(app_data: Data<AppState<T, E, U>>, json: Json<NewApplicationForRoute>) 
+pub async fn developer_applied<T: DevHasAppliedFn + Repository, E: EmailerSendService, U: Authenticator>(app_data: Data<AppState<T, E, U>>, json: Json<NewApplicationForRoute>) 
     -> Result<OutputBool, UserError> {    
     match app_data.repo.dev_has_applied(json.job_id, json.developer_id).await {
         Ok(applied) => Ok(OutputBool { result: applied }),
