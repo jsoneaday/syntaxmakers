@@ -153,3 +153,54 @@ impl Responder for JobAppliedResponders {
         }
     }
 }
+
+#[derive(Serialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct JobAndApplicantResponder {
+    pub job_id: i64,
+    pub job_updated_at: DateTime<Utc>,
+    pub applied_at: DateTime<Utc>,
+    pub dev_id: i64,
+    pub dev_full_name: String,
+    pub dev_description: String,
+    pub job_title: String,
+    pub dev_primary_lang_id: i64,
+    pub dev_primary_lang_name: String,
+    pub dev_secondary_lang_id: i64,
+    pub dev_secondary_lang_name: String
+}
+
+impl Responder for JobAndApplicantResponder {
+    type Body = BoxBody;
+
+    fn respond_to(self, _: &actix_web::HttpRequest) -> actix_web::HttpResponse<Self::Body> {
+        let json_result = serde_json::to_string(&self);
+        match json_result {
+            Ok(body) => HttpResponse::Ok()
+                .content_type(ContentType::json())
+                .body(body),
+            Err(_) => HttpResponse::InternalServerError()
+                .content_type(ContentType::json())
+                .body("Failed to serialize JobAndApplicantResponder")
+        }
+    }
+}
+
+#[derive(Serialize)]
+pub struct JobAndApplicantResponders(pub Vec<JobAndApplicantResponder>);
+
+impl Responder for JobAndApplicantResponders {
+    type Body = BoxBody;
+
+    fn respond_to(self, _: &actix_web::HttpRequest) -> actix_web::HttpResponse<Self::Body> {
+        let json_result = serde_json::to_string(&self);
+        match json_result {
+            Ok(body) => HttpResponse::Ok()
+                .content_type(ContentType::json())
+                .body(body),
+            Err(_) => HttpResponse::InternalServerError()
+                .content_type(ContentType::json())
+                .body("Failed to serialize JobAndApplicantResponders")
+        }
+    }
+}

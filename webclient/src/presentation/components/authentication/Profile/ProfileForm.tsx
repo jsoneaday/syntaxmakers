@@ -1,28 +1,28 @@
 import { ChangeEvent, FormEvent, useEffect, useRef, useState } from "react";
-import { UiDevOrEmployer } from "../../models/DevOrEmployer";
-import DropDown, { OptionType } from "../controls/DropDown";
-import { getLanguages } from "../../../domain/repository/LanguageRepo";
+import { UiDevOrEmployer } from "../../../models/DevOrEmployer";
+import DropDown, { OptionType } from "../../controls/DropDown";
+import { getLanguages } from "../../../../domain/repository/LanguageRepo";
 import {
   createDeveloper,
   getDeveloperByEmail,
   updateDeveloper,
-} from "../../../domain/repository/DeveloperRepo";
-import { useProfile } from "../../common/redux/profile/ProfileHooks";
-import DevProfile, { convert as convertDev } from "../../models/DevProfile";
-import EmpProfile, { convert as convertEmp } from "../../models/EmpProfile";
-import { ValidationMsgView } from "../controls/ValidationMsgView";
-import { ChangePassword } from "./ChangePassword";
-import { PrimaryButton } from "../controls/Buttons";
-import { MarkdownEditor } from "../textEditor/MarkdownEditor";
+} from "../../../../domain/repository/DeveloperRepo";
+import { useProfile } from "../../../common/redux/profile/ProfileHooks";
+import DevProfile, { convert as convertDev } from "../../../models/DevProfile";
+import EmpProfile, { convert as convertEmp } from "../../../models/EmpProfile";
+import { ValidationMsgView } from "../../controls/ValidationMsgView";
+import { ChangePassword } from "../ChangePassword";
+import { PrimaryButton } from "../../controls/Buttons";
+import { MarkdownEditor } from "../../textEditor/MarkdownEditor";
 import { MDXEditorMethods } from "@mdxeditor/editor";
 import { ActionMeta, SingleValue, StylesConfig } from "react-select";
 import CreateableSelect from "react-select/creatable";
-import { getCompanies } from "../../../domain/repository/CompanyRepo";
+import { getCompanies } from "../../../../domain/repository/CompanyRepo";
 import {
   createEmployer,
   getEmployerByEmail,
   updateEmployer,
-} from "../../../domain/repository/EmployerRepo";
+} from "../../../../domain/repository/EmployerRepo";
 
 interface SelectOptionType {
   value: string;
@@ -597,7 +597,7 @@ export function ProfileForm({
             />
           </section>
           <section className="form-section">
-            <span>Fullname</span>
+            <span>Full Name</span>
             <input
               type="text"
               name="fullName"

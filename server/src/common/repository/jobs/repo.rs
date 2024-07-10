@@ -7,8 +7,12 @@ use crate::common::repository::base::EntityId;
 use crate::common::repository::{error::SqlxError, developers::models::Developer, base::CountResult};
 use log::error;
 
+use super::models::JobApplicant;
+
 mod internal {    
     use chrono::Utc;
+
+    use crate::common::repository::jobs::models::JobApplicant;
 
     use super::*;    
 
@@ -579,6 +583,41 @@ mod internal {
             .fetch_all(conn).await;
         jobs
     }
+
+    pub async fn query_jobs_and_appliers(conn: &Pool<Postgres>, emp_id: i64, page_size: i32, last_offset: i64) -> Result<Vec<JobApplicant>, Error> { 
+        let jobs = query_as::<_, JobApplicant>(
+            r"
+            select 
+                j.id as job_id, 
+                j.updated_at as job_updated_at, 
+                a.created_at as applied_at,
+                d.id as dev_id,
+                d.full_name as dev_full_name,
+                d.description as dev_description,
+                j.title as job_title, 
+                d.primary_lang_id as dev_primary_lang_id,
+                ppl.name as dev_primary_lang_name,
+                dsl.secondary_lang_id as dev_secondary_lang_id,
+                spl.name as dev_secondary_lang_name                
+            from 
+                job j 
+                    join employer e on j.employer_id = e.id
+                    join application a on j.id = a.job_id
+                    join developer d on a.developer_id = d.id
+                    join prog_language ppl on d.primary_lang_id = ppl.id
+                    join developers_secondary_langs dsl on d.id = dsl.developer_id
+                    join prog_language spl on spl.id = dsl.secondary_lang_id
+            where e.id = $1 
+            order by a.created_at desc             
+            limit $2
+            offset $3
+            ")
+            .bind(emp_id)
+            .bind(page_size)
+            .bind(last_offset)
+            .fetch_all(conn).await;
+        jobs
+    }
 }
 
 #[async_trait]
@@ -698,5 +737,17 @@ pub trait QueryJobsByApplierFn {
 impl QueryJobsByApplierFn for DbRepo {
     async fn query_jobs_by_applier(&self, dev_id: i64, page_size: i32, last_offset: i64) -> Result<Vec<JobApplied>, Error> {
         internal::query_jobs_by_applier(self.get_conn(), dev_id, page_size, last_offset).await
+    }
+}
+
+#[async_trait]
+pub trait QueryJobsAndAppliersFn {
+    async fn query_jobs_and_appliers(&self, emp_id: i64, page_size: i32, last_offset: i64) -> Result<Vec<JobApplicant>, Error>;
+}
+
+#[async_trait]
+impl QueryJobsAndAppliersFn for DbRepo {
+    async fn query_jobs_and_appliers(&self, emp_id: i64, page_size: i32, last_offset: i64) -> Result<Vec<JobApplicant>, Error> {
+        internal::query_jobs_and_appliers(self.get_conn(), emp_id, page_size, last_offset).await
     }
 }

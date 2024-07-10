@@ -2,7 +2,7 @@ import { MouseEvent, useState } from "react";
 import Modal from "../Modal";
 import Login from "./Login";
 import { Tabs } from "../controls/Tabs";
-import { ProfileForm, ProfileFormEditMode } from "./ProfileForm";
+import { ProfileForm, ProfileFormEditMode } from "./Profile/ProfileForm";
 import { UiDevOrEmployer } from "../../models/DevOrEmployer";
 
 enum AuthModalMode {

@@ -9,6 +9,7 @@ import EmpJobFullview from "./presentation/pages/employer/EmpJobFullview";
 import DevProfile from "./presentation/pages/developer/DevProfile";
 import EmpProfile from "./presentation/pages/employer/EmpProfile";
 import ConfirmEmail from "./presentation/pages/ConfirmEmail";
+import { ViewProfile } from "./presentation/components/developer/profile/ViewProfile";
 
 export const DEV_ROUTE_PREFIX = "devhome";
 export const EMP_ROUTE_PREFIX = "emphome";
@@ -23,6 +24,7 @@ export enum RoutePaths {
   EmpProfile = `/${EMP_ROUTE_PREFIX}/profile`,
   EmpJobPosts = `/${EMP_ROUTE_PREFIX}/jobposts`,
   EmpJobApplicants = `/${EMP_ROUTE_PREFIX}/jobapplicants`,
+  ApplicantProfile = `/${EMP_ROUTE_PREFIX}/viewdev/:id`,
   EmpJobFullView = `/${EMP_ROUTE_PREFIX}/jobfullview`,
   EmailConfirmation = "/confirm_email",
 }
@@ -71,6 +73,10 @@ const router = createBrowserRouter([
   {
     path: RoutePaths.EmpJobApplicants,
     element: <EmpJobApplicants />,
+  },
+  {
+    path: RoutePaths.ApplicantProfile,
+    element: <ViewProfile />,
   },
   {
     path: RoutePaths.EmpJobFullView,

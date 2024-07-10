@@ -6,7 +6,7 @@ import DeveloperHome from "./DeveloperHome";
 import {
   ProfileForm,
   ProfileFormEditMode,
-} from "../../components/authentication/ProfileForm";
+} from "../../components/authentication/Profile/ProfileForm";
 import { UiDevOrEmployer } from "../../models/DevOrEmployer";
 
 export default function DevProfile() {

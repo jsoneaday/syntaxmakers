@@ -31,7 +31,7 @@ export default function Login({ toggleOpen }: LoginProps) {
   useEffect(() => {
     // todo: remove hard codings when ready
     if (devOrEmp === UiDevOrEmployer.Developer) {
-      setEmail("jon@jon.com");
+      setEmail("dharric@live.com");
     } else {
       setEmail("admin@dzhaven.com");
     }

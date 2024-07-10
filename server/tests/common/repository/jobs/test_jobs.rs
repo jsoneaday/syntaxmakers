@@ -12,16 +12,14 @@ use syntaxmakers_server::common::repository::employers::models::NewEmployer;
 use syntaxmakers_server::common::repository::employers::repo::InsertEmployerFn;
 use syntaxmakers_server::common::repository::jobs::models::{NewJob, Job, UpdateJob};
 use syntaxmakers_server::common::repository::jobs::repo::{
-    InsertJobFn, QueryAllJobsFn, QueryJobFn, QueryJobsByApplierFn, QueryJobsByDeveloperFn, QueryJobsByEmployerFn, QueryJobsBySearchTermsFn, UpdateJobFn
+    InsertJobFn, QueryAllJobsFn, QueryJobFn, QueryJobsAndAppliersFn, QueryJobsByApplierFn, QueryJobsByDeveloperFn, QueryJobsByEmployerFn, QueryJobsBySearchTermsFn, UpdateJobFn
 };
 use syntaxmakers_server::common::repository::industries::repo::QueryAllIndustriesFn;
 use syntaxmakers_server::common::repository::languages::repo::QueryAllLanguagesFn;
 use syntaxmakers_server::common::repository::companies::repo::InsertCompanyFn;
 use syntaxmakers_server::common::repository::salaries::repo::QueryAllSalariesFn;
 use syntaxmakers_server::common_test::fixtures::{ 
-    get_company_logo_randomly, get_fake_company_name, get_fake_desc, get_fake_dev_desc, 
-    get_fake_email, get_fake_fullname, get_fake_title, get_random_email, get_random_salary, init_fixtures, 
-    MockEmailer, COUNTRIES, INDUSTRIES, LANGUAGES
+    get_company_logo_randomly, get_fake_company_name, get_fake_desc, get_fake_dev_desc, get_fake_email, get_fake_fullname, get_fake_title, get_fake_user_name, get_random_email, get_random_salary, init_fixtures, MockEmailer, COUNTRIES, INDUSTRIES, LANGUAGES
 };
 
 #[tokio::test]
@@ -506,4 +504,109 @@ async fn test_create_two_distinct_jobs_and_have_same_dev_apply_both_then_get_bac
     assert!(applied_jobs.len() == 2);
     assert!(applied_jobs[0].id == create_job2.id);
     assert!(applied_jobs[1].id == create_job1.id);
+}
+
+#[tokio::test]
+async fn test_create_two_distinct_jobs_and_get_back_devs_who_applied() {
+    let repo = DbRepo::init().await;
+    init_fixtures().await;
+    let emailer = MockEmailer;
+    let logo = get_company_logo_randomly();
+    let languages_result = LANGUAGES.get().unwrap();
+    let industry_result = INDUSTRIES.get().unwrap();
+    let countries = COUNTRIES.get().unwrap();
+    
+    // setup needed data    
+    let company_name1 = CompanyName().fake::<String>();
+    let company_create_result1 = repo.insert_company(NewCompany{ name: company_name1.clone(), logo: Some(logo.clone()), headquarters_country_id: 1 }).await.unwrap();
+    let company_id1 = company_create_result1.id;
+    let create_employer_result1 = repo.insert_employer(NewEmployer {
+        user_name: Username().fake::<String>(),
+        full_name: get_fake_fullname(),
+        email: get_fake_email(),
+        password: "test1234".to_string(),
+        company_id: company_id1
+    }, &emailer).await.unwrap();   
+    
+    let developer1 = repo.insert_developer(NewDeveloper {
+        user_name: get_fake_user_name(),
+        full_name: get_fake_fullname(),
+        email: get_fake_email(),
+        description: get_fake_dev_desc(),
+        password: "test1234".to_string(),
+        primary_lang_id: languages_result.get(0).unwrap().id,
+        secondary_lang_id: Some(languages_result.get(1).unwrap().id)
+    }, &emailer).await.unwrap();
+    let developer2 = repo.insert_developer(NewDeveloper {
+        user_name: get_fake_user_name(),
+        full_name: get_fake_fullname(),
+        email: get_fake_email(),
+        description: get_fake_dev_desc(),
+        password: "test1234".to_string(),
+        primary_lang_id: languages_result.get(2).unwrap().id,
+        secondary_lang_id: Some(languages_result.get(3).unwrap().id)
+    }, &emailer).await.unwrap();
+
+    let title1 = get_fake_title().to_string();    
+    let primary_lang1 = languages_result.get(0).unwrap();
+    let secondary_lang1 = languages_result.get(1).unwrap();
+    let country1 = countries.get(0).unwrap();
+    let industry1 = industry_result.get(0).unwrap();    
+    let create_job1 = repo.insert_job(NewJob {
+        employer_id: create_employer_result1.id,
+        title: title1.clone(),
+        description: get_fake_desc().to_string(),
+        is_remote: false,
+        country_id: Some(country1.id),
+        primary_lang_id: primary_lang1.clone().id,
+        secondary_lang_id: Some(secondary_lang1.id),
+        industry_id: industry1.id,
+        salary_id: get_random_salary().await.id
+    }).await.unwrap();
+
+    let title2 = get_fake_title().to_string();    
+    let primary_lang2 = languages_result.get(2).unwrap();
+    let secondary_lang2 = languages_result.get(3).unwrap();
+    let country2 = countries.get(0).unwrap();
+    let industry2 = industry_result.get(1).unwrap();    
+    let create_job2 = repo.insert_job(NewJob {
+        employer_id: create_employer_result1.id,
+        title: title2,
+        description: get_fake_desc().to_string(),
+        is_remote: false,
+        country_id: Some(country2.id),
+        primary_lang_id: primary_lang2.id,
+        secondary_lang_id: Some(secondary_lang2.id),
+        industry_id: industry2.id,
+        salary_id: get_random_salary().await.id
+    }).await.unwrap();
+
+    _ = repo.insert_application(NewApplication {
+        job_id: create_job1.id,
+        developer_id: developer1.id
+    }).await;
+    _ = repo.insert_application(NewApplication {
+        job_id: create_job2.id,
+        developer_id: developer1.id
+    }).await;
+    match repo.query_jobs_and_appliers(create_employer_result1.id, 10, 0).await {
+        Ok(first_appliers) => {
+            assert!(first_appliers.len() == 2);
+            assert!(first_appliers[0].dev_id == developer1.id);
+            assert!(first_appliers[1].dev_id == developer1.id);
+        },
+        Err(e) => panic!("{}", e)
+    }    
+
+    _ = repo.insert_application(NewApplication {
+        job_id: create_job2.id,
+        developer_id: developer2.id
+    }).await;
+    match repo.query_jobs_and_appliers(create_employer_result1.id, 10, 0).await {
+        Ok(first_appliers) => {
+            assert!(first_appliers.len() == 3);
+            assert!(first_appliers[0].dev_id == developer2.id);
+        },
+        Err(e) => panic!("{}", e)
+    }   
 }

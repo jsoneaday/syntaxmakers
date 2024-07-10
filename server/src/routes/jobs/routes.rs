@@ -7,15 +7,15 @@ use crate::{
             developers::repo::QueryDeveloperFn, 
             employers::repo::QueryEmployerFn, 
             jobs::{
-                models::{Job, JobApplied, NewJob, UpdateJob}, 
-                repo::{InsertJobFn, QueryAllJobsFn, QueryJobFn, QueryJobsByApplierFn, QueryJobsByDeveloperFn, QueryJobsByEmployerFn, QueryJobsBySearchTermsFn, QueryJobsBySearchTermsForEmpFn, UpdateJobFn}
+                models::{Job, JobApplicant, JobApplied, NewJob, UpdateJob}, 
+                repo::{InsertJobFn, QueryAllJobsFn, QueryJobFn, QueryJobsAndAppliersFn, QueryJobsByApplierFn, QueryJobsByDeveloperFn, QueryJobsByEmployerFn, QueryJobsBySearchTermsFn, QueryJobsBySearchTermsForEmpFn, UpdateJobFn}
             }
         }
     }, routes::{
         auth_helper::check_is_authenticated, base_model::{IdAndPagingModel, OutputId, PagingModel, SearchAndPagingModel, SearchForEmpAndPagingModel}, user_error::UserError
     }
 };
-use super::models::{JobAppliedResponders, JobAppliedResponder, JobResponder, JobResponders, NewJobForRoute, UpdateJobForRoute};
+use super::models::{JobAndApplicantResponder, JobAndApplicantResponders, JobAppliedResponder, JobAppliedResponders, JobResponder, JobResponders, NewJobForRoute, UpdateJobForRoute};
 use crate::routes::authentication::models::DeveloperOrEmployer as AuthDeveloperOrEmployer;
 
 #[allow(unused)]
@@ -145,6 +145,21 @@ pub async fn get_jobs_by_applier<T: QueryJobsByApplierFn + Repository, E: Emaile
     }    
 }
 
+#[allow(unused)]
+pub async fn get_jobs_and_appliers<T: QueryJobsAndAppliersFn + Repository, E: EmailerSendService, U: Authenticator>(
+    app_data: Data<AppState<T, E, U>>, 
+    json: Json<IdAndPagingModel>
+) -> Result<JobAndApplicantResponders, UserError> {
+    let result = app_data.repo.query_jobs_and_appliers(json.id, json.page_size, json.last_offset).await;
+    // remove unneeded match
+    match result {
+        Ok(jobs) => {
+            return_job_applicant_result(Ok(jobs))
+        },
+        Err(e) => Err(e.into())
+    }    
+}
+
 fn return_jobs_result(result: Result<Vec<Job>, sqlx::error::Error>) -> Result<JobResponders, UserError> {
     match result {
         Ok(jobs) => {
@@ -167,6 +182,19 @@ fn return_job_applied_result(result: Result<Vec<JobApplied>, sqlx::error::Error>
             })
             .collect::<Vec<JobAppliedResponder>>();
             Ok(JobAppliedResponders(responders))
+        },
+        Err(e) => Err(e.into())
+    }
+}
+
+fn return_job_applicant_result(result: Result<Vec<JobApplicant>, sqlx::error::Error>) -> Result<JobAndApplicantResponders, UserError> {
+    match result {
+        Ok(jobs) => {
+            let responders = jobs.iter().map(|job| {
+                convert_job_applicant(job)
+            })
+            .collect::<Vec<JobAndApplicantResponder>>();
+            Ok(JobAndApplicantResponders(responders))
         },
         Err(e) => Err(e.into())
     }
@@ -228,6 +256,22 @@ fn convert_job_applied(job: &JobApplied) -> JobAppliedResponder {
         industry_name: job.industry_name.to_string(),
         salary_id: job.salary_id,
         salary: job.salary
+    }
+}
+
+fn convert_job_applicant(job_applicant: &JobApplicant) -> JobAndApplicantResponder {
+    JobAndApplicantResponder {
+        job_id: job_applicant.job_id,
+        job_updated_at: job_applicant.job_updated_at,
+        applied_at: job_applicant.applied_at,
+        dev_id: job_applicant.dev_id,
+        dev_full_name: job_applicant.dev_full_name.to_string(),
+        dev_description: job_applicant.dev_description.to_string(),
+        job_title: job_applicant.job_title.to_string(),
+        dev_primary_lang_id: job_applicant.dev_primary_lang_id,
+        dev_primary_lang_name: job_applicant.dev_primary_lang_name.to_string(),
+        dev_secondary_lang_id: job_applicant.dev_secondary_lang_id,
+        dev_secondary_lang_name: job_applicant.dev_secondary_lang_name.to_string()
     }
 }
 
