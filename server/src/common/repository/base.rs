@@ -79,7 +79,7 @@ async fn get_conn_pool() -> Pool<Postgres> {
         from _sqlx_migrations
         where version = $1
     ")
-    .bind(20230623210040 as i64)
+    .bind(20230623210040 as i64) // todo: need to improve this
     .fetch_optional(&conn)
     .await;
 

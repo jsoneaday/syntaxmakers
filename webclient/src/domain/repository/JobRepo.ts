@@ -1,4 +1,5 @@
 import {
+  EMPLOYER_JOBS_SEARCH_URL,
   JOBS_APPLIED_URL,
   JOBS_DEV_URL,
   JOBS_EMP_URL,
@@ -93,6 +94,32 @@ export async function getJobsBySearchTerms(
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
+      searchTerms,
+      pageSize,
+      lastOffset,
+    }),
+  });
+
+  if (result.ok) {
+    const jobs: Job[] = await result.json();
+    return jobs;
+  }
+  return [];
+}
+
+export async function getEmployerJobsBySearchTerms(
+  empId: string,
+  searchTerms: string[],
+  pageSize: number = 20,
+  lastOffset: number = 0
+) {
+  const result = await fetch(EMPLOYER_JOBS_SEARCH_URL, {
+    method: "post",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      empId,
       searchTerms,
       pageSize,
       lastOffset,

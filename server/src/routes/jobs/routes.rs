@@ -8,11 +8,11 @@ use crate::{
             employers::repo::QueryEmployerFn, 
             jobs::{
                 models::{Job, JobApplied, NewJob, UpdateJob}, 
-                repo::{InsertJobFn, QueryAllJobsFn, QueryJobFn, QueryJobsByApplierFn, QueryJobsByDeveloperFn, QueryJobsByEmployerFn, QueryJobsBySearchTermsFn, UpdateJobFn}
+                repo::{InsertJobFn, QueryAllJobsFn, QueryJobFn, QueryJobsByApplierFn, QueryJobsByDeveloperFn, QueryJobsByEmployerFn, QueryJobsBySearchTermsFn, QueryJobsBySearchTermsForEmpFn, UpdateJobFn}
             }
         }
     }, routes::{
-        auth_helper::check_is_authenticated, base_model::{IdAndPagingModel, OutputId, PagingModel, SearchAndPagingModel}, user_error::UserError
+        auth_helper::check_is_authenticated, base_model::{IdAndPagingModel, OutputId, PagingModel, SearchAndPagingModel, SearchForEmpAndPagingModel}, user_error::UserError
     }
 };
 use super::models::{JobAppliedResponders, JobAppliedResponder, JobResponder, JobResponders, NewJobForRoute, UpdateJobForRoute};
@@ -119,6 +119,16 @@ pub async fn get_jobs_by_employer<T: QueryJobsByEmployerFn + Repository, E: Emai
 pub async fn get_jobs_by_search_terms<T: QueryJobsBySearchTermsFn + Repository, E: EmailerSendService, U: Authenticator>(app_data: Data<AppState<T, E, U>>, json: Json<SearchAndPagingModel>) 
     -> Result<JobResponders, UserError> {
     let result = app_data.repo.query_jobs_by_search_terms(json.search_terms.clone(), json.page_size, json.last_offset).await;
+    
+    return_jobs_result(result)
+}
+
+#[allow(unused)]
+pub async fn get_jobs_by_search_terms_for_emp<T: QueryJobsBySearchTermsForEmpFn + Repository, E: EmailerSendService, U: Authenticator>(
+    app_data: Data<AppState<T, E, U>>, 
+    json: Json<SearchForEmpAndPagingModel>
+) -> Result<JobResponders, UserError> {
+    let result = app_data.repo.query_jobs_by_search_terms_for_emp(json.emp_id, json.search_terms.clone(), json.page_size, json.last_offset).await;
     
     return_jobs_result(result)
 }

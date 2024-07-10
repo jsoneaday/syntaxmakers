@@ -65,6 +65,10 @@ const router = createBrowserRouter([
     element: <EmpJobPosts />,
   },
   {
+    path: `${RoutePaths.EmpJobPosts}/:search`,
+    element: <EmpJobPosts />,
+  },
+  {
     path: RoutePaths.EmpJobApplicants,
     element: <EmpJobApplicants />,
   },

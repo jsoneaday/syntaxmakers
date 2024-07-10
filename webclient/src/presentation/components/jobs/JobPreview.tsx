@@ -19,20 +19,12 @@ export default function JobPreview({ jobPost, isSmall }: JobPreviewProps) {
     ? "normal-font preview-small-normal-font"
     : "normal-font";
 
-  const icon = isSmall ? null : (
-    <img
-      className="preview-icon"
-      src={jobPost.companyLogo ? URL.createObjectURL(jobPost.companyLogo) : ""}
-    />
-  );
-
   const timestamp = isSmall ? null : (
     <div className="small-font preview-timestamp">{jobPost.updatedAt}</div>
   );
 
   return (
     <div className="post-preview-container">
-      {icon}
       <div className="preview-content">
         <div className={smallTitleFont}>{jobPost.title}</div>
 

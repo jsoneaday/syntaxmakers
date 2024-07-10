@@ -2,6 +2,7 @@ import { ChangeEvent, useMemo, useState } from "react";
 import JobPost from "../../models/JobPost";
 import { useProfile } from "../../common/redux/profile/ProfileHooks";
 import {
+  getEmployerJobsBySearchTerms,
   getJobsByDeveloper,
   getJobsByEmployer,
   getJobsBySearchTerms,
@@ -90,11 +91,34 @@ export default function JobSearchList({ userType }: JobSearchListProps) {
     const searchTerms = search?.split(" ");
     if (!searchTerms) throw new Error("Search terms are missing");
 
-    const jobs = await getJobsBySearchTerms(searchTerms, PAGE_SIZE, newOffset);
-    const jobsData = jobs.map((job) => {
-      return convertJob(job);
-    });
-    setData && setJobsData(jobsData);
+    let jobsData: JobPost[] = [];
+    if (userType === UiDevOrEmployer.Developer) {
+      const jobs = await getJobsBySearchTerms(
+        searchTerms,
+        PAGE_SIZE,
+        newOffset
+      );
+      jobsData = jobs.map((job) => {
+        return convertJob(job);
+      });
+      setData && setJobsData(jobsData);
+    } else {
+      if (profile) {
+        const jobs = await getEmployerJobsBySearchTerms(
+          profile.id,
+          searchTerms,
+          PAGE_SIZE,
+          newOffset
+        );
+        jobsData = jobs.map((job) => {
+          return convertJob(job);
+        });
+        setData && setJobsData(jobsData);
+      } else {
+        setSearchResultsMessage("You must be logged in to search");
+        return [];
+      }
+    }
 
     console.log("searchJobs", newOffset, setData, jobsData);
     setSearchResultsMessage(`Search results for terms: ${search}`);
@@ -128,7 +152,15 @@ export default function JobSearchList({ userType }: JobSearchListProps) {
             onChange={onSearchTxtChanged}
           />
           <PrimaryButton disabled={searchBtnDisabled}>
-            <Link to={`${RoutePaths.DevJobSearch}/${searchInput}`}>search</Link>
+            <Link
+              to={
+                userType === UiDevOrEmployer.Developer
+                  ? `${RoutePaths.DevJobSearch}/${searchInput}`
+                  : `${RoutePaths.EmpJobPosts}/${searchInput}`
+              }
+            >
+              search
+            </Link>
           </PrimaryButton>
         </div>
       </div>
