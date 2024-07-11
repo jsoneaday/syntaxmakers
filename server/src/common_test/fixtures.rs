@@ -291,6 +291,9 @@ impl Repository for MockDbRepo {
 pub struct MockEmailer;
 #[async_trait]
 impl EmailerSendService for MockEmailer {
+    async fn send_email(&self, _: String, _: String, _: String, _: String, _: String, _: String) -> Result<(), EmailError>{
+        Ok(())
+    }
     async fn send_email_confirm_requirement(&self, _: bool, _: i64, _: String, _: String, _: String, _: Uuid) -> Result<(), EmailError> {
         Ok(())
     }

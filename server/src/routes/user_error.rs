@@ -64,6 +64,7 @@ impl UserError {
     pub fn from_email_to_user_error(e: EmailError) -> UserError {
         match e {
             EmailError::EmailSendFailed => UserError::EmailSendFailed,
+            EmailError::EmailBodyInvalidOnlyPlainTextAllowed => UserError::EmailSendFailed,
             EmailError::EmailConfirmationSendFailed => UserError::EmailSendFailed,
             EmailError::SqlxErrorDatabaseError => UserError::InternalError,
             EmailError::SqlxErrorEmailConfirmationNotFound => UserError::EmailConfirmationNotFound,

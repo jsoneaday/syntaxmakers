@@ -3,11 +3,13 @@ use crate::common::repository::error::{DATABASE_QUERY_FAILED, EMAIL_ALREADY_CONF
 
 const EMAIL_CONFIRMATION_SEND_FAILED: &str = "Confirmation email failed to send";
 const SENDING_EMAIL_FAILED: &str = "Sending email failed";
+const EMAIL_BODY_INVALID_ONLY_PLAINTEXT_ALLOWED: &str = "The format of email body is invalid. Only plain text is allowed";
 
 #[derive(Error, Debug, PartialEq)]
 pub enum EmailError {
     EmailConfirmationSendFailed,
     EmailSendFailed,
+    EmailBodyInvalidOnlyPlainTextAllowed,
     SqlxErrorDatabaseError,
     SqlxErrorEmailConfirmInvalidParams,
     SqlxErrorEmailConfirmationAttemptFailed,
@@ -23,6 +25,7 @@ impl std::fmt::Display for EmailError {
         match self {
             &EmailError::EmailConfirmationSendFailed => write!(f, "{}", EMAIL_CONFIRMATION_SEND_FAILED),
             &EmailError::EmailSendFailed => write!(f, "{}", SENDING_EMAIL_FAILED),
+            &EmailError::EmailBodyInvalidOnlyPlainTextAllowed => write!(f, "{}", EMAIL_BODY_INVALID_ONLY_PLAINTEXT_ALLOWED),
             &EmailError::SqlxErrorDatabaseError => write!(f, "{}", DATABASE_QUERY_FAILED),
             &EmailError::SqlxErrorEmailConfirmInvalidParams => write!(f, "{}", EMAIL_CONFIRM_INVALID_PARAMS),
             &EmailError::SqlxErrorEmailConfirmationAttemptFailed => write!(f, "{}", EMAIL_CONFIRM_FAILED),

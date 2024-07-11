@@ -11,10 +11,19 @@ pub struct ChangePasswordRoute {
     pub new_password: String,
     pub dev_or_emp: DeveloperOrEmployer
 }
+
 #[derive(Deserialize)]
 pub struct ConfirmEmailQuery {
     pub is_dev: bool,
     pub profile_id: i64,
     pub new_email: String,
     pub unique_key: Option<Uuid>
+}
+
+#[derive(Deserialize)]
+pub struct SendEmail {
+    pub sender_emp_id: i64,
+    pub receiver_dev_id: i64,
+    pub subject: String,
+    pub body: String
 }

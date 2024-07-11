@@ -11,17 +11,22 @@ use lettre::{Message, SmtpTransport, Transport};
 use std::env;
 use dotenv::dotenv;
 
+const SMTP_PROVIDER: &str = "smtp.mailgun.org";
 pub const SIGNUP_EMAIL_CONFIRMATION_BODY: &str = "Thank you for signing up to SyntaxMakers. The Jobs Posting site for specialized programming languages. <br/><br/>Please click the button below to confirm your email address:";
 pub const CHANGE_EMAIL_CONFIRMATION_BODY: &str = "Your SyntaxMakers account email has been changed. Please click the button below to confirm your email address:";
 
 #[derive(Clone, Debug)]
 pub struct Emailer {
+    /// smtp provider service user_name
     user_name: String,
+    /// smtp provider service password
     password: String
 }
 
 #[async_trait]
 pub trait EmailerSendService {
+    async fn send_email(&self, sender_full_name: String, sender_address: String, receiver_full_name: String, receiver_adddress: String, subject: String, body: String) -> Result<(), EmailError>;
+
     async fn send_email_confirm_requirement(&self, is_dev: bool, profile_id: i64, email_body: String, full_name: String, new_email: String, unique_key: Uuid) 
         -> Result<(), EmailError>;    
 }
@@ -29,6 +34,33 @@ pub trait EmailerSendService {
 #[allow(unused)]
 #[async_trait]
 impl EmailerSendService for Emailer {
+    async fn send_email(&self, sender_full_name: String, sender_address: String, receiver_full_name: String, receiver_adddress: String, subject: String, body: String) -> Result<(), EmailError> {
+        if !is_safe_text(body.as_str()) {
+            return Err(EmailError::EmailBodyInvalidOnlyPlainTextAllowed);
+        }
+
+        let from = format!("{} <{}>", sender_full_name, sender_address);
+        let email = Message::builder()
+            .from(from.parse().unwrap())
+            .reply_to(from.parse().unwrap())
+            .to(format!("{} <{}>", receiver_full_name, receiver_adddress).parse().unwrap())
+            .subject(subject)
+            .header(ContentType::TEXT_HTML)
+            .body(body) 
+            .unwrap();
+
+        let creds = Credentials::new(self.user_name.clone(), self.password.clone());
+        let mailer = SmtpTransport::relay(SMTP_PROVIDER).unwrap().credentials(creds).build();
+
+        match mailer.send(&email) {
+            Ok(_) => Ok(()),
+            Err(e) => {
+                println!("{}", e);
+                Err(EmailError::EmailSendFailed)
+            }
+        }     
+    }
+
     /// e.g. email_body - "Thank you for signing up. Please click the button below to confirm your email address:"
     async fn send_email_confirm_requirement(&self, is_dev: bool, profile_id: i64, email_body: String, full_name: String, new_email: String, unique_key: Uuid) 
         -> Result<(), EmailError> {
@@ -52,7 +84,7 @@ impl EmailerSendService for Emailer {
             .body(body) 
             .unwrap();
         let creds = Credentials::new(self.user_name.clone(), self.password.clone());
-        let mailer = SmtpTransport::relay("smtp.mailgun.org").unwrap().credentials(creds).build();
+        let mailer = SmtpTransport::relay(SMTP_PROVIDER).unwrap().credentials(creds).build();
 
         match mailer.send(&email) {
             Ok(_) => Ok(()),
@@ -157,4 +189,8 @@ impl Emailer {
         unique_key    
     ))
     }
+}
+
+fn is_safe_text(s: &str) -> bool {
+    s.chars().all(|c| c.is_ascii_alphanumeric() || c.is_ascii_punctuation() || c == ' ')
 }

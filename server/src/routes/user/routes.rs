@@ -5,14 +5,17 @@ use crate::{
         authentication::auth_keys_service::Authenticator, 
         emailer::emailer::{EmailerReceiveService, EmailerSendService}, 
         repository::{
-            base::Repository, developers::repo::QueryDeveloperFn, employers::repo::QueryEmployerFn, user::{models::{ChangePassword, DeveloperOrEmployer}, repo::ChangePasswordFn}
+            base::Repository, 
+            developers::repo::QueryDeveloperFn, 
+            employers::repo::QueryEmployerFn, 
+            user::{models::{ChangePassword, DeveloperOrEmployer}, repo::{ChangePasswordFn, SendEmailFn}}
         }
     }, 
     routes::{auth_helper::check_is_authenticated, authentication::models::DeveloperOrEmployer as AuthDeveloperOrEmployer, base_model::OutputBool, user_error::UserError}
 };
 use crate::common::repository::developers::repo::ConfirmDevEmailFn as ConfirmDevEmailFn;
 use crate::common::repository::employers::repo::ConfirmEmpEmailFn as ConfirmEmpEmailFn;
-use super::models::{ChangePasswordRoute, ConfirmEmailQuery};
+use super::models::{ChangePasswordRoute, ConfirmEmailQuery, SendEmail};
 use log::error;
 
 pub async fn confirm_email<T: ConfirmDevEmailFn + ConfirmEmpEmailFn + Repository + Send + Sync, E: EmailerSendService + EmailerReceiveService<T>, U: Authenticator>(
@@ -30,6 +33,16 @@ pub async fn confirm_email<T: ConfirmDevEmailFn + ConfirmEmpEmailFn + Repository
                 _ => Err(e.into())
             }            
         }
+    }
+}
+
+pub async fn send_email<T: SendEmailFn<E> + Repository + Send + Sync, E: EmailerSendService + Send + Sync, U: Authenticator>(
+    app_data: Data<AppState<T, E, U>>,
+    json: Json<SendEmail>
+) -> Result<OutputBool, UserError> {
+    match app_data.repo.send_email(json.sender_emp_id, json.receiver_dev_id, json.subject.to_owned(), json.body.to_owned(), &app_data.emailer).await {
+        Ok(()) => Ok(OutputBool { result: true }),
+        Err(e) => Err(e.into())
     }
 }
 
