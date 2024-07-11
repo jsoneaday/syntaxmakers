@@ -2,7 +2,7 @@ import { useState } from "react";
 import { ViewableDevProfile } from "../../../models/ViewProfileModel";
 import { MarkdownEditor } from "../../textEditor/MarkdownEditor";
 
-export function ViewProfile() {
+export function ApplicantFullview() {
   const [profile] = useState<ViewableDevProfile>();
   return (
     <div className="login-form">

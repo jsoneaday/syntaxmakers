@@ -458,6 +458,25 @@ mod tests {
         }
     } 
 
+    #[async_trait]
+    impl QueryJobsAndAppliersFn for MockDbRepo {
+        async fn query_jobs_and_appliers(&self, _: i64, _: i32, _: i64) -> Result<Vec<JobApplicant>, sqlx::Error> {
+            Ok(vec![JobApplicant {
+                dev_id: 1,
+                job_id: 1,
+                job_updated_at: Utc::now(),
+                applied_at: Utc::now(),
+                dev_full_name: get_fake_fullname(),
+                dev_description: get_fake_dev_desc(),
+                job_title: get_fake_title().to_string(),
+                dev_primary_lang_id: 1,
+                dev_primary_lang_name: LANGUAGES.get().unwrap()[0].name.clone(),
+                dev_secondary_lang_id: 2,
+                dev_secondary_lang_name: LANGUAGES.get().unwrap()[1].name.clone(),
+            }])
+        }
+    }
+
     #[tokio::test]
     async fn test_create_job_route() {
         init_fixtures().await;
@@ -575,5 +594,22 @@ mod tests {
         let result = get_jobs_by_developer(app_data, Json(IdAndPagingModel { id: 1, page_size: 10, last_offset: 1 })).await.unwrap();
 
         assert!(result.0.get(0).unwrap().id == 1);
+    }
+
+    #[tokio::test]
+    async fn test_get_job_and_applicants_route() {
+        init_fixtures().await;
+        let repo = MockDbRepo::init().await;
+        let auth_service = MockAuthService;
+        let emailer = MockEmailer;
+        let app_data = get_app_data(repo, emailer, auth_service).await;
+
+        let result = get_jobs_and_appliers(app_data, Json(IdAndPagingModel {
+            id: 1,
+            page_size: 10,
+            last_offset: 0
+        })).await.unwrap();
+
+        assert!(result.0.len() == 1);
     }
 }

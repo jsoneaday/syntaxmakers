@@ -1,5 +1,6 @@
 import {
   EMPLOYER_JOBS_SEARCH_URL,
+  JOBS_APPLICANTS_URL,
   JOBS_APPLIED_URL,
   JOBS_DEV_URL,
   JOBS_EMP_URL,
@@ -31,6 +32,22 @@ export class Job {
     public companyLogo?: ArrayBuffer, // normal format for file data received over wire
     public countryId?: number,
     public countryName?: string
+  ) {}
+}
+
+export class JobApplicant {
+  constructor(
+    public jobId: string,
+    public jobTitle: string,
+    public jobUpdatedAt: string,
+    public appliedAt: string,
+    public devId: string,
+    public devFullName: string,
+    public devDescription: string,
+    public devPrimaryLangId: string,
+    public devPrimaryLangName: string,
+    public devSecondaryLangId: string,
+    public devSecondaryLangName: string
   ) {}
 }
 
@@ -251,4 +268,28 @@ export async function updateJobPost(
     return await response.json();
   }
   throw new Error("Failed to update job");
+}
+
+export async function getJobApplicants(
+  empId: string,
+  pageSize: number = 20,
+  lastOffset: number = 0
+): Promise<JobApplicant[]> {
+  const result = await fetch(JOBS_APPLICANTS_URL, {
+    method: "post",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      id: empId,
+      pageSize,
+      lastOffset,
+    }),
+  });
+
+  if (result.ok) {
+    const applicants: JobApplicant[] = await result.json();
+    return applicants;
+  }
+  return [];
 }

@@ -65,12 +65,12 @@ pub struct JobCountry {
 #[derive(FromRow, Debug, Clone)]
 pub struct JobApplicant {
     pub job_id: i64,
+    pub job_title: String,
     pub job_updated_at: DateTime<Utc>,
     pub applied_at: DateTime<Utc>,
     pub dev_id: i64,
     pub dev_full_name: String,
-    pub dev_description: String,
-    pub job_title: String,
+    pub dev_description: String,    
     pub dev_primary_lang_id: i64,
     pub dev_primary_lang_name: String,
     pub dev_secondary_lang_id: i64,

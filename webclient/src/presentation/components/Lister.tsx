@@ -1,5 +1,5 @@
 import { ReactNode, useEffect, useState } from "react";
-import { KeyItem } from "../models/ModelUtils";
+import { GroupItem, KeyItem } from "../models/ModelUtils";
 import "../theme/lister.css";
 
 interface ListerProps<T extends KeyItem> {
@@ -25,4 +25,27 @@ export default function Lister<T extends KeyItem>({
   }, [dataItems]);
 
   return <ul className="lister-container">{elements}</ul>;
+}
+
+interface GroupListerProps<T extends GroupItem> {
+  groupItems: T[];
+  elementCreator: (item: T) => ReactNode;
+}
+
+export function GroupLister<T extends GroupItem>({
+  groupItems,
+  elementCreator,
+}: GroupListerProps<T>) {
+  return (
+    <>
+      {groupItems.map((g) => (
+        <section style={{ marginBottom: "2em", width: "100%" }}>
+          <header>
+            <strong>{g.title}</strong>
+          </header>
+          <Lister dataItems={groupItems} elementCreator={elementCreator} />
+        </section>
+      ))}
+    </>
+  );
 }

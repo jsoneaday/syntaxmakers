@@ -10,6 +10,7 @@ export const JOBS_EMP_URL = `${API_ROOT_URL}jobs_emp`;
 export const JOBS_SEARCH_URL = `${API_ROOT_URL}jobs_search`;
 export const EMPLOYER_JOBS_SEARCH_URL = `${API_ROOT_URL}jobs_emp_search`;
 export const JOBS_APPLIED_URL = `${API_ROOT_URL}jobs_applied`;
+export const JOBS_APPLICANTS_URL = `${API_ROOT_URL}job_applicants`;
 export const INDUSTRIES_URL = `${API_ROOT_URL}industries`;
 export const EMPLOYER_URL = `${API_ROOT_URL}employer`;
 export const EMPLOYER_UPDATE_URL = `${API_ROOT_URL}employer_update`;

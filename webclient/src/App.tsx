@@ -9,7 +9,7 @@ import EmpJobFullview from "./presentation/pages/employer/EmpJobFullview";
 import DevProfile from "./presentation/pages/developer/DevProfile";
 import EmpProfile from "./presentation/pages/employer/EmpProfile";
 import ConfirmEmail from "./presentation/pages/ConfirmEmail";
-import { ViewProfile } from "./presentation/components/developer/profile/ViewProfile";
+import EmpJobApplicant from "./presentation/pages/employer/EmpJobApplicant";
 
 export const DEV_ROUTE_PREFIX = "devhome";
 export const EMP_ROUTE_PREFIX = "emphome";
@@ -76,7 +76,7 @@ const router = createBrowserRouter([
   },
   {
     path: RoutePaths.ApplicantProfile,
-    element: <ViewProfile />,
+    element: <EmpJobApplicant />,
   },
   {
     path: RoutePaths.EmpJobFullView,

@@ -3,12 +3,12 @@ import "../../theme/userhome.css";
 /// @ts-ignore
 import { v4 as uuidv4 } from "uuid";
 import EmployerHome from "./EmployerHome";
-import { ApplicantList } from "../../components/developer/applicant/ApplicantList";
+import { ApplicantFullview } from "../../components/developer/applicant/ApplicantFullview";
 
-export default function EmpJobApplicants() {
+export default function EmpJobApplicant() {
   return (
     <EmployerHome>
-      <ApplicantList />
+      <ApplicantFullview />
     </EmployerHome>
   );
 }

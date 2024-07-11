@@ -1,3 +1,5 @@
+import { formatDistanceToNow, parseISO } from "date-fns";
+
 export function shortenDurationStr(date: string) {
   if (date.includes("seconds")) {
     return date.replace("seconds", "sec");
@@ -15,4 +17,10 @@ export function shortenDurationStr(date: string) {
     return date.replace("years", "y");
   }
   return "";
+}
+
+export function friendlyDate(utcDate: string) {
+  return shortenDurationStr(
+    formatDistanceToNow(parseISO(utcDate), { addSuffix: true })
+  );
 }
