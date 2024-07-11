@@ -1,11 +1,19 @@
 import { JobApplicantModel } from "../../../models/JobApplicantModel";
 import { PrimaryButton } from "../../controls/Buttons";
 
-interface ViewProfileProps {
-  profile: JobApplicantModel;
+interface PreviewApplicantProps {
+  applicant: JobApplicantModel;
+  selectDevId: (devId: string) => void;
 }
 
-export function PreviewApplicant({ profile }: ViewProfileProps) {
+export function PreviewApplicant({
+  applicant,
+  selectDevId,
+}: PreviewApplicantProps) {
+  const onClickToggleEmail = () => {
+    selectDevId(applicant.devId);
+  };
+
   return (
     <div style={{ width: "100%" }}>
       <div className="login-form">
@@ -16,7 +24,7 @@ export function PreviewApplicant({ profile }: ViewProfileProps) {
               width: "75%",
             }}
           >
-            {profile.appliedAt}
+            {applicant.appliedAt}
           </small>
         </section>
         <section className="form-section">
@@ -26,7 +34,7 @@ export function PreviewApplicant({ profile }: ViewProfileProps) {
               width: "75%",
             }}
           >
-            {profile.fullName}
+            {applicant.fullName}
           </span>
         </section>
         <section className="form-section">
@@ -36,7 +44,7 @@ export function PreviewApplicant({ profile }: ViewProfileProps) {
               width: "75%",
             }}
           >
-            {profile.primaryLangName}
+            {applicant.primaryLangName}
           </span>
         </section>
         <section className="form-section">
@@ -46,7 +54,7 @@ export function PreviewApplicant({ profile }: ViewProfileProps) {
               width: "75%",
             }}
           >
-            {profile.secondaryLangName}
+            {applicant.secondaryLangName}
           </span>
         </section>
         <section className="form-section">
@@ -56,14 +64,14 @@ export function PreviewApplicant({ profile }: ViewProfileProps) {
               width: "75%",
             }}
           >
-            {profile.description}
+            {applicant.description}
           </span>
         </section>
         <section
           className="form-section"
           style={{ marginTop: "1em", marginBottom: "1em" }}
         >
-          <PrimaryButton>message</PrimaryButton>
+          <PrimaryButton onClick={onClickToggleEmail}>email</PrimaryButton>
         </section>
       </div>
     </div>

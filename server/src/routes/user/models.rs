@@ -21,6 +21,7 @@ pub struct ConfirmEmailQuery {
 }
 
 #[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct SendEmail {
     pub sender_emp_id: i64,
     pub receiver_dev_id: i64,

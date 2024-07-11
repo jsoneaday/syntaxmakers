@@ -1,5 +1,7 @@
 import { ReactNode, useEffect, useState } from "react";
 import { GroupItem, KeyItem } from "../models/ModelUtils";
+/// @ts-ignore
+import { v4 as uuidv4 } from "uuid";
 import "../theme/lister.css";
 
 interface ListerProps<T extends KeyItem> {
@@ -39,7 +41,10 @@ export function GroupLister<T extends GroupItem>({
   return (
     <>
       {groupItems.map((g) => (
-        <section style={{ marginBottom: "2em", width: "100%" }}>
+        <section
+          key={`${g.key}-${uuidv4()}`}
+          style={{ marginBottom: "2em", width: "100%" }}
+        >
           <header>
             <strong>{g.title}</strong>
           </header>

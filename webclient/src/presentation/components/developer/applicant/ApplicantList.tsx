@@ -12,7 +12,6 @@ export function ApplicantList() {
 
   const getApplicants = async (newOffset: number, setData: boolean) => {
     if (!profile) return [];
-    console.log("id", profile.id);
     const applicants = await getJobApplicants(profile.id, PAGE_SIZE, newOffset);
     setData && setApplicants(applicants.map((a) => convert(a)));
     return applicants;

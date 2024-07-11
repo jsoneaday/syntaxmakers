@@ -119,7 +119,11 @@ mod internal {
             .fetch_one(conn)
             .await {
                 Ok(emp) => {
-                    match query_as::<_, Developer>("select * from developer where id = $1")
+                    match query_as::<_, Developer>(r"
+                        select d.id, d.created_at, d.updated_at, d.user_name, d.full_name, d.email, d.description, d.password, d.primary_lang_id, dsl.secondary_lang_id
+                        from developer d join developers_secondary_langs dsl on d.id = dsl.developer_id
+                        where d.id = $1
+                    ")
                         .bind(receiver_dev_id)
                         .fetch_one(conn)
                         .await {
@@ -141,10 +145,16 @@ mod internal {
                                     }
                                 }
                             },
-                            Err(e) => Err(e)
+                            Err(e) => {
+                                println!("route: {}", e);
+                                Err(e)
+                            }
                         }                    
                 },
-                Err(e) => Err(e)
+                Err(e) => {
+                    println!("route: {}", e);
+                    Err(e)
+                }
             }        
     }
 }

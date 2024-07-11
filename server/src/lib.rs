@@ -119,7 +119,7 @@ use routes::application::routes::{create_application, developer_applied};
 use routes::authentication::routes::{login, refresh_access_token};
 use routes::developers::routes::{get_developer_by_email, update_developer};
 use routes::employers::routes::{get_employer_by_email, update_employer};
-use routes::user::routes::{change_password, confirm_email};
+use routes::user::routes::{change_password, confirm_email, send_email};
 use routes::jobs::routes::{get_jobs_and_appliers, get_jobs_by_applier, get_jobs_by_employer, get_jobs_by_search_terms, get_jobs_by_search_terms_for_emp, update_job};
 use routes::{
     salaries::routes::get_all_salaries, 
@@ -241,6 +241,8 @@ pub async fn run() -> std::io::Result<()> {
                         .route(web::get().to(get_all_companies::<DbRepo, Emailer, AuthService>)))
                     .service(web::resource("/confirm_email")
                         .route(web::get().to(confirm_email::<DbRepo, Emailer, AuthService>)))
+                    .service(web::resource("/send_email")
+                        .route(web::post().to(send_email::<DbRepo, Emailer, AuthService>)))
             )            
     })
     .bind((host, port)).expect("")
