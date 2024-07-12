@@ -74,6 +74,18 @@ create table dev_email_confirmation (
     constraint fk_developer foreign key(developer_id) references developer(id)
 );
 
+create table dev_forgot_password_confirmation (
+    "id" bigserial primary key,
+    "created_at" timestamptz(3) not null default current_timestamp,
+    "updated_at" timestamptz(3) not null default current_timestamp,  
+    "developer_id" bigserial not null,
+    "is_confirmed" boolean not null,
+    "is_valid" boolean not null,
+    "unique_key" uuid not null,
+
+    constraint fk_developer foreign key(developer_id) references developer(id)
+);
+
 create table employer (
     "id" bigserial primary key,
     "created_at" timestamptz(3) not null default current_timestamp,
@@ -95,6 +107,18 @@ create table emp_email_confirmation (
     "is_confirmed" boolean not null,
     "is_valid" boolean not null,
     "new_email" varchar(120) not null,
+    "unique_key" uuid not null,
+
+    constraint fk_employer foreign key(employer_id) references employer(id)
+);
+
+create table emp_forgot_password_confirmation (
+    "id" bigserial primary key,
+    "created_at" timestamptz(3) not null default current_timestamp,
+    "updated_at" timestamptz(3) not null default current_timestamp,  
+    "employer_id" bigserial not null,
+    "is_confirmed" boolean not null,
+    "is_valid" boolean not null,
     "unique_key" uuid not null,
 
     constraint fk_employer foreign key(employer_id) references employer(id)

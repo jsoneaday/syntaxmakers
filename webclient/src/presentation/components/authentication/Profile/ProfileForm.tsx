@@ -79,10 +79,10 @@ export function ProfileForm({
     primaryLangId: 0,
   });
   const [empForm, setEmpForm] = useState<EmpFormData>({
-    userName: "emp1",
-    fullName: "Employer1",
-    email: `${Math.round(Math.random() * 100)}@test.com`,
-    password: "test1234",
+    userName: "",
+    fullName: "",
+    email: "",
+    password: "",
     companyId: null,
     newCompanyName: null,
   });

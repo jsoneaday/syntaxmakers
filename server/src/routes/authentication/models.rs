@@ -7,6 +7,13 @@ pub struct RefreshToken {
     pub dev_or_emp: DeveloperOrEmployer
 }
 
+#[derive(Deserialize, Serialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct ForgotPassword {
+    pub email: String,
+    pub dev_or_emp: DeveloperOrEmployer
+}
+
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct LoginCredential {

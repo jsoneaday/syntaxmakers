@@ -28,6 +28,7 @@ export const LOGIN_URL = `${API_ROOT_URL}login`;
 export const REFRESH_TOKEN_URL = `${API_ROOT_URL}refreshtoken`;
 export const CONFIRM_EMAIL_URL = `${API_ROOT_URL}confirm_email`;
 export const SEND_EMAIL_URL = `${API_ROOT_URL}send_email`;
+export const FORGOT_PASSWORD_URL = `${API_ROOT_URL}forgot_password`;
 
 export type OutputId = {
   id: number;

@@ -12,7 +12,7 @@ mod internal {
     use chrono::Utc;
     use sqlx::{query, PgConnection};
     use uuid::Uuid;      
-    use crate::common::emailer::emailer::{CHANGE_EMAIL_CONFIRMATION_BODY, SIGNUP_EMAIL_CONFIRMATION_BODY};
+    use crate::common::emailer::emailer::{CHANGE_EMAIL_CONFIRMATION_BODY, CHANGE_PASSWORD_CONFIRMATION_BODY, CHANGE_PASSWORD_SUBJECT, EMAIL_CONFIRMATION_SUBJECT, SIGNUP_EMAIL_CONFIRMATION_BODY};
 
     use super::*;    
 
@@ -66,7 +66,7 @@ mod internal {
             .await;
         }
 
-        match insert_email_confirm(&mut *tx, dev_id, SIGNUP_EMAIL_CONFIRMATION_BODY.to_string(), new_developer.full_name, new_developer.email, emailer).await {
+        match insert_email_confirm(&mut *tx, dev_id, EMAIL_CONFIRMATION_SUBJECT.to_string(), SIGNUP_EMAIL_CONFIRMATION_BODY.to_string(), new_developer.full_name, new_developer.email, emailer).await {
             Ok(_) => (),
             Err(e) => return Err(e)
         };
@@ -173,7 +173,7 @@ mod internal {
         }
 
         if existing_developer.unwrap().email != update_developer.email {
-            match insert_email_confirm(&mut *tx, update_developer.id, CHANGE_EMAIL_CONFIRMATION_BODY.to_string(), update_developer.full_name, update_developer.email, emailer).await {
+            match insert_email_confirm(&mut *tx, update_developer.id, EMAIL_CONFIRMATION_SUBJECT.to_string(), CHANGE_EMAIL_CONFIRMATION_BODY.to_string(), update_developer.full_name, update_developer.email, emailer).await {
                 Ok(_) => (),
                 Err(e) => return Err(e)
             };
@@ -268,7 +268,7 @@ mod internal {
     }
 
     // whether the user is attempting to use their old email or their new email
-    async fn insert_email_confirm<E: EmailerSendService + Send + Sync>(tx: &mut PgConnection, dev_id: i64, email_body: String, dev_full_name: String, new_email: String, emailer: &E) -> Result<EmailConfirm, Error> {
+    async fn insert_email_confirm<E: EmailerSendService + Send + Sync>(tx: &mut PgConnection, dev_id: i64, email_subject: String, email_body: String, dev_full_name: String, new_email: String, emailer: &E) -> Result<EmailConfirm, Error> {
         let uuid = Uuid::now_v7();
         match query_as::<_, EntityId>(r"
             insert into dev_email_confirmation
@@ -283,7 +283,7 @@ mod internal {
         .fetch_one(tx)
         .await {
             Ok(entity) => {
-                match emailer.send_email_confirm_requirement(true, dev_id, email_body, dev_full_name, new_email, uuid).await {
+                match emailer.send_email_confirm_requirement(true, true, dev_id, email_subject, email_body, dev_full_name, new_email, uuid).await {
                     Ok(_) => Ok(EmailConfirm {
                         entity,
                         unique_key: uuid
@@ -424,6 +424,44 @@ mod internal {
                 Err(e) => Err(e)
             }
     }
+
+    pub async fn insert_forgot_password_confirm<E: EmailerSendService + Send + Sync>(
+        conn: &Pool<Postgres>, email: String, emailer: &E
+    ) -> Result<EmailConfirm, Error> {
+        match query_developer_by_email(conn, email.clone()).await {
+            Ok(opt_dev) => match opt_dev {
+                Some(dev) => {
+                    let uuid = Uuid::now_v7();
+                    match query_as::<_, EntityId>(r"
+                        insert into dev_forgot_password_confirmation
+                        (developer_id, is_confirmed, is_valid, unique_key)
+                        values
+                        ($1, false, true, $2)
+                        returning id
+                    ")
+                    .bind(dev.id)
+                    .bind(uuid)
+                    .fetch_one(conn)
+                    .await {
+                        Ok(entity) => {
+                            match emailer.send_email_confirm_requirement(
+                                false, true, dev.id, CHANGE_PASSWORD_SUBJECT.to_string(), CHANGE_PASSWORD_CONFIRMATION_BODY.to_string(), dev.full_name, email, uuid
+                            ).await {
+                                Ok(_) => Ok(EmailConfirm {
+                                    entity,
+                                    unique_key: uuid
+                                }),
+                                Err(e) => Err(e.into())
+                            }                
+                        },
+                        Err(e) => Err(e)
+                    }
+                },
+                None => Err(SqlxError::UserNotFoundByEmail.into())
+            },
+            Err(e) => Err(e)
+        }
+    }
 }
 
 #[async_trait]
@@ -531,5 +569,17 @@ pub trait ConfirmDevEmailFn {
 impl ConfirmDevEmailFn for DbRepo {
     async fn confirm_dev_email(&self, email: String, dev_id: i64, unique_key: String) -> Result<(), Error> {
         internal::confirm_email(self.get_conn(), email, dev_id, unique_key).await
+    }
+}
+
+#[async_trait]
+pub trait InsertDevForgotPasswordConfirmFn<E: EmailerSendService + Send + Sync> {
+    async fn insert_dev_forgot_password_confirm(&self, email: String, emailer: &E) -> Result<EmailConfirm, Error>;
+}
+
+#[async_trait]
+impl<E: EmailerSendService + Send + Sync> InsertDevForgotPasswordConfirmFn<E> for DbRepo {
+    async fn insert_dev_forgot_password_confirm(&self, email: String, emailer: &E) -> Result<EmailConfirm, Error> {
+        internal::insert_forgot_password_confirm(self.get_conn(), email, emailer).await
     }
 }

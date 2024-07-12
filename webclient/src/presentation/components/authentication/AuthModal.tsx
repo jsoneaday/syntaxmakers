@@ -1,6 +1,6 @@
 import { MouseEvent, useState } from "react";
 import Modal from "../Modal";
-import Login from "./Login";
+import Login from "./login/Login";
 import { Tabs } from "../controls/Tabs";
 import { ProfileForm, ProfileFormEditMode } from "./Profile/ProfileForm";
 import { UiDevOrEmployer } from "../../models/DevOrEmployer";
@@ -49,7 +49,7 @@ export function AuthModal({ isOpen, userType, toggleOpen }: AuthModalProps) {
           ]}
         />
         {authModalMode === AuthModalMode.Login ? (
-          <Login toggleOpen={toggleOpen} />
+          <Login userType={userType} toggleOpen={toggleOpen} />
         ) : (
           <ProfileForm
             isModalMode={true}

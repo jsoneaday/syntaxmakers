@@ -116,7 +116,7 @@ use common::authentication::auth_keys_service::{init_auth_keys, AuthService};
 use common::emailer::emailer::Emailer;
 use common::repository::base::{DbRepo, Repository};
 use routes::application::routes::{create_application, developer_applied};
-use routes::authentication::routes::{login, refresh_access_token};
+use routes::authentication::routes::{forgot_password, login, refresh_access_token};
 use routes::developers::routes::{get_developer_by_email, update_developer};
 use routes::employers::routes::{get_employer_by_email, update_employer};
 use routes::user::routes::{change_password, confirm_email, send_email};
@@ -243,6 +243,9 @@ pub async fn run() -> std::io::Result<()> {
                         .route(web::get().to(confirm_email::<DbRepo, Emailer, AuthService>)))
                     .service(web::resource("/send_email")
                         .route(web::post().to(send_email::<DbRepo, Emailer, AuthService>)))
+                    .service(web::resource("/forgot_password")
+                        .route(web::post().to(forgot_password::<DbRepo, Emailer, AuthService>)))
+
             )            
     })
     .bind((host, port)).expect("")

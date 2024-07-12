@@ -14,15 +14,32 @@ use crate::{
         }, 
         emailer::emailer::EmailerSendService, repository::{
             base::Repository, 
-            developers::repo::{HasUnconfirmedDevEmailFn, QueryDeveloperFn}, 
-            employers::repo::{HasUnconfirmedEmpEmailFn, QueryEmployerFn}, 
+            developers::repo::{HasUnconfirmedDevEmailFn, InsertDevForgotPasswordConfirmFn, QueryDeveloperFn}, 
+            employers::repo::{HasUnconfirmedEmpEmailFn, InsertEmpForgotPasswordConfirmFn, QueryEmployerFn}, 
             user::{models::{AuthenticateResult, DeveloperOrEmployer as UserDeveloperOrEmployer}, repo::AuthenticateDbFn}
         }
     }, 
-    routes::authentication::models::DeveloperOrEmployer as AuthDeveloperOrEmployer
+    routes::{authentication::models::DeveloperOrEmployer as AuthDeveloperOrEmployer, base_model::OutputBool, user_error::UserError}
 };
-use super::models::{LoginCredential, RefreshToken};
+use super::models::{ForgotPassword, LoginCredential, RefreshToken};
 
+pub async fn forgot_password<T: InsertEmpForgotPasswordConfirmFn<E> + InsertDevForgotPasswordConfirmFn<E> + Repository, E: EmailerSendService + Send + Sync, U: Authenticator>(
+    app_data: Data<AppState<T, E, U>>, json: Json<ForgotPassword>
+) -> Result<OutputBool, UserError> {
+    println!("start forgot_password {:?}", json);
+    if json.dev_or_emp == AuthDeveloperOrEmployer::Developer {
+        match app_data.repo.insert_dev_forgot_password_confirm(json.email.to_owned(), &app_data.emailer).await {
+            Ok(_) => Ok(OutputBool { result: true }),
+            Err(e) => Err(e.into())
+        }
+    } else {
+        println!("emp");
+        match app_data.repo.insert_emp_forgot_password_confirm(json.email.to_owned(), &app_data.emailer).await {
+            Ok(_) => Ok(OutputBool { result: true }),
+            Err(e) => Err(e.into())
+        }
+    }
+}
 
 pub async fn refresh_access_token<T: Repository, E: EmailerSendService, U: Authenticator>(app_data: Data<AppState<T, E, U>>, json: Json<RefreshToken>, req: HttpRequest) -> HttpResponse {
     let dev_or_emp = if json.dev_or_emp == AuthDeveloperOrEmployer::Developer {

@@ -11,6 +11,7 @@ pub const EMAIL_ALREADY_CONFIRMED: &str = "Email already confirmed";
 pub const EMAIL_CONFIRM_INVALID_UNIQUE_KEY: &str = "Email confirm failed, invalid unique key";
 pub const EMAIL_CONFIRM_FAILED_NEWER_EXISTS: &str = "Newer email confirmations exist than the one presented";
 pub const EMAIL_CONFIRM_FOR_PROFILE_UPDATE_FAILED: &str = "Email confirm for profile update has failed";
+pub const USER_NOT_FOUND_BY_EMAIL: &str = "User not found by email";
 
 #[derive(Error, Debug, PartialEq)]
 pub enum SqlxError {
@@ -23,7 +24,8 @@ pub enum SqlxError {
     EmailAlreadyConfirmed,
     EmailConfirmInvalidUniqueKey,
     EmailConfirmFailedNewerExists,
-    EmailConfirmForProfileUpdateFailed
+    EmailConfirmForProfileUpdateFailed,
+    UserNotFoundByEmail
 }
 
 impl std::fmt::Display for SqlxError {
@@ -38,7 +40,8 @@ impl std::fmt::Display for SqlxError {
             SqlxError::EmailAlreadyConfirmed => write!(f, "{}", EMAIL_ALREADY_CONFIRMED),
             SqlxError::EmailConfirmInvalidUniqueKey => write!(f, "{}", EMAIL_CONFIRM_INVALID_UNIQUE_KEY),
             SqlxError::EmailConfirmFailedNewerExists => write!(f, "{}", EMAIL_CONFIRM_FAILED_NEWER_EXISTS),
-            SqlxError::EmailConfirmForProfileUpdateFailed => write!(f, "{}", EMAIL_CONFIRM_FOR_PROFILE_UPDATE_FAILED)
+            SqlxError::EmailConfirmForProfileUpdateFailed => write!(f, "{}", EMAIL_CONFIRM_FOR_PROFILE_UPDATE_FAILED),
+            SqlxError::UserNotFoundByEmail => write!(f, "{}", USER_NOT_FOUND_BY_EMAIL)
         }
     }
 }
@@ -56,7 +59,8 @@ impl sqlx::error::DatabaseError for SqlxError {
             SqlxError::EmailAlreadyConfirmed => EMAIL_ALREADY_CONFIRMED,
             SqlxError::EmailConfirmInvalidUniqueKey => EMAIL_CONFIRM_INVALID_UNIQUE_KEY,
             SqlxError::EmailConfirmFailedNewerExists => EMAIL_CONFIRM_FAILED_NEWER_EXISTS,
-            SqlxError::EmailConfirmForProfileUpdateFailed => EMAIL_CONFIRM_FOR_PROFILE_UPDATE_FAILED
+            SqlxError::EmailConfirmForProfileUpdateFailed => EMAIL_CONFIRM_FOR_PROFILE_UPDATE_FAILED,
+            SqlxError::UserNotFoundByEmail => USER_NOT_FOUND_BY_EMAIL,
         }
     }
 

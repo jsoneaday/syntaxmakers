@@ -1,4 +1,9 @@
-import { LOGIN_URL, REFRESH_TOKEN_URL } from "./Api";
+import {
+  FORGOT_PASSWORD_URL,
+  LOGIN_URL,
+  OutputBool,
+  REFRESH_TOKEN_URL,
+} from "./Api";
 
 export enum DevOrEmployer {
   Developer = "Developer",
@@ -80,4 +85,22 @@ export async function refreshAccessToken(
   }
 
   return "";
+}
+
+export async function forgotPassword(email: string, devOrEmp: DevOrEmployer) {
+  const response = await fetch(FORGOT_PASSWORD_URL, {
+    method: "post",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      email,
+      devOrEmp,
+    }),
+  });
+
+  if (response.ok) {
+    const result: OutputBool = await response.json();
+    return result;
+  }
 }
