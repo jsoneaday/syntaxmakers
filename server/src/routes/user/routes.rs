@@ -8,10 +8,10 @@ use crate::{
             base::Repository, 
             developers::repo::QueryDeveloperFn, 
             employers::repo::QueryEmployerFn, 
-            user::{models::{ChangePassword, DeveloperOrEmployer}, repo::{ChangePasswordFn, SendEmailFn}}
+            user::{models::{ChangePassword, RepoDeveloperOrEmployer}, repo::{ChangePasswordFn, SendEmailFn}}
         }
     }, 
-    routes::{auth_helper::check_is_authenticated, authentication::models::DeveloperOrEmployer as AuthDeveloperOrEmployer, base_model::OutputBool, user_error::UserError}
+    routes::{auth_helper::check_is_authenticated, authentication::models::RouteDeveloperOrEmployer as AuthDeveloperOrEmployer, base_model::OutputBool, user_error::UserError}
 };
 use crate::common::repository::developers::repo::ConfirmDevEmailFn as ConfirmDevEmailFn;
 use crate::common::repository::employers::repo::ConfirmEmpEmailFn as ConfirmEmpEmailFn;
@@ -46,6 +46,7 @@ pub async fn send_email<T: SendEmailFn<E> + Repository + Send + Sync, E: Emailer
     }
 }
 
+/// User changes password after logged in
 pub async fn change_password<T: QueryDeveloperFn + QueryEmployerFn + ChangePasswordFn + Repository, E: EmailerSendService, U: Authenticator>(
     app_data: Data<AppState<T, E, U>>, 
     json: Json<ChangePasswordRoute>,
@@ -66,9 +67,9 @@ pub async fn change_password<T: QueryDeveloperFn + QueryEmployerFn + ChangePassw
         old_password: json.old_password.to_owned(),
         new_password: json.new_password.to_owned(),
         dev_or_emp: if json.dev_or_emp == AuthDeveloperOrEmployer::Developer {
-            DeveloperOrEmployer::Developer
+            RepoDeveloperOrEmployer::Developer
         } else {
-            DeveloperOrEmployer::Employer
+            RepoDeveloperOrEmployer::Employer
         }
     }).await;
 

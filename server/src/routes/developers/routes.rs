@@ -13,7 +13,7 @@ use crate::{
     routes::{auth_helper::check_is_authenticated, base_model::{IdAndPagingModel, OutputBool, OutputId}, route_utils::get_header_strings, user_error::UserError}
 };
 use super::models::{DeveloperResponder, DeveloperResponders, NewDeveloperForRoute, UpdateDeveloperForRoute};
-use crate::routes::authentication::models::DeveloperOrEmployer as AuthDeveloperOrEmployer;
+use crate::routes::authentication::models::RouteDeveloperOrEmployer as AuthDeveloperOrEmployer;
 use log::error;
 
 /// register a new developer profile
@@ -235,7 +235,7 @@ mod tests {
     use crate::{
         common::{
             authentication::auth_keys_service::AuthenticationError, 
-            repository::{base::EntityId, developers::models::Developer, user::{models::{ChangePassword, DeveloperOrEmployer}, repo::ChangePasswordFn}}
+            repository::{base::EntityId, developers::models::Developer, user::{models::{ChangePassword, RepoDeveloperOrEmployer}, repo::ChangePasswordFn}}
         }, 
         common_test::fixtures::{
             get_app_data, get_fake_dev_desc, get_fake_email, get_fake_fullname, get_fake_httprequest_with_bearer_token, init_fixtures, get_fake_user_name,
@@ -386,7 +386,7 @@ mod tests {
         let app_data = get_app_data(repo, emailer, auth_service).await; 
 
         let req = get_fake_httprequest_with_bearer_token(
-            DEV_USERNAME.to_string(), DeveloperOrEmployer::Developer, &app_data.auth_keys.encoding_key, "/v1/developer", 1, Some(60*2), None
+            DEV_USERNAME.to_string(), RepoDeveloperOrEmployer::Developer, &app_data.auth_keys.encoding_key, "/v1/developer", 1, Some(60*2), None
         );
 
         let result = change_password(app_data, Json(ChangePasswordRoute { 
@@ -407,7 +407,7 @@ mod tests {
         let app_data = get_app_data(repo, emailer, auth_service).await; 
 
         let req = get_fake_httprequest_with_bearer_token(
-            DEV_USERNAME.to_string(), DeveloperOrEmployer::Developer, &app_data.auth_keys.encoding_key, "/v1/developer", 1, Some(60*2), None
+            DEV_USERNAME.to_string(), RepoDeveloperOrEmployer::Developer, &app_data.auth_keys.encoding_key, "/v1/developer", 1, Some(60*2), None
         );
 
         let result = get_developer(app_data, Path::from(1), req).await.unwrap();
@@ -423,7 +423,7 @@ mod tests {
         let app_data = get_app_data(repo, emailer, auth_service).await; 
 
         let req = get_fake_httprequest_with_bearer_token(
-            DEV_USERNAME.to_string(), DeveloperOrEmployer::Developer, &app_data.auth_keys.encoding_key, "/v1/developer", 1, Some(60*2), None
+            DEV_USERNAME.to_string(), RepoDeveloperOrEmployer::Developer, &app_data.auth_keys.encoding_key, "/v1/developer", 1, Some(60*2), None
         );
 
         let result = get_developer_by_email(app_data, Path::from("jon@jon.com".to_string()), req).await.unwrap();
@@ -441,7 +441,7 @@ mod tests {
         let parameters = IdAndPagingModel { id: 1, page_size: 10, last_offset: 1 };
         let req = get_fake_httprequest_with_bearer_token(
             DEV_USERNAME.to_string(), 
-            DeveloperOrEmployer::Developer, 
+            RepoDeveloperOrEmployer::Developer, 
             &app_data.auth_keys.encoding_key, 
             "/v1/developers", 
             parameters.clone(), 

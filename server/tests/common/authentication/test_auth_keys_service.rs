@@ -1,6 +1,6 @@
 use syntaxmakers_server::{
     common::{
-        authentication::auth_keys_service::{AuthService, Authenticator as _}, repository::{base::{DbRepo, Repository}, user::models::DeveloperOrEmployer}
+        authentication::auth_keys_service::{AuthService, Authenticator as _}, repository::{base::{DbRepo, Repository}, user::models::RepoDeveloperOrEmployer}
     }, common_test::fixtures::{get_app_data, get_fake_httprequest_with_bearer_token, init_fixtures, MockEmailer}, routes::route_utils::get_header_strings
 };
 
@@ -14,7 +14,7 @@ async fn test_is_authenticated() {
     let user_name = "jon@jon.com".to_string();
     
     let req = get_fake_httprequest_with_bearer_token(
-        user_name.clone(), DeveloperOrEmployer::Developer, &app_data.auth_keys.encoding_key, "/v1/developer", 1, Some(60*2), None
+        user_name.clone(), RepoDeveloperOrEmployer::Developer, &app_data.auth_keys.encoding_key, "/v1/developer", 1, Some(60*2), None
     );
     let headers = get_header_strings(req.headers());
 

@@ -6,7 +6,7 @@ use syntaxmakers_server::{
         repository::{
             base::{DbRepo, Repository}, 
             developers::{models::NewDeveloper, repo::{ConfirmDevEmailFn, InsertDeveloperFn, QueryLatestValidEmailConfirmFn}},
-            user::models::DeveloperOrEmployer as UserDeveloperOrEmployer
+            user::models::RepoDeveloperOrEmployer as UserDeveloperOrEmployer
         }
     }, 
     common_test::fixtures::{
@@ -18,7 +18,7 @@ use syntaxmakers_server::{
         get_fake_user_name, get_httpresponse_body_as_string, init_fixtures, MockEmailer
     }, 
     routes::authentication::{
-        models::{DeveloperOrEmployer as AuthDeveloperOrEmployer, LoginCredential, RefreshToken}, routes::{login, refresh_access_token}
+        models::{RouteDeveloperOrEmployer as AuthDeveloperOrEmployer, LoginCredential, RefreshToken}, routes::{login, refresh_access_token}
     }    
 };
 use actix_http::StatusCode;

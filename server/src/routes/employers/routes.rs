@@ -14,7 +14,7 @@ use crate::{
     }, routes::{auth_helper::check_is_authenticated, base_model::{OutputBool, OutputId, PagingModel}, route_utils::get_header_strings, user_error::UserError}
 };
 use super::models::{EmployerResponder, EmployerResponders, NewEmployerForRoute, UpdateEmployerForRoute};
-use crate::routes::authentication::models::DeveloperOrEmployer as AuthDeveloperOrEmployer;
+use crate::routes::authentication::models::RouteDeveloperOrEmployer as AuthDeveloperOrEmployer;
 use log::error;
 
 /// register a new employer profile
@@ -245,7 +245,7 @@ mod tests {
     use crate::{
         common::{
             authentication::auth_keys_service::AuthenticationError, repository::{
-                base::EntityId, employers::{models::Employer, repo::QueryAllEmployersFn}, user::models::DeveloperOrEmployer
+                base::EntityId, employers::{models::Employer, repo::QueryAllEmployersFn}, user::models::RepoDeveloperOrEmployer
             }
         }, 
         common_test::fixtures::{get_app_data, get_fake_email, get_fake_fullname, get_fake_httprequest_with_bearer_token, MockEmailer, MockDbRepo}
@@ -374,7 +374,7 @@ mod tests {
         let emailer = MockEmailer;
             let app_data = get_app_data(repo, emailer, auth_service).await;        
         let email = get_fake_email();
-        let req = get_fake_httprequest_with_bearer_token("linda".to_string(), DeveloperOrEmployer::Employer, &app_data.auth_keys.encoding_key, "/employer_email/{email}", "lshin@AmazingAndCo.com".to_string(), None, None);
+        let req = get_fake_httprequest_with_bearer_token("linda".to_string(), RepoDeveloperOrEmployer::Employer, &app_data.auth_keys.encoding_key, "/employer_email/{email}", "lshin@AmazingAndCo.com".to_string(), None, None);
 
         let result = update_employer(app_data, Json(UpdateEmployerForRoute { 
             id: 1, 
@@ -408,7 +408,7 @@ mod tests {
         let app_data = get_app_data(repo, emailer, auth_service).await; 
 
         let req = get_fake_httprequest_with_bearer_token(
-            "linda".to_string(), DeveloperOrEmployer::Employer, &app_data.auth_keys.encoding_key, "/employer_email/{email}", "lshin@AmazingAndCo.com".to_string(), None, None
+            "linda".to_string(), RepoDeveloperOrEmployer::Employer, &app_data.auth_keys.encoding_key, "/employer_email/{email}", "lshin@AmazingAndCo.com".to_string(), None, None
         );
         let result = get_employer_by_email(app_data, Path::from("lshin@AmazingAndCo.com".to_string()), req).await.unwrap().unwrap();
 

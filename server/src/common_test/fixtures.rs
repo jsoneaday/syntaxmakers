@@ -35,7 +35,7 @@ use crate::common::repository::languages::models::Language;
 use crate::common::repository::languages::repo::QueryAllLanguagesFn;
 use crate::common::repository::salaries::repo::QueryAllSalariesFn;
 use crate::common::repository::salaries::models::Salary;
-use crate::common::repository::user::models::DeveloperOrEmployer;
+use crate::common::repository::user::models::RepoDeveloperOrEmployer;
 use async_trait::async_trait;
 use tokio::time::{sleep, Duration};
 
@@ -309,7 +309,7 @@ impl<T: ConfirmDevEmailFn + ConfirmEmpEmailFn + Repository + Send + Sync> Emaile
 
 pub fn get_fake_httprequest_with_bearer_token(
     user_name: String, 
-    dev_or_emp: DeveloperOrEmployer, 
+    dev_or_emp: RepoDeveloperOrEmployer, 
     encoding_key: &EncodingKey, 
     url: &str, 
     parameter_data: impl Serialize, 

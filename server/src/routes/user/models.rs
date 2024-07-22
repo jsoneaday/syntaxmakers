@@ -1,6 +1,6 @@
 use serde::Deserialize;
 use uuid::Uuid;
-use crate::routes::authentication::models::DeveloperOrEmployer;
+use crate::routes::authentication::models::RouteDeveloperOrEmployer;
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -9,7 +9,7 @@ pub struct ChangePasswordRoute {
     pub id: i64,
     pub old_password: String,
     pub new_password: String,
-    pub dev_or_emp: DeveloperOrEmployer
+    pub dev_or_emp: RouteDeveloperOrEmployer
 }
 
 #[derive(Deserialize)]

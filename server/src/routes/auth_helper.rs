@@ -8,7 +8,7 @@ use crate::{
         repository::{base::Repository, developers::repo::QueryDeveloperFn, employers::repo::QueryEmployerFn}
     }
 };
-use super::{authentication::models::DeveloperOrEmployer as AuthDeveloperOrEmployer, route_utils::get_header_strings};
+use super::{authentication::models::RouteDeveloperOrEmployer as AuthDeveloperOrEmployer, route_utils::get_header_strings};
 
 
 pub async fn check_is_authenticated<T: QueryDeveloperFn + QueryEmployerFn + Repository, E: EmailerSendService, U: Authenticator>(
@@ -83,7 +83,7 @@ mod tests {
             repository::{
                 developers::{models::Developer, repo::HasUnconfirmedDevEmailFn}, 
                 employers::{models::Employer, repo::HasUnconfirmedEmpEmailFn}, 
-                user::{models::{AuthenticateResult, DeveloperOrEmployer as UserDeveloperOrEmployer}, repo::AuthenticateDbFn}
+                user::{models::{AuthenticateResult, RepoDeveloperOrEmployer as UserDeveloperOrEmployer}, repo::AuthenticateDbFn}
             }
         }, 
         common_test::fixtures::{get_app_data, get_fake_dev_desc, get_fake_email, get_fake_httprequest_with_bearer_token, MockEmailer}, routes::authentication::{models::LoginCredential, routes::login}

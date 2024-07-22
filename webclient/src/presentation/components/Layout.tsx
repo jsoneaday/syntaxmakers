@@ -8,12 +8,14 @@ import { DEV_ROUTE_PREFIX } from "../../App";
 import { AuthModal } from "./authentication/AuthModal";
 import { useProfile } from "../common/redux/profile/ProfileHooks";
 import { ConfirmEmailModal } from "./authentication/ConfirmEmailModal";
+import { ForgotPasswordModal } from "./authentication/ForgotPasswordModal";
 
 interface LayoutProps {
   children: ReactNode;
   userType?: UiDevOrEmployer;
   includeLogin?: boolean;
   includeEmailIsConfirmedDialog?: boolean;
+  includeForgotPassword?: boolean;
 }
 
 export default function Layout({
@@ -21,6 +23,7 @@ export default function Layout({
   userType,
   includeLogin = true,
   includeEmailIsConfirmedDialog = false,
+  includeForgotPassword = false,
 }: LayoutProps) {
   const [profile] = useProfile();
   const [loginOpen, setLoginOpen] = useLoginOpen();
@@ -28,6 +31,9 @@ export default function Layout({
   const location = useLocation();
   const [confirmEmailOpen, setConfirmEmailOpen] = useState(
     includeEmailIsConfirmedDialog
+  );
+  const [forgotPasswordIsOpen, setForgotPasswordIsOpen] = useState(
+    includeForgotPassword
   );
 
   useEffect(() => {
@@ -52,12 +58,23 @@ export default function Layout({
     setConfirmEmailOpen(!confirmEmailOpen);
   };
 
+  const toggleForgotPasswordIsOpen = () => {
+    setForgotPasswordIsOpen(!forgotPasswordIsOpen);
+  };
+
   return (
     <div className="layout-container">
       {includeEmailIsConfirmedDialog ? (
         <ConfirmEmailModal
           isOpen={confirmEmailOpen}
           toggleOpen={toggleConfirmEmailOpen}
+        />
+      ) : null}
+
+      {includeForgotPassword ? (
+        <ForgotPasswordModal
+          isOpen={forgotPasswordIsOpen}
+          toggleOpen={toggleForgotPasswordIsOpen}
         />
       ) : null}
 

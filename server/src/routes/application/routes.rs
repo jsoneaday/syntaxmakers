@@ -14,7 +14,7 @@ use crate::{
     routes::{auth_helper::check_is_authenticated, base_model::{OutputBool, OutputId}, user_error::UserError}
 };
 use super::models::NewApplicationForRoute;
-use crate::routes::authentication::models::DeveloperOrEmployer as AuthDeveloperOrEmployer;
+use crate::routes::authentication::models::RouteDeveloperOrEmployer as AuthDeveloperOrEmployer;
 
 pub async fn create_application<
     T: InsertApplicationFn + Repository + QueryEmployerFn + QueryDeveloperFn, 
@@ -52,7 +52,7 @@ mod tests {
                 developers::{models::Developer, repo::HasUnconfirmedDevEmailFn}, 
                 employers::{models::Employer, repo::HasUnconfirmedEmpEmailFn}, 
                 jobs::models::Job, 
-                user::{models::{AuthenticateResult, DeveloperOrEmployer as UserDeveloperOrEmployer}, repo::AuthenticateDbFn}
+                user::{models::{AuthenticateResult, RepoDeveloperOrEmployer as UserDeveloperOrEmployer}, repo::AuthenticateDbFn}
             }            
         }, 
         common_test::fixtures::{get_fake_dev_desc, get_fake_email, get_fake_fullname, get_fake_httprequest_with_bearer_token, init_fixtures, MockEmailer, COUNTRIES, INDUSTRIES, LANGUAGES, SALARY_BASE}, 

@@ -16,7 +16,7 @@ use crate::{
     }
 };
 use super::models::{JobAndApplicantResponder, JobAndApplicantResponders, JobAppliedResponder, JobAppliedResponders, JobResponder, JobResponders, NewJobForRoute, UpdateJobForRoute};
-use crate::routes::authentication::models::DeveloperOrEmployer as AuthDeveloperOrEmployer;
+use crate::routes::authentication::models::RouteDeveloperOrEmployer as AuthDeveloperOrEmployer;
 
 #[allow(unused)]
 pub async fn create_job<T: InsertJobFn + QueryEmployerFn + QueryDeveloperFn + Repository, E: EmailerSendService, U: Authenticator>(app_data: Data<AppState<T, E, U>>, json: Json<NewJobForRoute>, req: HttpRequest)
@@ -283,7 +283,7 @@ mod tests {
                 developers::{models::Developer, repo::HasUnconfirmedDevEmailFn}, 
                 employers::{models::Employer, repo::HasUnconfirmedEmpEmailFn}, 
                 jobs::models::Job, 
-                user::{models::{AuthenticateResult, DeveloperOrEmployer as UserDeveloperOrEmployer}, repo::AuthenticateDbFn}
+                user::{models::{AuthenticateResult, RepoDeveloperOrEmployer as UserDeveloperOrEmployer}, repo::AuthenticateDbFn}
             }            
         }, 
         common_test::fixtures::{

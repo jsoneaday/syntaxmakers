@@ -5,7 +5,7 @@ use syntaxmakers_server::common::repository::developers::models::{NewDeveloper, 
 use syntaxmakers_server::common::repository::developers::repo::{
     InsertDeveloperFn, ConfirmDevEmailFn, QueryAllDevelopersFn, QueryDeveloperByEmailFn, QueryDeveloperFn, UpdateDeveloperFn, QueryLatestValidEmailConfirmFn
 };
-use syntaxmakers_server::common::repository::user::models::{ChangePassword, DeveloperOrEmployer};
+use syntaxmakers_server::common::repository::user::models::{ChangePassword, RepoDeveloperOrEmployer};
 use syntaxmakers_server::common::repository::user::repo::ChangePasswordFn;
 use syntaxmakers_server::common_test::fixtures::{ get_fake_dev_desc, get_fake_email, get_fake_fullname, get_fake_user_name, init_fixtures, MockEmailer, LANGUAGES};
 
@@ -196,7 +196,7 @@ async fn test_change_dev_password_fails_on_invalid_old_password() {
         id: create_result.id, 
         old_password: "fake_old".to_string(),
         new_password: "test4567".to_string(),
-        dev_or_emp: DeveloperOrEmployer::Developer
+        dev_or_emp: RepoDeveloperOrEmployer::Developer
     }).await;
     assert!(update_result.is_err());
 }
@@ -227,7 +227,7 @@ async fn test_change_dev_password_fails_on_invalid_new_password() {
         id: create_result.id, 
         old_password: old_password.clone(), 
         new_password: "test456".to_string(),
-        dev_or_emp: DeveloperOrEmployer::Developer
+        dev_or_emp: RepoDeveloperOrEmployer::Developer
     }).await;
     assert!(update_result.is_err());
 }
@@ -258,7 +258,7 @@ async fn test_change_dev_password_succeeds_on_new_password() {
         id: create_result.id, 
         old_password: old_password.clone(), 
         new_password: "test4567".to_string(),
-        dev_or_emp: DeveloperOrEmployer::Developer
+        dev_or_emp: RepoDeveloperOrEmployer::Developer
     }).await;
     assert!(update_result.is_ok());
 }

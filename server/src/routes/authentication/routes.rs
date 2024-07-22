@@ -16,10 +16,10 @@ use crate::{
             base::Repository, 
             developers::repo::{HasUnconfirmedDevEmailFn, InsertDevForgotPasswordConfirmFn, QueryDeveloperFn}, 
             employers::repo::{HasUnconfirmedEmpEmailFn, InsertEmpForgotPasswordConfirmFn, QueryEmployerFn}, 
-            user::{models::{AuthenticateResult, DeveloperOrEmployer as UserDeveloperOrEmployer}, repo::AuthenticateDbFn}
+            user::{models::{AuthenticateResult, RepoDeveloperOrEmployer, RepoResetPassword}, repo::{AuthenticateDbFn, ResetPasswordFn}}
         }
     }, 
-    routes::{authentication::models::DeveloperOrEmployer as AuthDeveloperOrEmployer, base_model::OutputBool, user_error::UserError}
+    routes::{authentication::models::{RouteResetPassword, RouteDeveloperOrEmployer}, base_model::OutputBool, user_error::UserError}
 };
 use super::models::{ForgotPassword, LoginCredential, RefreshToken};
 
@@ -27,7 +27,7 @@ pub async fn forgot_password<T: InsertEmpForgotPasswordConfirmFn<E> + InsertDevF
     app_data: Data<AppState<T, E, U>>, json: Json<ForgotPassword>
 ) -> Result<OutputBool, UserError> {
     println!("start forgot_password {:?}", json);
-    if json.dev_or_emp == AuthDeveloperOrEmployer::Developer {
+    if json.dev_or_emp == RouteDeveloperOrEmployer::Developer {
         match app_data.repo.insert_dev_forgot_password_confirm(json.email.to_owned(), &app_data.emailer).await {
             Ok(_) => Ok(OutputBool { result: true }),
             Err(e) => Err(e.into())
@@ -41,11 +41,34 @@ pub async fn forgot_password<T: InsertEmpForgotPasswordConfirmFn<E> + InsertDevF
     }
 }
 
+/// User resets password due to forgotten password
+pub async fn reset_password<T: ResetPasswordFn + Repository, E: EmailerSendService + Send + Sync, U: Authenticator>(
+    app_data: Data<AppState<T, E, U>>, json: Json<RouteResetPassword>
+) -> Result<OutputBool, UserError> {
+    println!("start reset_password {:?}", json);
+
+    let result = app_data.repo.reset_password(RepoResetPassword {
+        user_id: json.user_id,
+        new_password: json.new_password.to_owned(),
+        dev_or_emp: if json.dev_or_emp == RouteDeveloperOrEmployer::Developer {
+            RepoDeveloperOrEmployer::Developer
+        } else {
+            RepoDeveloperOrEmployer::Employer
+        },
+        unique_key: json.unique_key
+    }).await;
+
+    match result {
+        Ok(_) => Ok(OutputBool { result: true }),
+        Err(e) => Err(e.into())
+    }
+}
+
 pub async fn refresh_access_token<T: Repository, E: EmailerSendService, U: Authenticator>(app_data: Data<AppState<T, E, U>>, json: Json<RefreshToken>, req: HttpRequest) -> HttpResponse {
-    let dev_or_emp = if json.dev_or_emp == AuthDeveloperOrEmployer::Developer {
-        UserDeveloperOrEmployer::Developer
+    let dev_or_emp = if json.dev_or_emp == RouteDeveloperOrEmployer::Developer {
+        RepoDeveloperOrEmployer::Developer
     } else {
-        UserDeveloperOrEmployer::Employer
+        RepoDeveloperOrEmployer::Employer
     };
 
     let refresh_cookie = req.cookie(REFRESH_TOKEN_LABEL);
@@ -83,7 +106,7 @@ pub async fn login<
     U: Authenticator
     >(app_data: Data<AppState<T, E, U>>, json: Json<LoginCredential>) 
     -> HttpResponse {
-    let dev_or_emp = if json.dev_or_emp == AuthDeveloperOrEmployer::Developer {
+    let dev_or_emp = if json.dev_or_emp == RouteDeveloperOrEmployer::Developer {
         match app_data.repo.has_unconfirmed_dev_email(json.email.clone()).await {
             Ok(has_unconfirmed) => if has_unconfirmed {
                 println!("Has unconfirmed email");
@@ -99,7 +122,7 @@ pub async fn login<
             }
         };
 
-        UserDeveloperOrEmployer::Developer
+        RepoDeveloperOrEmployer::Developer
     } else {
         match app_data.repo.has_unconfirmed_emp_email(json.email.clone()).await {
             Ok(has_unconfirmed) => if has_unconfirmed {
@@ -116,7 +139,7 @@ pub async fn login<
             }
         };
 
-        UserDeveloperOrEmployer::Employer
+        RepoDeveloperOrEmployer::Employer
     };
     let auth_result = app_data.repo.authenticate_db(dev_or_emp.clone(), json.email.clone(), json.password.clone()).await;
     
@@ -127,7 +150,7 @@ pub async fn login<
                     #[allow(unused)] let mut user_name = "".to_string();                    
                     #[allow(unused)] let mut http_response: Option<HttpResponse> = None;
                     
-                    if dev_or_emp == UserDeveloperOrEmployer::Developer {
+                    if dev_or_emp == RepoDeveloperOrEmployer::Developer {
                         let developer = app_data.repo.query_developer(id).await;
                         match developer {
                             Ok(opt_dev) => {
@@ -194,7 +217,7 @@ pub async fn login<
 }
 
 fn get_refresh_and_access_token_response<'a, T: AuthenticateDbFn + QueryDeveloperFn + Repository, E: EmailerSendService, U: Authenticator>(
-    app_data: Data<AppState<T, E, U>>, user_name: &'a str, dev_or_emp: &'a UserDeveloperOrEmployer
+    app_data: Data<AppState<T, E, U>>, user_name: &'a str, dev_or_emp: &'a RepoDeveloperOrEmployer
 ) -> (Cookie<'a>, String) {
     let access_token = get_token(user_name.to_string(), dev_or_emp.clone(), &app_data.auth_keys.encoding_key, Some(STANDARD_ACCESS_TOKEN_EXPIRATION));
     let refresh_token = get_token(user_name.to_string(), dev_or_emp.clone(), &app_data.auth_keys.encoding_key, None);
@@ -245,7 +268,7 @@ mod tests {
 
     #[async_trait]
     impl AuthenticateDbFn for MockDbRepo {
-        async fn authenticate_db(&self, _: UserDeveloperOrEmployer, _: String, _: String) -> Result<AuthenticateResult, sqlx::Error> {
+        async fn authenticate_db(&self, _: RepoDeveloperOrEmployer, _: String, _: String) -> Result<AuthenticateResult, sqlx::Error> {
             Ok(AuthenticateResult::Success{ id: 1 })
         }
     }
@@ -298,6 +321,13 @@ mod tests {
         }
     }    
 
+    #[async_trait]
+    impl ResetPasswordFn for MockDbRepo {
+        async fn reset_password(&self, _: RepoResetPassword) -> Result<(), sqlx::Error> {
+            Ok(())
+        }
+    }
+
     #[tokio::test]
     async fn test_login_route() {
         let repo = MockDbRepo::init().await;
@@ -306,7 +336,7 @@ mod tests {
         let app_data = get_app_data(repo, emailer, auth_service).await; 
 
         let result = login(app_data.clone(), Json(LoginCredential { 
-            dev_or_emp: AuthDeveloperOrEmployer::Developer, email: FreeEmail().fake::<String>(), password: "test1234".to_string() 
+            dev_or_emp: RouteDeveloperOrEmployer::Developer, email: FreeEmail().fake::<String>(), password: "test1234".to_string() 
         })).await;
 
         assert!(result.status() == StatusCode::OK);
@@ -316,5 +346,22 @@ mod tests {
         
         assert!(claims.exp >= STANDARD_REFRESH_TOKEN_EXPIRATION as usize);
         assert!(claims.sub == DEV_USERNAME.to_string());        
+    }
+
+    #[tokio::test]
+    async fn test_reset_password_route() {
+        let repo = MockDbRepo::init().await;
+        let auth_service = MockAuthService;
+        let emailer = MockEmailer;
+        let app_data = get_app_data(repo, emailer, auth_service).await; 
+
+        let result = reset_password(app_data, Json(RouteResetPassword {
+            user_id: 1,
+            new_password: "test1234".to_string(),
+            dev_or_emp: RouteDeveloperOrEmployer::Developer,
+            unique_key: uuid::Uuid::now_v7()
+        })).await;
+        
+        assert!(result.is_ok());        
     }
 }

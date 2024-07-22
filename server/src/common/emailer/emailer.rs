@@ -65,6 +65,7 @@ impl EmailerSendService for Emailer {
         }     
     }
 
+    /// this function either resets email or password
     /// e.g. email_body - "Thank you for signing up. Please click the button below to confirm your email address:"
     async fn send_email_confirm_requirement(&self, is_email_change: bool, is_dev: bool, profile_id: i64, email_subject: String, email_body: String, full_name: String, new_email: String, unique_key: Uuid) 
         -> Result<(), EmailError> {

@@ -3,7 +3,7 @@ use jsonwebtoken::{DecodingKey, EncodingKey};
 use ring::signature::{Ed25519KeyPair, KeyPair};
 use serde::{Deserialize, Serialize};
 use jsonwebtoken::{ Validation, encode, decode, Algorithm };
-use crate::common::repository::user::models::DeveloperOrEmployer;
+use crate::common::repository::user::models::RepoDeveloperOrEmployer;
 use async_trait::async_trait;
 use derive_more::{Error, Display};
 use log::info;
@@ -16,7 +16,7 @@ pub const REFRESH_TOKEN_LABEL: &str = "refresh_token";
 pub struct Claims {
     pub sub: String,
     pub exp: usize,
-    pub role: DeveloperOrEmployer
+    pub role: RepoDeveloperOrEmployer
 }
 
 #[derive(Error, Display, Debug)]
@@ -42,7 +42,7 @@ pub async fn init_auth_keys() -> AuthKeys {
     AuthKeys { encoding_key, decoding_key }
 }
 
-pub fn get_token(user_name: String, dev_or_emp: DeveloperOrEmployer, encoding_key: &EncodingKey, exp_duration_seconds: Option<i64>) -> String {
+pub fn get_token(user_name: String, dev_or_emp: RepoDeveloperOrEmployer, encoding_key: &EncodingKey, exp_duration_seconds: Option<i64>) -> String {
     let duration = if let None = exp_duration_seconds {
         STANDARD_REFRESH_TOKEN_EXPIRATION
     } else {

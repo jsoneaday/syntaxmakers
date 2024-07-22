@@ -1,5 +1,6 @@
 use serde::{Serialize, Deserialize};
 use sqlx::FromRow;
+use uuid::Uuid;
 
 
 #[derive(PartialEq, Debug)]
@@ -9,7 +10,7 @@ pub enum AuthenticateResult {
 }
 
 #[derive(PartialEq, Clone, Serialize, Deserialize, Debug)]
-pub enum DeveloperOrEmployer {
+pub enum RepoDeveloperOrEmployer {
     Developer = 0,
     Employer = 1
 }
@@ -26,5 +27,13 @@ pub struct ChangePassword {
     pub id: i64,
     pub old_password: String,
     pub new_password: String,
-    pub dev_or_emp: DeveloperOrEmployer
+    pub dev_or_emp: RepoDeveloperOrEmployer
+}
+
+#[derive(Debug)]
+pub struct RepoResetPassword {
+    pub user_id: i64,
+    pub new_password: String,
+    pub dev_or_emp: RepoDeveloperOrEmployer,
+    pub unique_key: Uuid,
 }

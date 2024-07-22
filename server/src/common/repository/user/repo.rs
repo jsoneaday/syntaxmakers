@@ -1,17 +1,24 @@
 use sqlx::{Postgres, query_as, Pool, Error};
 use crate::common::{emailer::emailer::EmailerSendService, repository::{base::{ConnGetter, DbRepo}, user::models::AuthenticateResult}};
 use async_trait::async_trait;
-use crate::common::repository::user::models::DeveloperOrEmployer;
+use crate::common::repository::user::models::RepoDeveloperOrEmployer;
 use super::models::ChangePassword;
+use crate::common::{
+    authentication::password_hash::{hash_password, verify_password}, 
+    repository::{
+        developers::models::Developer, 
+        employers::models::Employer, 
+        error::SqlxError, 
+        user::models::{Password, RepoResetPassword}
+    }
+};
 
 mod internal {  
     use sqlx::query;
-
-    use crate::common::{authentication::password_hash::{hash_password, verify_password}, emailer::emailer::EmailerSendService, repository::{developers::models::Developer, employers::models::Employer, error::SqlxError, user::models::{ChangePassword, Password}}};
     use super::*;    
 
-    pub async fn authenticate_db(conn: &Pool<Postgres>, is_dev_or_emp: DeveloperOrEmployer, email: String, password: String) -> Result<AuthenticateResult, sqlx::Error> {
-        if is_dev_or_emp == DeveloperOrEmployer::Developer {            
+    pub async fn authenticate_db(conn: &Pool<Postgres>, is_dev_or_emp: RepoDeveloperOrEmployer, email: String, password: String) -> Result<AuthenticateResult, sqlx::Error> {
+        if is_dev_or_emp == RepoDeveloperOrEmployer::Developer {            
             let result = query_as::<_, Developer>(r"
                 select d.id, d.created_at, d.updated_at, d.user_name, d.full_name, d.email, d.description, d.password, d.primary_lang_id, sl.secondary_lang_id
                 from developer d left join developers_secondary_langs sl on d.id = sl.developer_id where email = $1
@@ -69,8 +76,9 @@ mod internal {
         }           
     }
 
+    /// change password by a logged in user with old password
     pub async fn change_password(conn: &Pool<Postgres>, change_password: ChangePassword) -> Result<(), sqlx::Error> {
-        let query_str = if change_password.dev_or_emp == DeveloperOrEmployer::Developer {
+        let query_str = if change_password.dev_or_emp == RepoDeveloperOrEmployer::Developer {
             "select password from developer where id = $1"
         } else {
             "select password from employer where id = $1"
@@ -92,7 +100,7 @@ mod internal {
             Err(e) => return Err(e)
         };
 
-        let query_str = if change_password.dev_or_emp == DeveloperOrEmployer::Developer {
+        let query_str = if change_password.dev_or_emp == RepoDeveloperOrEmployer::Developer {
             "update developer set password = $2 where id = $1"
         } else {
             "update employer set password = $2 where id = $1"
@@ -107,6 +115,50 @@ mod internal {
                     if row.rows_affected() == 0 {
                         return Err(SqlxError::PasswordChangeFailed.into());
                     }
+                    Ok(())
+                },
+                Err(e) => Err(e)
+        }
+    }
+
+    /// reset password of user who has lost prior password
+    pub async fn reset_password(conn: &Pool<Postgres>, reset_password: RepoResetPassword) -> Result<(), sqlx::Error> {
+        let mut tx = conn.begin().await.unwrap();
+        // first match and confirm forgot_password_confirmation
+        let query_str = if reset_password.dev_or_emp == RepoDeveloperOrEmployer::Developer {
+            "update dev_forgot_password_confirmation set is_confirmed = true, is_valid = false where developer_id = $1 and unique_key = $2"
+        } else {
+            "update emp_forgot_password_confirmation set is_confirmed = true, is_valid = false where employer_id = $1 and unique_key = $2"
+        };
+        match query::<_>(query_str)
+            .bind(reset_password.user_id)
+            .bind(reset_password.unique_key)
+            .execute(&mut *tx)
+            .await {
+            Ok(row) => if row.rows_affected() > 0 {
+                ()
+            } else {
+                return Err(SqlxError::PasswordChangeFailed.into())
+            },
+            Err(e) => return Err(e)
+        };
+
+        let query_str = if reset_password.dev_or_emp == RepoDeveloperOrEmployer::Developer {
+            "update developer set password = $2 where id = $1"
+        } else {
+            "update employer set password = $2 where id = $1"
+        };
+        match query::<_>(query_str)
+            .bind(reset_password.user_id)
+            .bind(hash_password(&reset_password.new_password).unwrap())
+            .execute(&mut *tx)
+            .await {
+                Ok(row) => {
+                    println!("change password result {:?}", row);
+                    if row.rows_affected() == 0 {
+                        return Err(SqlxError::PasswordChangeFailed.into());
+                    }
+                    _ = tx.commit().await;
                     Ok(())
                 },
                 Err(e) => Err(e)
@@ -161,12 +213,12 @@ mod internal {
 
 #[async_trait]
 pub trait AuthenticateDbFn {
-    async fn authenticate_db(&self, is_dev_or_emp: DeveloperOrEmployer, email: String, password: String) -> Result<AuthenticateResult, sqlx::Error>;
+    async fn authenticate_db(&self, is_dev_or_emp: RepoDeveloperOrEmployer, email: String, password: String) -> Result<AuthenticateResult, sqlx::Error>;
 }
 
 #[async_trait]
 impl AuthenticateDbFn for DbRepo {
-    async fn authenticate_db(&self, is_dev_or_emp: DeveloperOrEmployer, email: String, password: String) -> Result<AuthenticateResult, sqlx::Error> {
+    async fn authenticate_db(&self, is_dev_or_emp: RepoDeveloperOrEmployer, email: String, password: String) -> Result<AuthenticateResult, sqlx::Error> {
         internal::authenticate_db(self.get_conn(), is_dev_or_emp, email, password).await
     }
 }
@@ -180,6 +232,18 @@ pub trait ChangePasswordFn {
 impl ChangePasswordFn for DbRepo {
     async fn change_password(&self, change_password: ChangePassword) -> Result<(), Error> {
         internal::change_password(self.get_conn(), change_password).await
+    }
+}
+
+#[async_trait]
+pub trait ResetPasswordFn {
+    async fn reset_password(&self, reset_password: RepoResetPassword) -> Result<(), Error>;
+}
+
+#[async_trait]
+impl ResetPasswordFn for DbRepo {
+    async fn reset_password(&self, reset_password: RepoResetPassword) -> Result<(), Error> {
+        internal::reset_password(self.get_conn(), reset_password).await
     }
 }
 
