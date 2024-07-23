@@ -31,7 +31,7 @@ impl std::fmt::Display for UserError {
             UserError::AuthenticationFailed => write!(f, "{}", "Authentication Failed. Email or password is incorrect."),
             UserError::AuthorizationFailed => write!(f, "{}", "Authorization Failed."),
             UserError::EmailSendFailed => write!(f, "{}", "Sending email failed."),
-            UserError::EmailAlreadyInUse => write!(f, "{}", "Sending email failed."),
+            UserError::EmailAlreadyInUse => write!(f, "{}", "Email already in use."),
             UserError::EmailNeedsConfirmation => write!(f, "{}", "Email needs confirmation."),
             UserError::EmailAlreadyConfirmed => write!(f, "{}", EMAIL_ALREADY_CONFIRMED),
             UserError::EmailConfirmationNotFound => write!(f, "{}", EMAIL_CONFIRM_NOT_FOUND),

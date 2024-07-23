@@ -123,6 +123,10 @@ mod internal {
 
     /// reset password of user who has lost prior password
     pub async fn reset_password(conn: &Pool<Postgres>, reset_password: RepoResetPassword) -> Result<(), sqlx::Error> {
+        if reset_password.new_password.len() < 8 || reset_password.new_password.len() > 50 { 
+            return Err(SqlxError::PasswordChangeFailed.into());
+        }
+        
         let mut tx = conn.begin().await.unwrap();
         // first match and confirm forgot_password_confirmation
         let query_str = if reset_password.dev_or_emp == RepoDeveloperOrEmployer::Developer {

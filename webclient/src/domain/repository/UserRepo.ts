@@ -1,4 +1,9 @@
-import { OutputBool, SEND_EMAIL_URL, USER_CHANGE_PASSWORD_URL } from "./Api";
+import {
+  OutputBool,
+  RESET_PASSWORD_URL,
+  SEND_EMAIL_URL,
+  USER_CHANGE_PASSWORD_URL,
+} from "./Api";
 import { DevOrEmployer } from "./AuthRepo";
 
 export async function changePassword(
@@ -57,4 +62,39 @@ export async function sendEmail(
     return changePassResult.result;
   }
   return false;
+}
+
+export async function resetPassword(
+  userId: number,
+  newPassword: string,
+  devOrEmp: DevOrEmployer,
+  uniqueKey: string
+): Promise<OutputBool> {
+  const response = await fetch(RESET_PASSWORD_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      userId,
+      newPassword,
+      devOrEmp,
+      uniqueKey,
+    }),
+  });
+
+  if (!response.ok) {
+    return {
+      result: false,
+      message: await response.text(),
+    };
+  }
+  if (response.ok) {
+    const resetPassResult: OutputBool = await response.json();
+    return resetPassResult;
+  }
+  return {
+    result: false,
+    message: undefined,
+  };
 }

@@ -14,55 +14,14 @@ use crate::{
         }, 
         emailer::emailer::EmailerSendService, repository::{
             base::Repository, 
-            developers::repo::{HasUnconfirmedDevEmailFn, InsertDevForgotPasswordConfirmFn, QueryDeveloperFn}, 
-            employers::repo::{HasUnconfirmedEmpEmailFn, InsertEmpForgotPasswordConfirmFn, QueryEmployerFn}, 
-            user::{models::{AuthenticateResult, RepoDeveloperOrEmployer, RepoResetPassword}, repo::{AuthenticateDbFn, ResetPasswordFn}}
+            developers::repo::{HasUnconfirmedDevEmailFn, QueryDeveloperFn}, 
+            employers::repo::{HasUnconfirmedEmpEmailFn, QueryEmployerFn}, 
+            user::{models::{AuthenticateResult, RepoDeveloperOrEmployer}, repo::AuthenticateDbFn}
         }
     }, 
-    routes::{authentication::models::{RouteResetPassword, RouteDeveloperOrEmployer}, base_model::OutputBool, user_error::UserError}
+    routes::authentication::models::RouteDeveloperOrEmployer
 };
-use super::models::{ForgotPassword, LoginCredential, RefreshToken};
-
-pub async fn forgot_password<T: InsertEmpForgotPasswordConfirmFn<E> + InsertDevForgotPasswordConfirmFn<E> + Repository, E: EmailerSendService + Send + Sync, U: Authenticator>(
-    app_data: Data<AppState<T, E, U>>, json: Json<ForgotPassword>
-) -> Result<OutputBool, UserError> {
-    println!("start forgot_password {:?}", json);
-    if json.dev_or_emp == RouteDeveloperOrEmployer::Developer {
-        match app_data.repo.insert_dev_forgot_password_confirm(json.email.to_owned(), &app_data.emailer).await {
-            Ok(_) => Ok(OutputBool { result: true }),
-            Err(e) => Err(e.into())
-        }
-    } else {
-        println!("emp");
-        match app_data.repo.insert_emp_forgot_password_confirm(json.email.to_owned(), &app_data.emailer).await {
-            Ok(_) => Ok(OutputBool { result: true }),
-            Err(e) => Err(e.into())
-        }
-    }
-}
-
-/// User resets password due to forgotten password
-pub async fn reset_password<T: ResetPasswordFn + Repository, E: EmailerSendService + Send + Sync, U: Authenticator>(
-    app_data: Data<AppState<T, E, U>>, json: Json<RouteResetPassword>
-) -> Result<OutputBool, UserError> {
-    println!("start reset_password {:?}", json);
-
-    let result = app_data.repo.reset_password(RepoResetPassword {
-        user_id: json.user_id,
-        new_password: json.new_password.to_owned(),
-        dev_or_emp: if json.dev_or_emp == RouteDeveloperOrEmployer::Developer {
-            RepoDeveloperOrEmployer::Developer
-        } else {
-            RepoDeveloperOrEmployer::Employer
-        },
-        unique_key: json.unique_key
-    }).await;
-
-    match result {
-        Ok(_) => Ok(OutputBool { result: true }),
-        Err(e) => Err(e.into())
-    }
-}
+use super::models::{LoginCredential, RefreshToken};
 
 pub async fn refresh_access_token<T: Repository, E: EmailerSendService, U: Authenticator>(app_data: Data<AppState<T, E, U>>, json: Json<RefreshToken>, req: HttpRequest) -> HttpResponse {
     let dev_or_emp = if json.dev_or_emp == RouteDeveloperOrEmployer::Developer {
@@ -321,13 +280,6 @@ mod tests {
         }
     }    
 
-    #[async_trait]
-    impl ResetPasswordFn for MockDbRepo {
-        async fn reset_password(&self, _: RepoResetPassword) -> Result<(), sqlx::Error> {
-            Ok(())
-        }
-    }
-
     #[tokio::test]
     async fn test_login_route() {
         let repo = MockDbRepo::init().await;
@@ -348,20 +300,5 @@ mod tests {
         assert!(claims.sub == DEV_USERNAME.to_string());        
     }
 
-    #[tokio::test]
-    async fn test_reset_password_route() {
-        let repo = MockDbRepo::init().await;
-        let auth_service = MockAuthService;
-        let emailer = MockEmailer;
-        let app_data = get_app_data(repo, emailer, auth_service).await; 
-
-        let result = reset_password(app_data, Json(RouteResetPassword {
-            user_id: 1,
-            new_password: "test1234".to_string(),
-            dev_or_emp: RouteDeveloperOrEmployer::Developer,
-            unique_key: uuid::Uuid::now_v7()
-        })).await;
-        
-        assert!(result.is_ok());        
-    }
+    
 }

@@ -116,10 +116,10 @@ use common::authentication::auth_keys_service::{init_auth_keys, AuthService};
 use common::emailer::emailer::Emailer;
 use common::repository::base::{DbRepo, Repository};
 use routes::application::routes::{create_application, developer_applied};
-use routes::authentication::routes::{forgot_password, login, refresh_access_token};
+use routes::authentication::routes::{login, refresh_access_token};
 use routes::developers::routes::{get_developer_by_email, update_developer};
 use routes::employers::routes::{get_employer_by_email, update_employer};
-use routes::user::routes::{change_password, confirm_email, send_email};
+use routes::user::routes::{change_password, reset_password, forgot_password, confirm_email, send_email};
 use routes::jobs::routes::{get_jobs_and_appliers, get_jobs_by_applier, get_jobs_by_employer, get_jobs_by_search_terms, get_jobs_by_search_terms_for_emp, update_job};
 use routes::{
     salaries::routes::get_all_salaries, 
@@ -245,6 +245,8 @@ pub async fn run() -> std::io::Result<()> {
                         .route(web::post().to(send_email::<DbRepo, Emailer, AuthService>)))
                     .service(web::resource("/forgot_password")
                         .route(web::post().to(forgot_password::<DbRepo, Emailer, AuthService>)))
+                    .service(web::resource("/reset_password")
+                        .route(web::post().to(reset_password::<DbRepo, Emailer, AuthService>)))
 
             )            
     })

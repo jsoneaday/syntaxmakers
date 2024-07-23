@@ -29,6 +29,7 @@ export const REFRESH_TOKEN_URL = `${API_ROOT_URL}refreshtoken`;
 export const CONFIRM_EMAIL_URL = `${API_ROOT_URL}confirm_email`;
 export const SEND_EMAIL_URL = `${API_ROOT_URL}send_email`;
 export const FORGOT_PASSWORD_URL = `${API_ROOT_URL}forgot_password`;
+export const RESET_PASSWORD_URL = `${API_ROOT_URL}reset_password`;
 
 export type OutputId = {
   id: number;
@@ -36,4 +37,5 @@ export type OutputId = {
 
 export type OutputBool = {
   result: boolean;
+  message: string | undefined;
 };

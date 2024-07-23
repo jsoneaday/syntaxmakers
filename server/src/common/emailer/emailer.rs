@@ -237,7 +237,7 @@ impl Emailer {
                                             </tr>
                                             <tr>
                                                 <td align=\"center\" style=\"padding: 20px 0 30px 0;\">
-                                                    <a href=\"{}?is_dev={}&profile_id={}&new_email={}&unique_key={}&\" style=\"background-color: #007bff; border: none; color: white; padding: 15px 32px; text-align: center; text-decoration: none; display: inline-block; font-size: 16px; margin: 4px 2px; cursor: pointer;\">Confirm Email</a>
+                                                    <a href=\"{}?is_dev={}&profile_id={}&new_email={}&unique_key={}&\" style=\"background-color: #007bff; border: none; color: white; padding: 15px 32px; text-align: center; text-decoration: none; display: inline-block; font-size: 16px; margin: 4px 2px; cursor: pointer;\">Change Password</a>
                                                 </td>
                                             </tr>
                                         </table>
