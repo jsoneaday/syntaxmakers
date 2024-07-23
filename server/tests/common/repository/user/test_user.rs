@@ -11,6 +11,7 @@ use syntaxmakers_server::{
     common_test::fixtures::{get_app_data, get_fake_dev_desc, get_fake_email, get_fake_fullname, init_fixtures, MockEmailer, LANGUAGES}
 };
 
+// note: the tests for change_password are in test_developer or test_employer!!!
 
 #[tokio::test]
 async fn test_authenticate_returns_authenticateresult() {
