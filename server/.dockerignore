@@ -1,6 +1,4 @@
-/target
 dbdata
-devdb
 .env
 .env.production
-/ssl
+.env.example

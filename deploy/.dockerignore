@@ -1,0 +1,4 @@
+../server/dbdata
+../server/.env
+../server/.env.production
+../server/.env.example
