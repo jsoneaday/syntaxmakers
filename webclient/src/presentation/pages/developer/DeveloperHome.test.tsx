@@ -24,6 +24,7 @@ describe("Test Developer page", () => {
               defaultDevProfile.userName,
               defaultDevProfile.fullName,
               defaultDevProfile.email,
+              defaultDevProfile.description,
               defaultDevProfile.primaryLangId
             )
           );

@@ -10,6 +10,7 @@ import DevProfile from "./presentation/pages/developer/DevProfile";
 import EmpProfile from "./presentation/pages/employer/EmpProfile";
 import ConfirmEmail from "./presentation/pages/ConfirmEmail";
 import ForgotPassword from "./presentation/pages/ForgotPassword";
+import ErrorBoundary from "./presentation/components/ErrorBoundary";
 
 export const DEV_ROUTE_PREFIX = "devhome";
 export const EMP_ROUTE_PREFIX = "emphome";
@@ -89,7 +90,11 @@ const router = createBrowserRouter([
 ]);
 
 function App() {
-  return <RouterProvider router={router} />;
+  return (
+    <ErrorBoundary>
+      <RouterProvider router={router} />;
+    </ErrorBoundary>
+  );
 }
 
 export default App;

@@ -62,14 +62,25 @@ impl ConnGetter for DbRepo {
 
 async fn get_conn_pool() -> Pool<Postgres> {
     dotenv().ok();
-    let postgres_host = env::var("POSTGRES_HOST").unwrap();
+    
     let postgres_port = env::var("POSTGRES_PORT").unwrap().parse::<u16>().unwrap();
     let postgres_password = env::var("POSTGRES_PASSWORD").unwrap();
     let postgres_user = env::var("POSTGRES_USER").unwrap();
     let postgres_db = env::var("POSTGRES_DB").unwrap();
+    let env = env::var("ENV").unwrap();
+    let postgres_host = if env == "production" {
+        env::var("POSTGRES_HOST").unwrap()
+    } else {
+        format!("{}:{}", env::var("POSTGRES_HOST").unwrap(), postgres_port)
+    };
+    let ssl_mode = if env == "production" {
+        "?sslmode=require"
+    } else {
+        ""
+    };
 
     let postgres_url = format!(
-        "postgres://{postgres_user}:{postgres_password}@{postgres_host}:{postgres_port}/{postgres_db}"
+        "postgres://{postgres_user}:{postgres_password}@{postgres_host}/{postgres_db}{ssl_mode}"
     );
     info!("connection string {}", postgres_url);
 

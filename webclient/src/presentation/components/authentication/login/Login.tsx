@@ -125,7 +125,7 @@ function LoginView({ toggleOpen, toggleIsLogin }: LoginViewProps) {
   };
 
   return (
-    <>
+    <div style={{ width: "100%" }}>
       <div className="login-item" style={{ marginBottom: "2em" }}>
         <span className="title-font">Welcome to SyntaxMakers</span>
         <span
@@ -135,24 +135,26 @@ function LoginView({ toggleOpen, toggleIsLogin }: LoginViewProps) {
           Please login
         </span>
       </div>
-      <div className="login-item">
+      <section className="form-section input-spacing">
         <span className="login-label">Email</span>
         <input
           className="input normal-font"
+          style={{ width: "70%" }}
           type="text"
           value={email}
           onChange={onChangeEmail}
         />
-      </div>
-      <div className="login-item">
+      </section>
+      <section className="form-section input-spacing">
         <span className="login-label">Password</span>
         <input
           className="input normal-font"
+          style={{ width: "70%" }}
           type="password"
           value={password}
           onChange={onChangePassword}
         />
-      </div>
+      </section>
       <div className="login-item-row">
         <button className="small-font" onClick={onClickForgotPassword}>
           Forgot password
@@ -164,7 +166,7 @@ function LoginView({ toggleOpen, toggleIsLogin }: LoginViewProps) {
       <div className="login-item">
         <span>{errorMessage}</span>
       </div>
-    </>
+    </div>
   );
 }
 

@@ -7,6 +7,7 @@ const reactmodal = require("react-modal");
 export const userName = "tester";
 export const fullName = "Tester Test";
 export const email = "test@test.com";
+export const description = "User description";
 export const updatedAt = "2022-12-03T22:21:02.145Z";
 
 export const defaultDevProfile: DevProfile = {
@@ -16,7 +17,8 @@ export const defaultDevProfile: DevProfile = {
   userName,
   fullName,
   email,
-  primaryLangId: "1",
+  description,
+  primaryLangId: 1,
 };
 
 export const defaultEmpProfile: EmpProfile = {

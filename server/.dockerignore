@@ -1,4 +1,3 @@
 dbdata
 .env
-.env.production
 .env.example

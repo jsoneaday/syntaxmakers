@@ -14,12 +14,10 @@ export function Popup({ children, toggleOpen, isOpen }: PopupProps) {
       toggleOpen={toggleOpen}
       overlayClickClose={true}
       style={{
-        content: {
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "center",
-          height: "50px",
-        },
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center",
+        height: "50px",
       }}
     >
       {children}

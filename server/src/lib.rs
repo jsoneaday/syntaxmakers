@@ -153,6 +153,7 @@ pub async fn run() -> std::io::Result<()> {
     dotenv().ok();
     let host = env::var("HOST").unwrap();
     let port = env::var("PORT").unwrap().parse::<u16>().unwrap();
+    let allowed_origin1 = env::var("ALLOWED_ORIGIN1").unwrap();
     
     let app_data = actix_web::web::Data::new(AppState{
         repo: DbRepo::init().await,
@@ -167,7 +168,7 @@ pub async fn run() -> std::io::Result<()> {
             .wrap(Logger::default())
             .wrap(
                 Cors::default()
-                    .allowed_origin("http://localhost:5173")
+                    .allowed_origin(&allowed_origin1)
                     .allowed_methods(vec!["GET", "POST"])
                     .allowed_headers(vec![
                         header::CONTENT_TYPE,
