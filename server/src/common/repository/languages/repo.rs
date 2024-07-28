@@ -8,7 +8,7 @@ mod internal {
     use super::*;    
 
     pub async fn query_all_languages(conn: &Pool<Postgres>) -> Result<Vec<Language>, Error> {
-        query_as::<_, Language>("select * from prog_language").fetch_all(conn).await
+        query_as::<_, Language>("select * from prog_language order by name").fetch_all(conn).await
     }
 }
 

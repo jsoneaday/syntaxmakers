@@ -1,4 +1,5 @@
-export const API_ROOT_URL = "http://localhost:4003/v1/";
+export const API_ROOT_URL = import.meta.env.VITE_API_URL;
+console.log("VITE_API_URL", import.meta.env.VITE_API_URL);
 export const SALARIES_URL = `${API_ROOT_URL}salaries`;
 export const APPLY_JOB_URL = `${API_ROOT_URL}apply_job`;
 export const DEV_APPLIED_JOB_URL = `${API_ROOT_URL}developer_applied`;
