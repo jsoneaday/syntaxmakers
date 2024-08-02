@@ -1,5 +1,4 @@
-import { ReactNode } from "react";
-import * as ReactModal from "react-modal"; // needed to pass jest tests
+import { CSSProperties, ReactNode, useEffect, useRef } from "react";
 import "../theme/modal.css";
 
 interface ModalProps {
@@ -7,25 +6,56 @@ interface ModalProps {
   toggleOpen: () => void;
   children: ReactNode;
   overlayClickClose?: boolean;
-  style?: ReactModal.Styles;
+  style?: CSSProperties;
 }
 
 export default function Modal({
   isOpen,
   toggleOpen,
   children,
+  style,
   overlayClickClose = false,
-  style = {},
 }: ModalProps) {
+  const dialogRef = useRef<HTMLDialogElement>(null);
+
+  useEffect(() => {
+    const dialogElement = dialogRef.current;
+    if (!dialogElement) return;
+
+    if (isOpen) {
+      dialogElement.showModal();
+    } else {
+      dialogElement.close();
+    }
+  }, [isOpen]);
+
+  const onClickOut = (e: React.MouseEvent<HTMLDialogElement>) => {
+    e.preventDefault();
+
+    if (!overlayClickClose) return;
+
+    const dialogElement = dialogRef.current;
+    if (!dialogElement) return;
+
+    const rect = dialogElement.getBoundingClientRect();
+    const isInDialog =
+      rect.top <= e.clientY &&
+      e.clientY <= rect.top + rect.height &&
+      rect.left <= e.clientX &&
+      e.clientX <= rect.left + rect.width;
+    if (!isInDialog) {
+      toggleOpen();
+    }
+  };
+
   return (
-    <ReactModal
+    <dialog
+      ref={dialogRef}
       style={style}
+      onClick={onClickOut}
       className="modal-container"
-      isOpen={isOpen}
-      onRequestClose={toggleOpen}
-      shouldCloseOnOverlayClick={overlayClickClose}
     >
       {children}
-    </ReactModal>
+    </dialog>
   );
 }

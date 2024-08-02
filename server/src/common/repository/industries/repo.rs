@@ -8,7 +8,7 @@ mod internal {
     use super::*;    
 
     pub async fn query_all_industries(conn: &Pool<Postgres>) -> Result<Vec<Industry>, Error> {
-        query_as::<_, Industry>("select * from industry").fetch_all(conn).await
+        query_as::<_, Industry>("select * from industry order by name").fetch_all(conn).await
     }
 }
 

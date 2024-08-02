@@ -115,6 +115,7 @@ use actix_web::{HttpServer, http::header, App, middleware::Logger, web};
 use common::authentication::auth_keys_service::{init_auth_keys, AuthService};
 use common::emailer::emailer::Emailer;
 use common::repository::base::{DbRepo, Repository};
+use log::info;
 use routes::application::routes::{create_application, developer_applied};
 use routes::authentication::routes::{login, refresh_access_token};
 use routes::developers::routes::{get_developer_by_email, update_developer};
@@ -148,11 +149,12 @@ fn ssl_builder() -> SslAcceptorBuilder {
 }
 
 pub async fn run() -> std::io::Result<()> {
-    env_logger::init_from_env(env_logger::Env::new().default_filter_or("debug"));
+    env_logger::init_from_env(env_logger::Env::new().default_filter_or("info"));
     
     dotenv().ok();
     let host = env::var("HOST").unwrap();
     let port = env::var("PORT").unwrap().parse::<u16>().unwrap();
+    let allowed_domain = env::var("ALLOWED_DOMAIN").unwrap();
     
     let app_data = actix_web::web::Data::new(AppState{
         repo: DbRepo::init().await,
@@ -167,7 +169,7 @@ pub async fn run() -> std::io::Result<()> {
             .wrap(Logger::default())
             .wrap(
                 Cors::default()
-                    .allowed_origin("http://localhost:5173")
+                    .allowed_origin(&allowed_domain)
                     .allowed_methods(vec!["GET", "POST"])
                     .allowed_headers(vec![
                         header::CONTENT_TYPE,
@@ -253,7 +255,7 @@ pub async fn run() -> std::io::Result<()> {
     .bind((host, port)).expect("")
     // note: cannot use this for dev as client must also be on https,
     // enable at production
-    // .bind_openssl((host, port), ssl_builder()).expect("SSL not working") 
+   // .bind_openssl((host, port), ssl_builder()).expect("SSL not working") 
     .run()
     .await
 }
