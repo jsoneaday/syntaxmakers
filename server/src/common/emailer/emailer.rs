@@ -105,7 +105,7 @@ impl EmailerSendService for Emailer {
         match mailer.send(&email) {
             Ok(_) => Ok(()),
             Err(e) => {
-                println!("{}", e);
+                error!("{}", e);
                 Err(EmailError::EmailConfirmationSendFailed)
             }
         }        

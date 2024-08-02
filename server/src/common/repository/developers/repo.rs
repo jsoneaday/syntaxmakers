@@ -288,7 +288,10 @@ mod internal {
                         entity,
                         unique_key: uuid
                     }),
-                    Err(e) => Err(e.into())
+                    Err(e) => {
+                        error!("Send email confirm error: {}", e);
+                        Err(e.into())
+                    }
                 }
             },
             Err(e) => Err(e)

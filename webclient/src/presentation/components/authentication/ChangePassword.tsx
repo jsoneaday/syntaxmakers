@@ -1,4 +1,4 @@
-import { ChangeEvent, FormEvent, useState } from "react";
+import { ChangeEvent, MouseEvent, useState } from "react";
 import { ValidationMsgView } from "../controls/ValidationMsgView";
 import { changePassword } from "../../../domain/repository/UserRepo";
 import { useProfile } from "../../common/redux/profile/ProfileHooks";
@@ -28,7 +28,7 @@ export function ChangePassword({ userType }: ChangePasswordProps) {
     setNewPassword(e.target.value);
   };
 
-  const onSubmitChangePassword = async (e: FormEvent<HTMLFormElement>) => {
+  const onSubmitChangePassword = async (e: MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
 
     if (!profile || !profile.accessToken) {
@@ -72,7 +72,7 @@ export function ChangePassword({ userType }: ChangePasswordProps) {
   };
 
   return (
-    <form className="login-form" onSubmit={onSubmitChangePassword}>
+    <form className="login-form">
       <div style={{ padding: "2em", width: "100%" }}>
         <section className="form-section">
           <span>Current Password</span>
@@ -100,7 +100,11 @@ export function ChangePassword({ userType }: ChangePasswordProps) {
           className="form-section"
           style={{ marginTop: "1.5em", justifyContent: "flex-end" }}
         >
-          <PrimaryButton type="submit" disabled={disableSubmit}>
+          <PrimaryButton
+            type="submit"
+            disabled={disableSubmit}
+            onClick={onSubmitChangePassword}
+          >
             change
           </PrimaryButton>
         </section>

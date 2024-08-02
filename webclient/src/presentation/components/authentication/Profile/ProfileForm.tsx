@@ -1,4 +1,4 @@
-import { ChangeEvent, FormEvent, useEffect, useRef, useState } from "react";
+import { ChangeEvent, MouseEvent, useEffect, useRef, useState } from "react";
 import { UiDevOrEmployer } from "../../../models/DevOrEmployer";
 import DropDown, { OptionType } from "../../controls/DropDown";
 import { getLanguages } from "../../../../domain/repository/LanguageRepo";
@@ -60,6 +60,7 @@ interface ProfileFormProps {
 }
 
 /// form to register or edit profile
+/// note: form's onSubmit does not work inside a <dialog>
 export function ProfileForm({
   isModalMode,
   editMode,
@@ -173,7 +174,7 @@ export function ProfileForm({
     // Add more custom styles for other parts
   };
 
-  const createOrEditProfile = async (e: FormEvent<HTMLFormElement>) => {
+  const createOrEditProfile = async (e: MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
 
     if (!isValidProfile()) return;
@@ -544,7 +545,7 @@ export function ProfileForm({
 
   return (
     <div style={{ width: "100%" }}>
-      <form className="login-form" onSubmit={createOrEditProfile}>
+      <form className="login-form">
         {isModalMode ? (
           <div className="login-item">
             <span className="title-font">Welcome to SyntaxMakers</span>
@@ -718,8 +719,12 @@ export function ProfileForm({
             className="form-section"
             style={{ marginTop: "1.5em", justifyContent: "flex-end" }}
           >
-            <PrimaryButton type="submit" disabled={disableSubmit}>
-              {editMode === ProfileFormEditMode.Edit ? "edit" : "create"}
+            <PrimaryButton
+              type="submit"
+              disabled={disableSubmit}
+              onClick={createOrEditProfile}
+            >
+              {editMode === ProfileFormEditMode.Edit ? "Edit" : "Create"}
             </PrimaryButton>
           </section>
           <section className="form-section" style={{ marginTop: "1em" }}>

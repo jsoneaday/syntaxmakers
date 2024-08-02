@@ -75,6 +75,7 @@ function LoginView({ toggleOpen, toggleIsLogin }: LoginViewProps) {
                     setProfile(profile);
                     toggleOpen();
                   });
+                  toggleOpen();
                 } else {
                   setProfile(null);
                   setErrorMessage(`Failed to find user with email ${email}`);
@@ -161,10 +162,15 @@ function LoginView({ toggleOpen, toggleIsLogin }: LoginViewProps) {
         </button>
       </div>
       <div className="login-item" style={{ alignItems: "flex-end" }}>
-        <PrimaryButton onClick={onClickLogin}>Login</PrimaryButton>
+        <PrimaryButton type="submit" onClick={onClickLogin}>
+          Login
+        </PrimaryButton>
       </div>
       <div className="login-item">
-        <span>{errorMessage}</span>
+        <ValidationMsgView
+          successMessage={""}
+          validationMessage={errorMessage}
+        />
       </div>
     </div>
   );
