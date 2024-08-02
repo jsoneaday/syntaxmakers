@@ -82,7 +82,7 @@ async fn get_conn_pool() -> Pool<Postgres> {
     let postgres_url = format!(
         "postgres://{postgres_user}:{postgres_password}@{postgres_host}/{postgres_db}{ssl_mode}"
     );
-    //info!("connection string {}", postgres_url);
+    // info!("DB connection string: {}", postgres_url);
 
     let conn = sqlx::postgres::PgPool::connect(&postgres_url).await.unwrap();
     let result = sqlx::query_as::<_, Version>(r"
