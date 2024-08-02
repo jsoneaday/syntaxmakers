@@ -154,8 +154,7 @@ pub async fn run() -> std::io::Result<()> {
     dotenv().ok();
     let host = env::var("HOST").unwrap();
     let port = env::var("PORT").unwrap().parse::<u16>().unwrap();
-    let allowed_origin1 = env::var("ALLOWED_ORIGIN1").unwrap();
-    info!("ALLOWED_ORIGIN1 {}", &allowed_origin1);
+    let allowed_domain = env::var("ALLOWED_DOMAIN").unwrap();
     
     let app_data = actix_web::web::Data::new(AppState{
         repo: DbRepo::init().await,
@@ -170,7 +169,7 @@ pub async fn run() -> std::io::Result<()> {
             .wrap(Logger::default())
             .wrap(
                 Cors::default()
-                    .allowed_origin(&allowed_origin1)
+                    .allowed_origin(&allowed_domain)
                     .allowed_methods(vec!["GET", "POST"])
                     .allowed_headers(vec![
                         header::CONTENT_TYPE,
@@ -256,7 +255,7 @@ pub async fn run() -> std::io::Result<()> {
     .bind((host, port)).expect("")
     // note: cannot use this for dev as client must also be on https,
     // enable at production
-    // .bind_openssl((host, port), ssl_builder()).expect("SSL not working") 
+   // .bind_openssl((host, port), ssl_builder()).expect("SSL not working") 
     .run()
     .await
 }
