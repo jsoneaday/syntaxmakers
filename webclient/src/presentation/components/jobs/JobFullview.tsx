@@ -237,6 +237,10 @@ export default function JobFullview({ userType }: JobFullviewProps) {
   const [successMessage, setSuccessMessage] = useState("");
 
   useEffect(() => {
+    console.log("popup state", isPopupOpen);
+  }, []);
+
+  useEffect(() => {
     let currentJobPost: JobPost | undefined = undefined;
     if (routeJobPost) {
       currentJobPost = routeJobPost as JobPost;
@@ -707,15 +711,24 @@ export default function JobFullview({ userType }: JobFullviewProps) {
       } else {
         await updateJobPost(formValues.current, profile.accessToken);
       }
-    } catch (e) {
-      console.log(e);
-    } finally {
+
       const state = refreshUrlState();
       navigate(".", { state, replace: true });
-      setSubmitDisabled(false);
-      setInTextEditMode(false);
+
       setValidationMessage("");
       setSuccessMessage("Job saved successfully");
+    } catch (e) {
+      console.log(e);
+      if (e instanceof Error) {
+        setValidationMessage(e.message);
+        setSuccessMessage("");
+      } else {
+        setValidationMessage("Failed to save job");
+        setSuccessMessage("");
+      }
+    } finally {
+      setInTextEditMode(false);
+      setSubmitDisabled(false);
       toggleIsPopupOpen();
     }
   };
@@ -772,7 +785,7 @@ export default function JobFullview({ userType }: JobFullviewProps) {
       setSuccessMessage("");
       result = false;
     }
-    console.log("result", result);
+    console.log("validation result", result);
     return result;
   };
 
@@ -794,12 +807,21 @@ export default function JobFullview({ userType }: JobFullviewProps) {
   return (
     <>
       <Popup isOpen={isPopupOpen} toggleOpen={toggleIsPopupOpen}>
-        <div className="popup-container">
-          <ValidationMsgView
-            validationMessage={validationMessage}
-            successMessage={successMessage}
-          />
-        </div>
+        {isPopupOpen ? (
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "center",
+              height: "50px",
+            }}
+          >
+            <ValidationMsgView
+              validationMessage={validationMessage}
+              successMessage={successMessage}
+            />
+          </div>
+        ) : null}
       </Popup>
       <form
         className="userhome-main"

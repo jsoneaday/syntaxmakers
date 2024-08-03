@@ -231,7 +231,7 @@ export async function insertJobPost(
     const result: OutputId = await response.json();
     return result;
   }
-  throw new Error("Failed to update job");
+  throw new Error(await response.text());
 }
 
 export async function updateJobPost(

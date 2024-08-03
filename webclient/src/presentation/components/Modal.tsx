@@ -6,6 +6,7 @@ interface ModalProps {
   toggleOpen: () => void;
   children: ReactNode;
   overlayClickClose?: boolean;
+  /// note: do not override display attribute as it causes a white box to always show
   style?: CSSProperties;
 }
 
@@ -23,8 +24,10 @@ export default function Modal({
     if (!dialogElement) return;
 
     if (isOpen) {
+      console.log("showModal");
       dialogElement.showModal();
     } else {
+      console.log("close modal");
       dialogElement.close();
     }
   }, [isOpen]);

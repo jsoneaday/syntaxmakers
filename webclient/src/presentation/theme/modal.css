@@ -29,6 +29,6 @@
   height: 120px;
 }
 
-dialog::backdrop {
-  background: rgb(0 0 0 / 0.2);
+dialog[open] {
+  display: block; /* Show when open */
 }
