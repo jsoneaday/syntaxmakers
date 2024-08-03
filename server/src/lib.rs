@@ -115,7 +115,6 @@ use actix_web::{HttpServer, http::header, App, middleware::Logger, web};
 use common::authentication::auth_keys_service::{init_auth_keys, AuthService};
 use common::emailer::emailer::Emailer;
 use common::repository::base::{DbRepo, Repository};
-use log::info;
 use routes::application::routes::{create_application, developer_applied};
 use routes::authentication::routes::{login, refresh_access_token};
 use routes::developers::routes::{get_developer_by_email, update_developer};

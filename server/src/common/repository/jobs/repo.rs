@@ -6,14 +6,11 @@ use crate::common::repository::jobs::models::{NewJob, Job, UpdateJob, JobApplied
 use crate::common::repository::base::EntityId;
 use crate::common::repository::{error::SqlxError, developers::models::Developer, base::CountResult};
 use log::error;
-
 use super::models::JobApplicant;
 
 mod internal {    
     use chrono::Utc;
-
     use crate::common::repository::jobs::models::JobApplicant;
-
     use super::*;    
 
     pub async fn insert_job(conn: &Pool<Postgres>, new_job: NewJob) -> Result<EntityId, Error> {
@@ -52,6 +49,7 @@ mod internal {
         let job_id = inserted_entity.unwrap().id;
         if new_job.is_remote {
             if let Some(_) = new_job.country_id {
+                error!("insert job error: is_remote and country cannot both be given");
                 return Err(sqlx::Error::Database(Box::new(SqlxError::IsRemoteContstraintError)));
             }
         } else {
@@ -74,9 +72,11 @@ mod internal {
                     Err(e) => Err(e)
                 };
                 if let Err(e) = jobs_countries_result {
+                    error!("insert job error: {:?}", e);
                     return Err(e);
                 }
             } else {
+                error!("insert job error: when is_remote is false country must be given");
                 return Err(sqlx::Error::Database(Box::new(SqlxError::IsRemoteContstraintError)));
             }
         }
@@ -123,6 +123,7 @@ mod internal {
         
         if update_job.is_remote {
             if let Some(_) = update_job.country_id {
+                error!("update job error: is_remote and country cannot both be given");
                 return Err(sqlx::Error::Database(Box::new(SqlxError::IsRemoteContstraintError)));
             } else {
                 let delete_job_country_result = query::<_>(

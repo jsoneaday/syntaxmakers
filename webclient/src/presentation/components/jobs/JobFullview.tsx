@@ -38,6 +38,7 @@ import {
 } from "../../../domain/repository/JobApplicationRepo";
 import { Popup } from "../controls/Popup";
 import { ValidationMsgView } from "../controls/ValidationMsgView";
+import EmpProfile from "../../models/EmpProfile";
 
 type JobPostDisplayComponents = {
   title: JSX.Element;
@@ -200,10 +201,10 @@ export default function JobFullview({ userType }: JobFullviewProps) {
     updatedAt: formatDistanceToNow(new Date()),
     title: "",
     description: null,
-    employerId: 1,
+    employerId: profile ? Number(profile.id) : 0,
     employerName: "",
     isRemote: false,
-    companyId: 1,
+    companyId: profile ? Number((profile as EmpProfile).companyId) : 0,
     companyName: "",
     countryId: 1,
     countryName: "",
@@ -217,7 +218,7 @@ export default function JobFullview({ userType }: JobFullviewProps) {
     salary: "",
     companyLogo: undefined,
   });
-  const [lastCountryId, setLastCountryId] = useState<number>();
+  const [lastCountryId, setLastCountryId] = useState<number | undefined>(1);
   /// formValues used for form submission
   const formValues = useRef<JobFormState>({
     id: 0,
@@ -237,14 +238,12 @@ export default function JobFullview({ userType }: JobFullviewProps) {
   const [successMessage, setSuccessMessage] = useState("");
 
   useEffect(() => {
-    console.log("popup state", isPopupOpen);
-  }, []);
-
-  useEffect(() => {
     let currentJobPost: JobPost | undefined = undefined;
     if (routeJobPost) {
       currentJobPost = routeJobPost as JobPost;
       setJobPostStates(currentJobPost);
+    } else {
+      setJobPostStates(null);
     }
   }, [routeJobPost]);
 
@@ -271,7 +270,6 @@ export default function JobFullview({ userType }: JobFullviewProps) {
     ) {
       developerAppliedToJob(currentJobPost.id, Number(profile.id)).then(
         (disableApplyBtn) => {
-          console.log("dev already applied?", disableApplyBtn);
           setSubmitDisabled(disableApplyBtn);
         }
       );
@@ -296,83 +294,86 @@ export default function JobFullview({ userType }: JobFullviewProps) {
     currentJobPost.description = markdown;
   };
 
-  const setJobPostStates = (jobPost: JobPost) => {
-    setCurrentJobPost({ type: FormActionTypes.Id, payload: jobPost.id });
+  const setJobPostStates = (jobPost: JobPost | null) => {
+    setCurrentJobPost({ type: FormActionTypes.Id, payload: jobPost?.id || 0 });
     setCurrentJobPost({
       type: FormActionTypes.UpdatedAt,
-      payload: jobPost.updatedAt,
+      payload: jobPost?.updatedAt || formatDistanceToNow(new Date()),
     });
-    setCurrentJobPost({ type: FormActionTypes.Title, payload: jobPost.title });
+    setCurrentJobPost({
+      type: FormActionTypes.Title,
+      payload: jobPost?.title || "",
+    });
     setCurrentJobPost({
       type: FormActionTypes.Desc,
-      payload: jobPost.description,
+      payload: jobPost?.description || null,
     });
-    mdRef.current?.setMarkdown(jobPost.description);
+    mdRef.current?.setMarkdown(jobPost?.description || "");
     setCurrentJobPost({
       type: FormActionTypes.EmployerId,
-      payload: jobPost.employerId,
+      payload: jobPost?.employerId || Number(profile!.id),
     });
     setCurrentJobPost({
       type: FormActionTypes.EmployerName,
-      payload: jobPost.employerName,
+      payload: jobPost?.employerName || "",
     });
     setCurrentJobPost({
       type: FormActionTypes.IsRemote,
-      payload: jobPost.isRemote,
+      payload: jobPost?.isRemote || false,
     });
     setCurrentJobPost({
       type: FormActionTypes.CompanyLogo,
-      payload: jobPost.companyLogo,
+      payload: jobPost?.companyLogo,
     });
     setCurrentJobPost({
       type: FormActionTypes.CompanyId,
-      payload: jobPost.companyId,
+      payload: jobPost?.companyId || 1,
     });
     setCurrentJobPost({
       type: FormActionTypes.CompanyName,
-      payload: jobPost.companyName,
+      payload: jobPost?.companyName || "",
     });
     setCurrentJobPost({
       type: FormActionTypes.CountryId,
-      payload: jobPost.countryId,
+      payload: jobPost?.countryId || 1,
     });
     // if no country selected just default to first on list, as there must be at least one
-    setLastCountryId(jobPost.countryId || 1);
+    setLastCountryId(jobPost?.countryId || 1);
     setCurrentJobPost({
       type: FormActionTypes.CountryName,
-      payload: jobPost.countryName,
+      payload: jobPost?.countryName || "",
     });
     setCurrentJobPost({
       type: FormActionTypes.PrimaryLangId,
-      payload: jobPost.primaryLangId,
+      payload: jobPost?.primaryLangId || 1,
     });
     setCurrentJobPost({
       type: FormActionTypes.PrimaryLangName,
-      payload: jobPost.primaryLangName,
+      payload: jobPost?.primaryLangName || "",
     });
     setCurrentJobPost({
       type: FormActionTypes.SecondaryLangId,
-      payload: jobPost.secondaryLangId,
+      payload: jobPost?.secondaryLangId || 1,
     });
     setCurrentJobPost({
       type: FormActionTypes.SecondaryLangName,
-      payload: jobPost.secondaryLangName,
+      payload: jobPost?.secondaryLangName || "",
     });
     setCurrentJobPost({
       type: FormActionTypes.IndustryId,
-      payload: jobPost.industryId,
+      payload: jobPost?.industryId || 1,
     });
     setCurrentJobPost({
       type: FormActionTypes.IndustryName,
-      payload: jobPost.industryName,
+      payload: jobPost?.industryName || "",
     });
     setCurrentJobPost({
       type: FormActionTypes.SalaryId,
-      payload: jobPost.salaryId,
+      payload: jobPost?.salaryId || 1,
     });
     setCurrentJobPost({
       type: FormActionTypes.Salary,
-      payload: jobPost.salary,
+      payload: jobPost?.salary || "",
     });
   };
 
@@ -654,7 +655,6 @@ export default function JobFullview({ userType }: JobFullviewProps) {
 
   const onJobSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log("userType", userType);
     if (userType === UiDevOrEmployer.Developer) {
       await onJobApply();
     } else {
@@ -663,7 +663,6 @@ export default function JobFullview({ userType }: JobFullviewProps) {
   };
 
   const onJobApply = async () => {
-    console.log("apply job");
     // show login or register if not logged in
     if (!profile || !profile.accessToken) {
       setLoginOpen(!loginOpen);
@@ -691,8 +690,6 @@ export default function JobFullview({ userType }: JobFullviewProps) {
   };
 
   const onJobSave = async () => {
-    console.log("save job", currentJobPost.id);
-
     try {
       setSubmitDisabled(true);
       setFormValues();
@@ -784,8 +781,11 @@ export default function JobFullview({ userType }: JobFullviewProps) {
       setValidationMessage("Country cannot be selected when Remote is checked");
       setSuccessMessage("");
       result = false;
+    } else if (!formValues.current.isRemote && !formValues.current.countryId) {
+      setValidationMessage("Country cannot be empty when not is remote");
+      setSuccessMessage("");
+      result = false;
     }
-    console.log("validation result", result);
     return result;
   };
 
@@ -891,7 +891,7 @@ export default function JobFullview({ userType }: JobFullviewProps) {
                 name="save"
                 disabled={submitDisabled}
               >
-                save
+                Save
               </button>
             )}
           </div>

@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import { ChangeEvent, ReactNode } from "react";
 import "../../theme/checkbox.css";
 
 interface CheckboxProps {
@@ -14,7 +14,8 @@ export default function Checkbox({
   children,
   name,
 }: CheckboxProps) {
-  const onChange = () => {
+  const onChange = (e: ChangeEvent<HTMLInputElement>) => {
+    e.preventDefault();
     toggleIsChecked();
   };
 

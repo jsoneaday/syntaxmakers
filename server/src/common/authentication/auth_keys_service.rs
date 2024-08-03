@@ -83,7 +83,6 @@ impl Authenticator for AuthService {
             if header_name.to_lowercase() == "authorization" {
                 let bearer_items: Vec<&str> = header_val.split(' ').collect();
                 let claims = decode_token(bearer_items.get(1).unwrap(), decoding_key);
-                info!("claims {:?}", claims);
                 info!("checking against user_name {}", user_name);
                 if claims.sub == user_name {
                     if claims.exp >= (Utc::now().timestamp() as usize) {
